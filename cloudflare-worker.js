@@ -48,8 +48,8 @@ export default {
         { expirationTtl: 3600 } // 1 hour
       );
 
-      // Forward to Gemini API
-      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${body.model}:generateContent?key=${env.GEMINI_API_KEY}`;
+      // Forward to Gemini API (use v1 for Gemini 3 models)
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1/models/${body.model}:generateContent?key=${env.GEMINI_API_KEY}`;
 
       const geminiResponse = await fetch(geminiUrl, {
         method: 'POST',
