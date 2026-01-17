@@ -1031,14 +1031,28 @@ ${mathContext}
    - Roll formula: d10 + STAT - PIPS
    - Example: FORCE +2 with 1 Pip = d10(${virtualD10}) + 2 - 1 = total
 
-3. TIER ENFORCEMENT:
+3. WHEN TO ROLL:
+   - **NO ROLL needed for:**
+     * Walking, leaving, entering places
+     * Simple conversations with no stakes
+     * Looking around, observing
+     * Picking up items, basic movement
+   - **ROLL only when there is RISK or OPPOSITION:**
+     * Someone actively resists or threatens
+     * Failure would have meaningful consequences
+     * The action is dangerous or contested
+
+4. TIER ENFORCEMENT:
    - Tier 1 (Challenging): 6+ Success, 4-5 Cost, 1-3 Miss
+     * Use for: Tense social situations, tricky tasks, moderate risk
      * Cost: Minor complication OR 1 Pip Strain
    - Tier 2 (Perilous): 7+ Success, 5-6 Cost, 1-4 Miss
+     * Use for: Combat, life-threatening situations, hostile confrontations
      * Cost: Serious complication OR 2 Pips Injury
-   - **Combat is always Tier 2** - Apply injury on Cost/Miss
+   - **Combat is always Tier 2**
+   - **Pressing someone who is hostile/suspicious = Tier 2 (not Tier 1)**
 
-4. CURRENCY MECHANICS:
+5. CURRENCY MECHANICS:
    - Current: ${character.currency} coin
    - **When player spends/gives coin: ONLY use "currency_gain": -X (negative number)**
    - **Do NOT use remove_pips when player gives/spends coin on non-healing things**
@@ -1048,7 +1062,7 @@ ${mathContext}
      * Buy item (3 coin) → "currency_gain": -3 (NO remove_pips)
      * Pay for healing (3 coin) → "currency_gain": -3 AND "remove_pips": {"stat": "FORCE", "amount": 1}
 
-5. HEALING MECHANICS:
+6. HEALING MECHANICS:
    - Pips NEVER clear automatically
    - **ONLY use remove_pips when ALL of these are true:**
      1. Player EXPLICITLY asks to be healed (e.g., "I seek a healer", "I rest to recover")
@@ -1060,14 +1074,14 @@ ${mathContext}
      * "Being grateful" or "feeling better"
    - **When in doubt, DO NOT heal - leave remove_pips empty**
 
-6. WORLD FACTIONS (Use ONLY these names):
+7. WORLD FACTIONS (Use ONLY these names):
    - The Ash-Wardens (enforcers, order at any cost)
    - The Soot-Stained (criminals, black market control)
    - The Iron-Forgers (industrialists, tech monopoly)
    - Whispering Flesh (cultists, accelerate the Blight)
    - **Do NOT invent new factions** - only reference these four
 
-7. CONSEQUENCES ALWAYS APPLY:
+8. CONSEQUENCES ALWAYS APPLY:
    - Never give "free success" - apply cost on 4-6
    - Grimdark = choices have weight
 
