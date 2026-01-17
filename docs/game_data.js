@@ -1,5 +1,5 @@
 // game_data.js
-// Version 2.2.0 - The Ash-Lord's Covenant (Oracle Table System)
+// Version 2.3.0 - The Ash-Lord's Covenant (Equipment & Inventory System)
 // - Expanded TIER_1_TWISTS: 5 themed tables × 20 entries = 100 total
 // - Added TIER_2_TWISTS_WITTY: 10 entries with grimdark humor
 // - Added QUEST_HOOKS: 12 engine-switch quests (epic → political)
@@ -549,6 +549,110 @@ const CONTENT_PACK_ASHLORDS = {
             political_truth: "...hallucinations caused by contaminated water, poisoned by Iron-Forger runoff.",
             faction: "Iron-Forgers",
             tier: 1
+        }
+    ],
+
+    // === MASTER GEAR LIST (Equipment purchasable during downtime) ===
+    MASTER_GEAR_LIST: [
+        // FORCE Equipment
+        {
+            name: "Iron Gauntlets",
+            type: "tool",
+            stat: "FORCE",
+            bonus: 1,
+            cost_xp: 5,
+            desc: "+1 to FORCE rolls. Heavy reinforced gloves that add crushing power to your strikes.",
+            properties: ["heavy", "melee"]
+        },
+        {
+            name: "Chainmail Jack",
+            type: "armor",
+            stat: "FORCE",
+            pips: 2,
+            max_pips: 2,
+            cost_xp: 5,
+            desc: "Absorbs 2 FORCE damage. Overlapping iron rings that turn aside bludgeoning blows.",
+            properties: ["armor", "heavy"]
+        },
+        // FINESSE Equipment
+        {
+            name: "Balanced Daggers",
+            type: "tool",
+            stat: "FINESSE",
+            bonus: 1,
+            cost_xp: 5,
+            desc: "+1 to FINESSE rolls. Perfectly weighted blades for precise work.",
+            properties: ["melee", "light", "throwable"]
+        },
+        {
+            name: "Padded Leathers",
+            type: "armor",
+            stat: "FINESSE",
+            pips: 2,
+            max_pips: 2,
+            cost_xp: 5,
+            desc: "Absorbs 2 FINESSE damage. Supple armor that cushions falls and glancing cuts.",
+            properties: ["armor", "light"]
+        },
+        // INFLUENCE Equipment
+        {
+            name: "Noble Signet",
+            type: "tool",
+            stat: "INFLUENCE",
+            bonus: 1,
+            cost_xp: 5,
+            desc: "+1 to INFLUENCE rolls. A ring bearing a prestigious house seal—real or forged.",
+            properties: ["accessory", "valuable"]
+        },
+        {
+            name: "Fine Clothes",
+            type: "armor",
+            stat: "INFLUENCE",
+            pips: 2,
+            max_pips: 2,
+            cost_xp: 5,
+            desc: "Absorbs 2 INFLUENCE damage. Expensive garments that deflect social attacks.",
+            properties: ["armor", "valuable"]
+        },
+        // WITS Equipment
+        {
+            name: "Investigator's Kit",
+            type: "tool",
+            stat: "WITS",
+            bonus: 1,
+            cost_xp: 5,
+            desc: "+1 to WITS rolls. Magnifying glass, tweezers, vials—tools of deduction.",
+            properties: ["tool", "fragile"]
+        },
+        {
+            name: "Warded Spectacles",
+            type: "armor",
+            stat: "WITS",
+            pips: 2,
+            max_pips: 2,
+            cost_xp: 5,
+            desc: "Absorbs 2 WITS damage. Enchanted lenses that filter illusions and mental assaults.",
+            properties: ["armor", "fragile", "magical"]
+        },
+        // RESOLVE Equipment
+        {
+            name: "Prayer Beads",
+            type: "tool",
+            stat: "RESOLVE",
+            bonus: 1,
+            cost_xp: 5,
+            desc: "+1 to RESOLVE rolls. Sacred beads that focus the mind against fear and despair.",
+            properties: ["accessory", "holy"]
+        },
+        {
+            name: "Blessed Vestments",
+            type: "armor",
+            stat: "RESOLVE",
+            pips: 2,
+            max_pips: 2,
+            cost_xp: 5,
+            desc: "Absorbs 2 RESOLVE damage. Consecrated robes that ward against corruption.",
+            properties: ["armor", "holy"]
         }
     ]
 };

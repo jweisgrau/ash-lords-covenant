@@ -60,7 +60,7 @@
 
     <div id="loading-overlay" class="flex fixed top-0 left-0 w-screen h-screen bg-black/80 z-[199] justify-center items-center" style="flex-direction: column;">
         <div class="spinner mb-4"></div>
-        <span id="loading-text" class="ml-4 text-lg text-gray-300">Booting v2.1.0 (Adventure/Downtime)...</span>
+        <span id="loading-text" class="ml-4 text-lg text-gray-300">Booting v2.3.0 (Equipment & Inventory)...</span>
         <div id="boot-log"></div>
         <button id="force-start-btn" onclick="window.forceUI()">⚠️ FORCE UI</button>
     </div>
@@ -81,7 +81,7 @@
         <header class="mb-4 p-4 bg-gray-800 rounded-lg border border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div>
                 <h1 class="text-2xl font-bold text-white">Ash-Lord's Covenant</h1>
-                <p class="text-sm text-gray-400">Digital RPG Prototype (Build v2.2.0 - Oracle Tables)</p>
+                <p class="text-sm text-gray-400">Digital RPG Prototype (Build v2.3.0 - Equipment & Inventory System)</p>
             </div>
             <div class="flex items-center space-x-2">
                 <button onclick="window.exportSave()" class="px-3 py-2 bg-gray-700 text-xs text-gray-300 rounded-lg hover:bg-emerald-700 hover:text-white transition">
@@ -237,11 +237,33 @@
                                     <span class="font-bold text-white">Rest & Recover (3 Coin)</span>
                                     <span class="text-xs text-gray-400 mt-1">Heal one Pip of damage. Requires coin.</span>
                                 </button>
+                                <button id="interlude-shop-btn" class="interlude-button flex flex-col items-start text-left p-3 border-amber-700">
+                                    <span class="font-bold text-amber-400">Visit Equipment Shop (5 XP)</span>
+                                    <span class="text-xs text-gray-400 mt-1">Purchase specialized tools or armor.</span>
+                                </button>
+                                <button id="interlude-repair-btn" class="interlude-button flex flex-col items-start text-left p-3 border-blue-700">
+                                    <span class="font-bold text-blue-400">Repair Armor (Free)</span>
+                                    <span class="text-xs text-gray-400 mt-1">Restore all armor to full protection.</span>
+                                </button>
                             </div>
                             <button id="interlude-end-btn" class="w-full mt-4 px-4 py-3 bg-red-900 text-white rounded-lg font-bold hover:bg-red-800 transition border border-red-700">
                                 Return to Adventure →
                             </button>
                             <p class="text-xs text-gray-500 text-center mt-2">Warning: Ending downtime advances faction clocks!</p>
+                        </div>
+
+                        <!-- XP Shop Modal -->
+                        <div id="xp-shop-modal" class="fixed top-0 left-0 w-full h-full bg-black/80 z-[200] flex justify-center items-center hidden">
+                            <div class="modal-content bg-gray-800 border border-amber-700 p-6 rounded-lg max-w-lg w-full">
+                                <h2 class="text-xl font-bold text-amber-400 mb-4">⚔️ Equipment Shop</h2>
+                                <p class="text-gray-400 text-sm mb-4">Spend 5 XP to purchase specialized gear. Choose wisely - only 3 items available per visit.</p>
+                                <div id="xp-shop-items" class="space-y-3 mb-4">
+                                    <!-- Items will be populated by JavaScript -->
+                                </div>
+                                <button id="xp-shop-close-btn" class="w-full px-4 py-2 bg-gray-700 text-white rounded-lg font-semibold hover:bg-gray-600 transition">
+                                    Close Shop
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -259,7 +281,7 @@
         const BACKUP_KEY = "ashlords_game_v1_backup";
 
         const createFreshState = () => ({
-            version: "2.1.0",
+            version: "2.3.0",
             userId: `local-${crypto.randomUUID()}`,
             character: null,
             gameState: {
@@ -290,7 +312,7 @@
                     const char = updates.character;
                     if (char.stats) {
                         for (const [stat, val] of Object.entries(char.stats)) {
-                            if (val < -3 || val > 5) {
+                            if (val < -1 || val > 5) {
                                 errors.push(`Stat ${stat} out of bounds: ${val}`);
                             }
                         }
@@ -504,6 +526,182 @@
 
         const gameState = new GameStateManager();
 
+        // ===== INVENTORY SYSTEM (Equipment Management) =====
+
+        const InventorySystem = {
+            // Get tool bonus for a stat (returns 0 or 1)
+            getToolBonus(stat) {
+                const character = gameState.getState().character;
+                if (!character) return 0;
+                const tool = (character.equipment || []).find(
+                    i => i.type === 'tool' && i.stat === stat
+                );
+                return tool ? (tool.bonus || 1) : 0;
+            },
+
+            // Get available armor pips for a stat
+            getArmorPips(stat) {
+                const character = gameState.getState().character;
+                if (!character) return 0;
+                const armor = (character.equipment || []).find(
+                    i => i.type === 'armor' && i.stat === stat
+                );
+                return armor ? (armor.pips || 0) : 0;
+            },
+
+            // Damage armor before character takes pips - returns remaining damage
+            async damageArmor(stat, amount) {
+                const character = gameState.getState().character;
+                if (!character) return amount;
+
+                const equipment = character.equipment || [];
+                const armorIndex = equipment.findIndex(
+                    i => i.type === 'armor' && i.stat === stat && (i.pips || 0) > 0
+                );
+
+                if (armorIndex === -1) return amount; // No armor to absorb
+
+                const armor = equipment[armorIndex];
+                const absorbed = Math.min(armor.pips, amount);
+                const remaining = amount - absorbed;
+
+                // Update armor pips
+                const newEquipment = [...equipment];
+                newEquipment[armorIndex] = { ...armor, pips: armor.pips - absorbed };
+
+                await gameState.transaction(async (state) => ({
+                    character: {
+                        ...state.character,
+                        equipment: newEquipment
+                    }
+                }));
+
+                if (absorbed > 0) {
+                    showToast(`${armor.name} absorbs ${absorbed} damage!`);
+                }
+
+                return remaining;
+            },
+
+            // Repair all armor during downtime
+            async repairAllArmor() {
+                const character = gameState.getState().character;
+                if (!character) return;
+
+                const equipment = character.equipment || [];
+                let repairedAny = false;
+
+                const repairedEquipment = equipment.map(item => {
+                    if (item.type === 'armor' && item.pips < (item.max_pips || 2)) {
+                        repairedAny = true;
+                        return { ...item, pips: item.max_pips || 2 };
+                    }
+                    return item;
+                });
+
+                if (repairedAny) {
+                    await gameState.transaction(async (state) => ({
+                        character: {
+                            ...state.character,
+                            equipment: repairedEquipment
+                        }
+                    }));
+                    showToast('All armor repaired!');
+                }
+            },
+
+            // Add item to inventory
+            async addItem(item) {
+                const character = gameState.getState().character;
+                if (!character) return false;
+
+                // For tools/armor, check if we already have one for that stat
+                if (item.type === 'tool' || item.type === 'armor') {
+                    const existing = (character.equipment || []).find(
+                        i => i.type === item.type && i.stat === item.stat
+                    );
+                    if (existing) {
+                        showToast(`Already have a ${item.stat} ${item.type}!`);
+                        return false;
+                    }
+                }
+
+                // Prepare item with proper structure
+                const newItem = {
+                    name: item.name,
+                    type: item.type || 'loot',
+                    properties: item.properties || [],
+                    lore: item.lore || item.desc || '',
+                    ...(item.type === 'tool' ? { stat: item.stat, bonus: item.bonus || 1 } : {}),
+                    ...(item.type === 'armor' ? { stat: item.stat, pips: item.max_pips || 2, max_pips: item.max_pips || 2 } : {}),
+                    ...(item.tags ? { tags: item.tags } : {}),
+                    ...(item.desc ? { desc: item.desc } : {})
+                };
+
+                await gameState.transaction(async (state) => ({
+                    character: {
+                        ...state.character,
+                        equipment: [...(state.character.equipment || []), newItem]
+                    }
+                }));
+
+                showToast(`+1 Item: ${item.name}`);
+                return true;
+            },
+
+            // Remove item by name
+            async removeItem(itemName) {
+                const character = gameState.getState().character;
+                if (!character) return false;
+
+                const equipment = character.equipment || [];
+                const index = equipment.findIndex(i => i.name === itemName);
+                if (index === -1) return false;
+
+                const newEquipment = [...equipment];
+                newEquipment.splice(index, 1);
+
+                await gameState.transaction(async (state) => ({
+                    character: {
+                        ...state.character,
+                        equipment: newEquipment
+                    }
+                }));
+
+                showToast(`Removed: ${itemName}`);
+                return true;
+            },
+
+            // Check if character has an item
+            hasItem(itemName) {
+                const character = gameState.getState().character;
+                if (!character) return false;
+                return (character.equipment || []).some(i => i.name === itemName);
+            },
+
+            // Get all equipment of a type
+            getEquipmentByType(type) {
+                const character = gameState.getState().character;
+                if (!character) return [];
+                return (character.equipment || []).filter(i => i.type === type);
+            },
+
+            // Get 3 random items from MASTER_GEAR_LIST that player doesn't own
+            getAvailableShopItems(count = 3) {
+                const character = gameState.getState().character;
+                if (!character || !CONTENT_PACK_ASHLORDS.MASTER_GEAR_LIST) return [];
+
+                const owned = (character.equipment || []).map(e => e.name);
+                const available = CONTENT_PACK_ASHLORDS.MASTER_GEAR_LIST.filter(
+                    item => !owned.includes(item.name)
+                );
+
+                // Shuffle and pick
+                const shuffled = [...available].sort(() => Math.random() - 0.5);
+                return shuffled.slice(0, count);
+            }
+        };
+
         // ===== MECHANICS ENGINE (Client-Side) =====
 
         const MechanicsEngine = {
@@ -571,27 +769,56 @@
                 const d10 = Math.floor(Math.random() * 10) + 1;
                 const statMod = character.stats[stat] || 0;
                 const pips = character.pips?.[stat] || 0;
-                const total = d10 + statMod - pips;
+                // Add tool bonus from equipment
+                const toolBonus = InventorySystem.getToolBonus(stat);
+                const total = d10 + statMod + toolBonus - pips;
 
                 let outcome;
                 if (tier === 1) {
-                    // Tier 1: 6+ Success, 4-5 Cost, 1-3 Miss
-                    if (total >= 6) outcome = 'success';
-                    else if (total >= 4) outcome = 'cost';
+                    // Tier 1: 8+ Success, 5-7 Cost, 4- Miss
+                    if (total >= 8) outcome = 'success';
+                    else if (total >= 5) outcome = 'cost';
                     else outcome = 'miss';
                 } else {
-                    // Tier 2: 7+ Success, 5-6 Cost, 1-4 Miss
-                    if (total >= 7) outcome = 'success';
-                    else if (total >= 5) outcome = 'cost';
+                    // Tier 2: 11+ Full Success, 8-10 Minor Cost, 6-7 Major Cost, 5- Failure
+                    if (total >= 11) outcome = 'success';
+                    else if (total >= 8) outcome = 'minor_cost';
+                    else if (total >= 6) outcome = 'major_cost';
                     else outcome = 'miss';
                 }
 
-                return { d10, statMod, pips, total, outcome, stat, tier };
+                return { d10, statMod, pips, toolBonus, total, outcome, stat, tier };
             },
 
 
             // Apply consequences to game state
             async applyConsequences(consequences) {
+                // Handle damage with armor absorption first
+                if (consequences.add_pips) {
+                    const stat = consequences.add_pips.stat;
+                    let damageAmount = consequences.add_pips.amount;
+
+                    // Try to absorb damage with armor first
+                    damageAmount = await InventorySystem.damageArmor(stat, damageAmount);
+
+                    // Apply remaining damage to character pips
+                    if (damageAmount > 0) {
+                        await gameState.transaction(async (state) => {
+                            const character = state.character;
+                            const currentPips = { ...(character.pips || {}) };
+                            currentPips[stat] = Math.min(2, (currentPips[stat] || 0) + damageAmount);
+                            return {
+                                character: {
+                                    ...character,
+                                    pips: currentPips
+                                }
+                            };
+                        });
+                        showToast(`${stat} damage: +${damageAmount} pip${damageAmount > 1 ? 's' : ''}`);
+                    }
+                }
+
+                // Handle XP and currency gains
                 await gameState.transaction(async (state) => {
                     const updates = {};
                     const character = state.character;
@@ -611,18 +838,6 @@
                             currency: newCurrency
                         };
                         showToast(`${consequences.currency_gain > 0 ? '+' : ''}${consequences.currency_gain} Coin`);
-                    }
-
-                    if (consequences.add_pips) {
-                        const currentPips = { ...(character.pips || {}) };
-                        const stat = consequences.add_pips.stat;
-                        const amt = consequences.add_pips.amount;
-                        currentPips[stat] = Math.min(2, (currentPips[stat] || 0) + amt);
-                        updates.character = {
-                            ...(updates.character || character),
-                            pips: currentPips
-                        };
-                        showToast(`${stat} damage: +${amt} pip${amt > 1 ? 's' : ''}`);
                     }
 
                     return updates;
@@ -661,6 +876,7 @@
             },
 
             // Enhanced consequence calculation with Escalation Oracle + Oracle Tables
+            // Tier 1: success/cost/miss | Tier 2: success/minor_cost/major_cost/miss
             getConsequences(rollResult, actionType) {
                 const consequences = {
                     xp_gain: 0,
@@ -668,53 +884,54 @@
                     add_pips: null,
                     escalation: null,
                     twist: null,  // Oracle-generated twist for AI narrative
-                    description: ''
+                    description: '',
+                    stealContext: actionType === 'steal'  // Flag for AI to know stealing occurred
                 };
 
                 if (rollResult.outcome === 'success') {
                     consequences.xp_gain = 1;
-                    // Award coin for successful stealing/pickpocketing/looting
+                    // For steal: AI will determine loot based on context
                     if (actionType === 'steal') {
-                        const loot = Math.floor(Math.random() * 6) + 1; // 1d6 coin
-                        consequences.currency_gain = loot;
-                        consequences.description = `Success! Gained ${loot} coin.`;
+                        consequences.description = 'Success! The AI will describe what was stolen based on the target.';
                     } else {
                         consequences.description = 'Success!';
                     }
-                } else if (rollResult.outcome === 'cost') {
+                } else if (rollResult.outcome === 'cost' || rollResult.outcome === 'minor_cost') {
+                    // Tier 1 cost OR Tier 2 minor cost: Success + minor twist
                     consequences.xp_gain = 1;
-                    // Partial loot on cost for steal (half, rounded down)
+
+                    // Roll minor twist from Oracle
+                    const minorTwist = OracleSystem.rollMinorTwist();
+                    consequences.twist = minorTwist;
+
+                    // For steal on cost: partial success, AI decides reduced loot
                     if (actionType === 'steal') {
-                        const loot = Math.floor((Math.floor(Math.random() * 6) + 1) / 2); // 1d6/2
-                        if (loot > 0) {
-                            consequences.currency_gain = loot;
-                        }
-                    }
-
-                    // Roll Escalation Oracle to determine complication severity
-                    const escalation = this.rollEscalationOracle();
-                    consequences.escalation = escalation;
-
-                    if (escalation.type === 'major_twist') {
-                        // d6 = 6: Roll from Tier 2 Major Twist table
-                        const majorTwist = OracleSystem.rollMajorTwist();
-                        consequences.twist = majorTwist;
-                        consequences.add_pips = { stat: rollResult.stat, amount: 1 };
-                        consequences.description = `Success with major complication (Escalation: ${escalation.d6})`;
+                        consequences.description = `Success with complication! Partial loot - AI describes what was grabbed.`;
                     } else {
-                        // d6 = 1-5: Roll from Tier 1 Minor Twist table
-                        const minorTwist = OracleSystem.rollMinorTwist();
-                        consequences.twist = minorTwist;
+                        consequences.description = `Success with minor complication`;
+                    }
+                } else if (rollResult.outcome === 'major_cost') {
+                    // Tier 2 major cost: Success + major twist + pip damage
+                    consequences.xp_gain = 1;
 
-                        if (rollResult.tier === 2 || actionType === 'combat') {
-                            // Perilous actions always risk injury on cost
-                            consequences.add_pips = { stat: rollResult.stat, amount: 1 };
-                            consequences.description = `Success with injury (Escalation: ${escalation.d6})`;
-                        } else {
-                            consequences.description = `Success with complication (Escalation: ${escalation.d6})`;
-                        }
+                    // Roll major twist from Oracle
+                    const majorTwist = OracleSystem.rollMajorTwist();
+                    consequences.twist = majorTwist;
+
+                    // Major cost always includes pip damage
+                    consequences.add_pips = { stat: rollResult.stat, amount: 1 };
+
+                    if (actionType === 'steal') {
+                        consequences.description = `Success with major complication! Partial loot + injury.`;
+                    } else {
+                        consequences.description = `Success with major complication and injury`;
                     }
                 } else { // miss
+                    // Tier 2 failures still award XP (learning from failure)
+                    if (rollResult.tier === 2) {
+                        consequences.xp_gain = 1;
+                    }
+
                     const severity = (rollResult.tier === 2 || actionType === 'combat') ? 2 : 1;
                     consequences.add_pips = { stat: rollResult.stat, amount: severity };
 
@@ -723,6 +940,11 @@
                     consequences.description = severity >= 2
                         ? `Failure with serious injury: ${flavor}`
                         : `Failure with strain: ${flavor}`;
+
+                    // No loot on miss for steal
+                    if (actionType === 'steal') {
+                        consequences.description += ` (No loot obtained)`;
+                    }
                 }
 
                 return consequences;
@@ -731,10 +953,13 @@
             // Format roll result for display and AI context
             formatRollResult(rollResult) {
                 if (!rollResult) return '';
-                const { d10, stat, statMod, pips, total, outcome, tier } = rollResult;
+                const { d10, stat, statMod, pips, toolBonus, total, outcome, tier } = rollResult;
                 const tierLabel = tier === 2 ? 'Perilous' : 'Challenging';
                 const pipText = pips > 0 ? ` - ${pips}(Pips)` : '';
-                return `Action: ${stat} (Tier ${tier} - ${tierLabel}). Roll: d10(${d10}) + ${statMod}(${stat})${pipText} = ${total}. Result: ${outcome.toUpperCase()}`;
+                const toolText = toolBonus > 0 ? ` + ${toolBonus}(Tool)` : '';
+                const outcomeLabel = outcome === 'minor_cost' ? 'MINOR COST' :
+                                    outcome === 'major_cost' ? 'MAJOR COST' : outcome.toUpperCase();
+                return `Action: ${stat} (Tier ${tier} - ${tierLabel}). Roll: d10(${d10}) + ${statMod}(${stat})${toolText}${pipText} = ${total}. Result: ${outcomeLabel}`;
             }
         };
 
@@ -963,7 +1188,7 @@
         }
 
         async function init() {
-            logBoot("🚀 INIT SEQUENCE v2.2.0 (Oracle Tables + Intent Fix)");
+            logBoot("🚀 INIT SEQUENCE v2.3.0 (Equipment & Inventory System)");
 
             setTimeout(() => {
                 const btn = document.getElementById('force-start-btn');
@@ -1041,6 +1266,18 @@
 
             const btnHeal = safeBind('interlude-heal-btn');
             if (btnHeal) btnHeal.addEventListener('click', () => handleInterludeAction('heal'));
+
+            const btnShop = safeBind('interlude-shop-btn');
+            if (btnShop) btnShop.addEventListener('click', () => openXPShop());
+
+            const btnRepair = safeBind('interlude-repair-btn');
+            if (btnRepair) btnRepair.addEventListener('click', () => handleInterludeAction('repair_armor'));
+
+            const btnShopClose = safeBind('xp-shop-close-btn');
+            if (btnShopClose) btnShopClose.addEventListener('click', () => {
+                const modal = document.getElementById('xp-shop-modal');
+                if (modal) modal.style.display = 'none';
+            });
 
             const btnEnd = safeBind('interlude-end-btn');
             if (btnEnd) btnEnd.addEventListener('click', () => handleInterludeAction('end_interlude'));
@@ -1246,22 +1483,43 @@
             }).join('');
             
             const equipHtml = (data.equipment || []).map(i => {
-                const safeProperties = (i.properties || []).filter(p => p);
-                const badges = safeProperties.map(p => {
-                    if (typeof p !== 'string') return '';
-                    const type = p.toLowerCase().includes('heavy') ? 'heavy' :
-                                 p.toLowerCase().includes('silver') || p.toLowerCase().includes('gold') || p.toLowerCase().includes('precious') ? 'precious' :
-                                 p.toLowerCase().includes('consumable') ? 'consumable' :
-                                 p.toLowerCase().includes('fragile') || p.toLowerCase().includes('shabby') ? 'fragile' : '';
-                    return `<span class="equip-tag ${type}">${p}</span>`;
-                }).join(' ');
-
                 const safeName = (i.name || 'Unknown Item').replace(/'/g, "&apos;");
-                const loreContent = (i.lore || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n');
+                const loreContent = (i.lore || i.desc || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n');
+
+                // Build special display for tools and armor
+                let specialBadge = '';
+                if (i.type === 'tool' && i.stat) {
+                    // Tool: show "+1 STAT" badge
+                    specialBadge = `<span class="equip-tag text-emerald-400 border border-emerald-600 bg-emerald-900/30">+1 ${i.stat.substring(0,3)}</span>`;
+                } else if (i.type === 'armor' && i.stat) {
+                    // Armor: show pip meter
+                    const currentPips = i.pips || 0;
+                    const maxPips = i.max_pips || 2;
+                    const pipDisplay = '●'.repeat(currentPips) + '○'.repeat(maxPips - currentPips);
+                    const pipColor = currentPips === maxPips ? 'text-blue-400' :
+                                    currentPips === 0 ? 'text-red-400' : 'text-yellow-400';
+                    specialBadge = `<span class="equip-tag ${pipColor} border border-gray-600">${pipDisplay}</span>`;
+                } else {
+                    // Regular items: show property badges
+                    const safeProperties = (i.properties || []).filter(p => p);
+                    specialBadge = safeProperties.map(p => {
+                        if (typeof p !== 'string') return '';
+                        const type = p.toLowerCase().includes('heavy') ? 'heavy' :
+                                     p.toLowerCase().includes('silver') || p.toLowerCase().includes('gold') || p.toLowerCase().includes('precious') ? 'precious' :
+                                     p.toLowerCase().includes('consumable') ? 'consumable' :
+                                     p.toLowerCase().includes('fragile') || p.toLowerCase().includes('shabby') ? 'fragile' : '';
+                        return `<span class="equip-tag ${type}">${p}</span>`;
+                    }).join(' ');
+                }
+
+                // Type badge
+                const typeBadge = i.type && i.type !== 'loot'
+                    ? `<span class="text-xs px-1 rounded ${i.type === 'tool' ? 'bg-emerald-900 text-emerald-300' : i.type === 'armor' ? 'bg-blue-900 text-blue-300' : 'bg-gray-700 text-gray-400'}">${i.type}</span>`
+                    : '';
 
                 return `<li class="text-sm text-gray-300 py-2 border-b border-gray-800 cursor-pointer hover:text-emerald-400 flex justify-between items-center" onclick="updateDescription('${safeName}', '', 'item', '${loreContent}')">
-                    <span>${i.name}</span>
-                    <div class="text-right">${badges}</div>
+                    <span class="flex items-center gap-2">${typeBadge}${i.name}</span>
+                    <div class="text-right">${specialBadge}</div>
                 </li>`;
             }).join('');
 
@@ -1584,7 +1842,11 @@ Name: ${character.name}
 Calling: ${character.playbook?.calling} / Burden: ${character.playbook?.burden}
 Stats: FOR ${character.stats.FORCE}, FIN ${character.stats.FINESSE}, INF ${character.stats.INFLUENCE}, WIT ${character.stats.WITS}, RES ${character.stats.RESOLVE}
 Injuries: ${pipContext}
-Equipment: ${(character.equipment||[]).map(e=>e.name).join(', ')}
+Equipment: ${(character.equipment||[]).map(e => {
+    if (e.type === 'tool') return `${e.name} (+1 ${e.stat})`;
+    if (e.type === 'armor') return `${e.name} (${e.pips || 0}/${e.max_pips || 2} ${e.stat} armor)`;
+    return e.name;
+}).join(', ')}
 Coin: ${character.currency}
 XP: ${character.xp || 0}
 
@@ -1628,6 +1890,20 @@ ${shouldSuggestDowntime ? `DOWNTIME HINT: The player has been active for ${adven
 - Reference the character's Tags when relevant to create callbacks
 - NEVER mention game mechanics explicitly (no "XP", "pips", "dice")
 - Describe injuries as wounds, exhaustion, strain - not as "pips"
+
+*** STEALING GUIDANCE ***
+When the player successfully steals (action type 'steal'), you MUST determine what was stolen based on context:
+- Pickpocketing commoners: coin purse (1-3 coin), trinkets, bread
+- Pickpocketing merchants: coin pouch (2-6 coin), keys, receipts, small tools
+- Pickpocketing nobles: valuable jewelry (5-10 coin value), sealed letters, signet rings
+- Looting bodies: weapons, armor pieces, coin, evidence, personal effects
+- Burglary/theft from locations: tools, documents, valuables, supplies
+
+For SUCCESS: Award full loot. Include "currency_gain: X" in your structured response (X = 1-6 depending on target).
+For COST/PARTIAL: Award reduced loot. Include "currency_gain: X" (X = 1-3) or a lesser item.
+For MISS: No loot is obtained. Narrate the failure and consequences.
+
+You can also add interesting narrative items with: equipment_add: [{name: "Item Name", type: "loot", tags: ["tag1"], desc: "Description"}]
 
 *** COMPLICATION GUIDANCE ***
 If a "COMPLICATION TO NARRATE" is provided in the mechanical result:
@@ -1884,6 +2160,85 @@ If a "COMPLICATION TO NARRATE" is provided in the mechanical result:
             }
         }
 
+        // ===== XP SHOP SYSTEM =====
+
+        function openXPShop() {
+            const state = gameState.getState();
+            const character = state.character;
+
+            if ((character.xp || 0) < 5) {
+                return window.showError("Insufficient XP", "You need 5 XP to browse the equipment shop.");
+            }
+
+            const items = InventorySystem.getAvailableShopItems(3);
+            const container = document.getElementById('xp-shop-items');
+
+            if (items.length === 0) {
+                container.innerHTML = '<p class="text-gray-400 text-center py-4">You already own all available equipment!</p>';
+            } else {
+                container.innerHTML = items.map((item, idx) => {
+                    const typeColor = item.type === 'tool' ? 'text-emerald-400' : 'text-blue-400';
+                    const statBadge = item.stat ? `<span class="${typeColor}">${item.stat}</span>` : '';
+                    const bonusText = item.type === 'tool' ? `+${item.bonus || 1} bonus` : `${item.max_pips || 2} armor pips`;
+
+                    return `
+                        <div class="bg-gray-900 border border-gray-700 rounded-lg p-3 hover:border-amber-600 transition">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <span class="font-bold text-white">${item.name}</span>
+                                    <span class="text-xs ml-2 px-1 rounded ${item.type === 'tool' ? 'bg-emerald-900 text-emerald-300' : 'bg-blue-900 text-blue-300'}">${item.type}</span>
+                                </div>
+                                <span class="text-amber-400 font-bold">${item.cost_xp} XP</span>
+                            </div>
+                            <p class="text-gray-400 text-sm mb-2">${item.desc}</p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs text-gray-500">${statBadge} ${bonusText}</span>
+                                <button onclick="purchaseFromShop(${idx})" class="px-3 py-1 bg-amber-700 text-white text-sm rounded hover:bg-amber-600 transition">
+                                    Purchase
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Store available items for purchase reference
+            window._shopItems = items;
+
+            // Show the modal
+            const modal = document.getElementById('xp-shop-modal');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        async function purchaseFromShop(index) {
+            const items = window._shopItems || [];
+            const item = items[index];
+            if (!item) return;
+
+            const state = gameState.getState();
+            const character = state.character;
+
+            if ((character.xp || 0) < item.cost_xp) {
+                return window.showError("Insufficient XP", `You need ${item.cost_xp} XP to purchase this item.`);
+            }
+
+            // Deduct XP
+            await gameState.transaction(async (s) => ({
+                character: { ...s.character, xp: s.character.xp - item.cost_xp }
+            }));
+            showToast(`-${item.cost_xp} XP`);
+
+            // Add item to inventory
+            await InventorySystem.addItem(item);
+
+            // Add narrative message
+            await addMessageToChat('model', `You spend ${item.cost_xp} XP at a skilled craftsman's workshop. After careful negotiation, you acquire **${item.name}** - ${item.desc.toLowerCase()}`);
+
+            // Close the shop and refresh it (in case they want to buy more)
+            const modal = document.getElementById('xp-shop-modal');
+            if (modal) modal.style.display = 'none';
+        }
+
         async function handleInterludeAction(actionType) {
             const state = gameState.getState();
             const character = state.character;
@@ -1894,6 +2249,7 @@ If a "COMPLICATION TO NARRATE" is provided in the mechanical result:
                 acquire_asset: { costType: 'xp', cost: 1, label: 'Acquire an Asset' },
                 reflect: { costType: 'xp', cost: 1, label: 'Reflect & Integrate' },
                 heal: { costType: 'coin', cost: 3, label: 'Rest & Recover' },
+                repair_armor: { costType: 'none', cost: 0, label: 'Repair Armor' },
                 end_interlude: { costType: 'none', cost: 0, label: 'Return to Adventure' }
             };
 
@@ -1913,6 +2269,16 @@ If a "COMPLICATION TO NARRATE" is provided in the mechanical result:
                 const hasPips = Object.values(character.pips || {}).some(p => p > 0);
                 if (!hasPips) {
                     return window.showError("No Damage", "You have no injuries to heal.");
+                }
+            }
+
+            // For repair armor, check if there's armor to repair
+            if (actionType === 'repair_armor') {
+                const hasArmorToRepair = (character.equipment || []).some(
+                    e => e.type === 'armor' && (e.pips || 0) < (e.max_pips || 2)
+                );
+                if (!hasArmorToRepair) {
+                    return window.showError("No Repairs Needed", "All your armor is already at full protection.");
                 }
             }
 
@@ -1959,6 +2325,11 @@ If a "COMPLICATION TO NARRATE" is provided in the mechanical result:
                         showToast(`${stat} healed: -1 pip`);
                         await addMessageToChat('model', `You rest and tend to your wounds. Your ${stat} injury begins to mend, the pain slowly fading as you recover.`);
                     }
+
+                } else if (actionType === 'repair_armor') {
+                    // Repair all armor during downtime
+                    await InventorySystem.repairAllArmor();
+                    await addMessageToChat('model', `You spend time carefully maintaining your equipment. Dented plates are hammered smooth, torn padding is replaced, and worn straps are reinforced. Your armor is restored to full protection.`);
 
                 } else if (actionType === 'end_interlude') {
                     // Execute World Turn - advance all faction clocks
