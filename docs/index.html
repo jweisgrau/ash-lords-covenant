@@ -1133,10 +1133,14 @@ You MUST respond with valid JSON in this exact structure:
 
                     const data = await response.json();
 
+                    // Log full response for debugging
+                    console.log("Gemini API response:", JSON.stringify(data, null, 2));
+
                     // Extract JSON from Gemini response
                     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
                     if (!text) {
-                        throw new Error("Gemini did not return text");
+                        console.error("Full API response:", data);
+                        throw new Error("Gemini did not return text. Check console for full response.");
                     }
 
                     // Parse JSON (Gemini should return clean JSON with responseMimeType)
