@@ -1031,6 +1031,9 @@ ${mathContext}
 2. PIP PENALTIES:
    - Roll formula: d10 + STAT - PIPS
    - Example: FORCE +2 with 1 Pip = d10(${virtualD10}) + 2 - 1 = total
+   - **ONLY subtract pips that are LISTED ABOVE in "PIPS (DAMAGE)"**
+   - **If "PIPS (DAMAGE): None" then subtract ZERO - no penalties exist**
+   - **NEVER invent or assume injuries that aren't listed**
 
 3. WHEN TO ROLL:
    - **NO ROLL needed for:**
@@ -1118,7 +1121,8 @@ You MUST respond with valid JSON in this exact structure:
 - amount for pips must be 1 or 2 only
 - currency_gain can be negative for payments (use ONLY this for spending money)
 - remove_pips should ONLY be used when player is being healed, NOT when just giving/spending coin
-- If player gives coin as tip/bribe/gift: use currency_gain: -X, leave remove_pips empty`;
+- If player gives coin as tip/bribe/gift: use currency_gain: -X, leave remove_pips empty
+- **In mechanics text: ONLY subtract pips if listed in PIPS (DAMAGE) above - if "None", pips penalty is 0**`;
 
             // Build Gemini payload
             const payload = {
