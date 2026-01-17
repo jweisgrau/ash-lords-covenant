@@ -1,0 +1,2770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital RPG: Ash-Lord's Covenant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=IM+Fell+English+SC&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Reset and base styles */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        /* Utility classes to replace Tailwind */
+        .container { width: 100%; margin: 0 auto; }
+        .mx-auto { margin-left: auto; margin-right: auto; }
+        .max-w-7xl { max-width: 80rem; }
+        .max-w-3xl { max-width: 48rem; }
+        .p-4 { padding: 1rem; }
+        .p-3 { padding: 0.75rem; }
+        .p-2 { padding: 0.5rem; }
+        .p-6 { padding: 1.5rem; }
+        .px-4 { padding-left: 1rem; padding-right: 1rem; }
+        .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+        .px-2\.5 { padding-left: 0.625rem; padding-right: 0.625rem; }
+        .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+        .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+        .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .mb-3 { margin-bottom: 0.75rem; }
+        .mb-6 { margin-bottom: 1.5rem; }
+        .mb-1 { margin-bottom: 0.25rem; }
+        .mt-4 { margin-top: 1rem; }
+        .mt-3 { margin-top: 0.75rem; }
+        .mt-2 { margin-top: 0.5rem; }
+        .mt-6 { margin-top: 1.5rem; }
+        .mr-2 { margin-right: 0.5rem; }
+        .ml-4 { margin-left: 1rem; }
+        .w-full { width: 100%; }
+        .w-6 { width: 1.5rem; }
+        .h-6 { height: 1.5rem; }
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .flex-grow { flex-grow: 1; }
+        .flex-wrap { flex-wrap: wrap; }
+        .grid { display: grid; }
+        .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+        .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+        .gap-4 { gap: 1rem; }
+        .gap-3 { gap: 0.75rem; }
+        .gap-2 { gap: 0.5rem; }
+        .gap-1 { gap: 0.25rem; }
+        .space-y-4 > * + * { margin-top: 1rem; }
+        .space-y-3 > * + * { margin-top: 0.75rem; }
+        .space-y-1 > * + * { margin-top: 0.25rem; }
+        .space-x-4 > * + * { margin-left: 1rem; }
+        .rounded-lg { border-radius: 0.5rem; }
+        .rounded-full { border-radius: 9999px; }
+        .rounded { border-radius: 0.25rem; }
+        .border { border-width: 1px; }
+        .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+        .shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .overflow-y-auto { overflow-y: auto; }
+        .overflow-hidden { overflow: hidden; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .justify-center { justify-content: center; }
+        .text-center { text-align: center; }
+        .text-left { text-align: left; }
+        .text-right { text-align: right; }
+        .text-xs { font-size: 0.75rem; line-height: 1rem; }
+        .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+        .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+        .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+        .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+        .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+        .text-md { font-size: 1rem; line-height: 1.5rem; }
+        .font-bold { font-weight: 700; }
+        .font-semibold { font-weight: 600; }
+        .font-medium { font-weight: 500; }
+        .uppercase { text-transform: uppercase; }
+        .italic { font-style: italic; }
+        .block { display: block; }
+        .inline { display: inline; }
+        .hidden { display: none; }
+        .fixed { position: fixed; }
+        .absolute { position: absolute; }
+        .relative { position: relative; }
+        .top-0 { top: 0; }
+        .left-0 { left: 0; }
+        .cursor-pointer { cursor: pointer; }
+        .cursor-help { cursor: help; }
+        .transition { transition-property: all; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
+        .antialiased { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        .list-disc { list-style-type: disc; }
+        .list-inside { list-style-position: inside; }
+        .col-span-1 { grid-column: span 1 / span 1; }
+        .col-span-2 { grid-column: span 2 / span 2; }
+        button { cursor: pointer; border: none; }
+        input:focus, textarea:focus { outline: none; }
+        @media (min-width: 640px) {
+            .sm\:flex-row { flex-direction: row; }
+            .sm\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (min-width: 768px) {
+            .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (min-width: 1024px) {
+            .lg\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .lg\:col-span-1 { grid-column: span 1 / span 1; }
+            .lg\:col-span-2 { grid-column: span 2 / span 2; }
+        }
+        .h-\[80vh\] { height: 80vh; }
+        kbd { padding: 0 0.25rem; background-color: var(--c-shadow-silt); border-radius: 0.25rem; font-family: monospace; }
+        
+        :root {
+            --c-void-slate: #1B1F23;
+            --c-bone-white: #E3DAC9;
+            --c-shadow-silt: #4A4441;
+            --c-oxidized-copper: #4E6E5D;
+            --c-dried-cinnabar: #8A3324;
+            --c-alchemical-gold: #C5A059;
+            --f-header: 'IM Fell English SC', serif;
+            --f-subheader: 'Cinzel', serif;
+            --f-body: 'Crimson Text', serif;
+            --f-data: 'Lato', sans-serif;
+        }
+        body {
+            font-family: var(--f-body);
+            background-color: var(--c-void-slate);
+            color: var(--c-bone-white);
+            font-size: 1.1rem;
+        }
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABWKLW/AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAB5JREFUeNpiZGBg6GDEwMAAxAAGJM0MmAACDAA1PQHwPWeoXwAAAABJRU5ErkJggg==);
+            opacity: 0.1;
+            pointer-events: none;
+            z-index: 100;
+        }
+        h1 { 
+            font-family: var(--f-header); 
+            color: var(--c-alchemical-gold); 
+            font-size: 2.5rem;
+            line-height: 1.1;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+        }
+        @media (max-width: 640px) {
+            h1 { font-size: 1.75rem; }
+        }
+        h2, h3, h4 { 
+            font-family: var(--f-subheader); 
+            letter-spacing: 0.1em; 
+            text-transform: uppercase;
+        }
+        strong {
+            font-weight: 700;
+            color: var(--c-bone-white);
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.2);
+        }
+        .game-term {
+            font-weight: 700;
+            color: var(--c-alchemical-gold) !important;
+        }
+        p, label, span, div { font-family: var(--f-body); }
+        .font-mono {
+            font-family: var(--f-data);
+            font-size: 0.8rem;
+        }
+        .bg-gray-800 { background-color: var(--c-void-slate) !important; }
+        .bg-gray-900 { background-color: #111 !important; }
+        .bg-gray-700 { background-color: var(--c-shadow-silt) !important; }
+        .border-gray-700 { border: 2px double rgba(227, 218, 201, 0.3) !important; }
+        .border-b.border-gray-700 {
+            border-bottom: 2px double rgba(227, 218, 201, 0.3) !important;
+            border-top: 0 !important;
+            border-left: 0 !important;
+            border-right: 0 !important;
+        }
+        input.border-gray-700 { border: 1px solid rgba(227, 218, 201, 0.3) !important; }
+        .focus\:ring-emerald-500:focus { --tw-ring-color: var(--c-alchemical-gold) !important; }
+        .text-white { color: var(--c-bone-white) !important; }
+        .text-gray-300 { color: var(--c-bone-white) !important; }
+        .text-gray-400 { color: rgba(227, 218, 201, 0.7) !important; }
+        .text-gray-500 { color: rgba(227, 218, 201, 0.5) !important; }
+        .placeholder-gray-500::placeholder { color: rgba(227, 218, 201, 0.5) !important; }
+        .text-gray-200 { color: var(--c-bone-white) !important; }
+        .text-emerald-400 { color: var(--c-alchemical-gold) !important; }
+        .text-indigo-300 { color: var(--c-dried-cinnabar) !important; }
+        .text-green-400 { color: var(--c-alchemical-gold) !important; }
+        .text-red-400 { color: var(--c-dried-cinnabar) !important; }
+        .text-emerald-100 { color: var(--c-bone-white) !important; }
+        .bg-red-700:hover {
+            background-color: var(--c-dried-cinnabar) !important; 
+            color: var(--c-bone-white) !important; 
+        }
+        .bg-emerald-700 {
+            background-color: var(--c-alchemical-gold) !important; 
+            color: var(--c-void-slate) !important; 
+            font-family: var(--f-subheader);
+            font-weight: 700;
+            border: 1px solid rgba(227, 218, 201, 0.5);
+        }
+        .bg-emerald-700:hover { background-color: #e0b968 !important; }
+        .bg-emerald-600 {
+            background-color: var(--c-alchemical-gold) !important; 
+            color: var(--c-void-slate) !important; 
+            font-family: var(--f-subheader);
+            font-weight: 700;
+        }
+        .bg-emerald-600:hover { background-color: #e0b968 !important; }
+        .interlude-button {
+            background-color: var(--c-shadow-silt);
+            border: 1px solid rgba(227, 218, 201, 0.3);
+            color: var(--c-bone-white);
+            font-family: var(--f-subheader);
+            font-weight: 700;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+        }
+        .interlude-button:hover {
+            background-color: var(--c-oxidized-copper);
+            border-color: rgba(227, 218, 201, 0.5);
+        }
+        .interlude-button.end-interlude { background-color: var(--c-dried-cinnabar); }
+        .interlude-button.end-interlude:hover { background-color: #a64230; }
+        .spinner {
+            border: 4px solid var(--c-shadow-silt);
+            border-top: 4px solid var(--c-alchemical-gold);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .narrative-bubble-model { 
+            background-color: #2a2624;
+            border: 1px solid var(--c-shadow-silt);
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 1.15rem;
+        }
+        .narrative-bubble-user { 
+            background-color: var(--c-oxidized-copper); 
+            color: var(--c-bone-white); 
+            border: 1px solid rgba(227, 218, 201, 0.4);
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 1.15rem;
+        }
+        .playbook-card { 
+            background-color: var(--c-shadow-silt); 
+            border: 1px solid rgba(227, 218, 201, 0.2);
+            transition: all 0.2s ease;
+        }
+        .playbook-card:hover {
+            border-color: rgba(227, 218, 201, 0.5);
+        }
+        .playbook-card.selected { 
+            border-color: var(--c-alchemical-gold) !important; 
+            box-shadow: 0 0 15px rgba(197, 160, 89, 0.3);
+            transform: translateY(-2px);
+        }
+        .stat-block, .talent-block { 
+            background-color: var(--c-shadow-silt); 
+            border: 1px solid rgba(227, 218, 201, 0.2);
+            font-family: var(--f-data);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .stat-block:hover, .talent-block:hover {
+            border-color: rgba(227, 218, 201, 0.5);
+            transform: translateY(-1px);
+        }
+        .talent-block {
+            font-family: var(--f-subheader); 
+            font-weight: 700;
+        }
+        .stat-block .text-xs {
+             font-family: var(--f-subheader);
+             letter-spacing: 0.1em;
+        }
+        #description-display { 
+            background-color: #0c0e10;
+            border: 1px solid rgba(227, 218, 201, 0.2); 
+            font-family: var(--f-body);
+        }
+        #error-modal {
+            display: none;
+            position: fixed;
+            top: 0; 
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 200;
+            padding-top: 10vh;
+        }
+        .modal-content { 
+            background-color: var(--c-void-slate); 
+            border: 2px double rgba(227, 218, 201, 0.3);
+            margin: 0 auto; 
+            max-width: 500px;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        #accordion-icon { transition: transform 0.3s ease; }
+        .accordion-closed #accordion-icon { transform: rotate(-90deg); }
+        #character-sheet-content {
+            transition: max-height 0.3s ease-out;
+            overflow: hidden;
+            max-height: 2000px;
+        }
+        .accordion-closed #character-sheet-content { max-height: 0; }
+        #character-creation-ui, #main-game-ui { display: none; }
+        
+        .tooltip {
+            position: relative;
+            cursor: help;
+        }
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 200px;
+            background-color: var(--c-shadow-silt);
+            color: var(--c-bone-white);
+            text-align: left;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 150;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.85rem;
+            border: 1px solid rgba(227, 218, 201, 0.3);
+            pointer-events: none;
+        }
+        .tooltip .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: var(--c-shadow-silt) transparent transparent transparent;
+        }
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: var(--c-alchemical-gold);
+            color: var(--c-void-slate);
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 300;
+            font-family: var(--f-subheader);
+            font-weight: 700;
+            animation: slideIn 0.3s ease-out, slideOut 0.3s ease-in 2.7s;
+            animation-fill-mode: forwards;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+        
+        #world-clocks-wrapper { background-color: var(--c-void-slate) !important; }
+        .clock {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .clock-face {
+            width: 100px;
+            height: 100px;
+            border: 2px solid var(--c-shadow-silt);
+            border-radius: 50%;
+            position: relative;
+            background-color: #111;
+            transition: all 0.3s ease;
+        }
+        .clock-face.near-full {
+            animation: pulse-danger 2s ease-in-out infinite;
+            border-color: var(--c-dried-cinnabar);
+        }
+        @keyframes pulse-danger {
+            0%, 100% { 
+                box-shadow: 0 0 5px rgba(138, 51, 36, 0.3);
+            }
+            50% { 
+                box-shadow: 0 0 20px rgba(138, 51, 36, 0.8);
+            }
+        }
+        .clock-segment {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            clip-path: polygon(50% 50%, 50% 0, 100% 0, 100% 50%);
+            transform-origin: 50% 50%;
+        }
+        .clock-segment.filled {
+            background-color: var(--c-dried-cinnabar);
+        }
+        .clock-name {
+            font-family: var(--f-subheader);
+            font-size: 0.9rem;
+            color: var(--c-bone-white);
+            text-align: center;
+            margin-top: 0.5rem;
+            max-width: 150px;
+        }
+        
+        @media (max-width: 1024px) {
+            .grid.grid-cols-1.lg\:grid-cols-3 {
+                grid-template-columns: 1fr !important;
+            }
+            .lg\:col-span-2 {
+                grid-column: span 1 !important;
+            }
+            #character-sheet-wrapper, #world-clocks-wrapper {
+                margin-bottom: 1rem;
+            }
+            .h-\[80vh\] {
+                height: 50vh !important;
+            }
+        }
+        @media (max-width: 640px) {
+            .playbook-card {
+                font-size: 0.9rem;
+            }
+            .grid-cols-5 {
+                grid-template-columns: repeat(3, 1fr) !important;
+            }
+            .grid-cols-1.sm\:grid-cols-2 {
+                grid-template-columns: 1fr !important;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div id="loading-overlay" class="flex fixed top-0 left-0 w-screen h-screen bg-black/80 z-[199] justify-center items-center" style="z-index: 199; background-color: rgba(0,0,0,0.8); width: 100vw; height: 100vh;">
+        <div class="spinner"></div>
+        <span id="loading-text" class="ml-4 text-lg text-gray-300"></span>
+    </div>
+
+    <div id="error-modal">
+        <div class="modal-content">
+            <h2 id="error-title" class="text-xl font-bold text-red-400 mb-4">Error</h2>
+            <p id="error-message" class="text-gray-300 mb-6">Something went wrong.</p>
+            <button id="close-modal-btn" class="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition">
+                OK
+            </button>
+        </div>
+    </div>
+
+    <div class="container mx-auto max-w-7xl p-4">
+        <header class="mb-4 p-4 bg-gray-800 rounded-lg border border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-white">Ash-Lord's Covenant</h1>
+                <p class="text-sm text-gray-400">Digital RPG Prototype (Build v0.4)</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div id="auth-status" class="text-right">
+                    <p class="text-sm font-medium text-gray-400">Auth Status:</p>
+                    <p class="text-xs text-gray-500 font-mono">Loading...</p>
+                </div>
+                <button id="reset-game-btn" class="px-3 py-2 bg-gray-700 text-xs text-gray-300 rounded-lg hover:bg-red-700 hover:text-white transition">
+                    Reset Game
+                </button>
+            </div>
+        </header>
+
+        <div id="character-creation-ui">
+            <div class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-6 max-w-3xl mx-auto">
+                <h2 class="text-3xl font-bold text-white mb-2">Create Your Character</h2>
+                <p class="text-gray-400 mb-6">Every hero in this cursed world is defined by what they do (their Calling) and what haunts them (their Burden).</p>
+                
+                <div class="mb-4">
+                    <label for="character-name" class="block text-sm font-medium text-gray-300 mb-1">What is your name?</label>
+                    <input type="text" id="character-name" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h3 class="text-xl font-semibold text-emerald-400 mb-3">Choose a Calling</h3>
+                        <div id="calling-options" class="space-y-3"></div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-indigo-300 mb-3">Choose a Burden</h3>
+                        <div id="burden-options" class="space-y-3"></div>
+                        
+                        <div id="burden-detail-input-wrapper" class="mt-3" style="display: none;">
+                            <label for="burden-detail-input" id="burden-detail-label" class="block text-sm font-medium text-gray-300 mb-1">Define your Burden:</label>
+                            <input type="text" id="burden-detail-input" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                    </div>
+                </div>
+
+                <button id="create-character-btn" class="w-full mt-6 px-4 py-3 bg-emerald-700 text-white rounded-lg font-bold hover:bg-emerald-800 shadow-md">
+                    Begin Your Story
+                </button>
+            </div>
+        </div>
+
+        <div id="main-game-ui">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div class="lg:col-span-1 space-y-4">
+                    <div id="character-sheet-wrapper" class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg">
+                        <div id="character-sheet-header" class="flex justify-between items-center p-4 border-b border-gray-700 cursor-pointer">
+                            <h2 class="text-xl font-semibold text-white">Character Sheet</h2>
+                            <svg id="accordion-icon" class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                        <div id="character-sheet-content" class="p-4 space-y-4">
+                            <p id="character-sheet-loading" class="text-gray-400 italic">Loading character data...</p>
+                            <div id="character-sheet-data"></div>
+                        </div>
+                    </div>
+
+                    <div id="world-clocks-wrapper" class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4">
+                         <h2 class="text-xl font-semibold text-white mb-4">World Clocks</h2>
+                         <div id="world-clocks-container" class="grid grid-cols-2 gap-4">
+                             <p id="world-clocks-loading" class="text-gray-400 italic col-span-2">Loading world state...</p>
+                         </div>
+                    </div>
+
+                    <div id="quest-progress-wrapper" class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4" style="display: none;">
+                        <h2 class="text-xl font-semibold text-emerald-400 mb-2">Active Quest</h2>
+                        <div id="quest-progress-content">
+                            <p id="quest-title" class="font-bold text-white text-lg mb-1"></p>
+                            <p id="quest-chapter" class="text-sm text-gray-400 mb-2"></p>
+                            <div class="bg-gray-900 rounded p-2">
+                                <div class="flex justify-between text-xs text-gray-400 mb-1">
+                                    <span>Progress</span>
+                                    <span id="quest-progress-text">0/0</span>
+                                </div>
+                                <div class="w-full bg-gray-700 rounded-full h-2">
+                                    <div id="quest-progress-bar" class="bg-emerald-600 h-2 rounded-full transition-all" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <p id="quest-xp-earned" class="text-xs text-gray-400 mt-2"></p>
+                        </div>
+                    </div>
+
+                    <div id="destiny-clock-wrapper" class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4">
+                        <h2 class="text-xl font-semibold text-emerald-400 mb-2">Path to Legend</h2>
+                        <div class="clock">
+                            <div class="clock-face" id="destiny-clock-face" style="border-color: var(--c-alchemical-gold);">
+                                <!-- Segments generated dynamically -->
+                            </div>
+                            <p id="destiny-narrative" class="text-sm text-gray-300 text-center mt-2 italic">Your destiny awaits...</p>
+                        </div>
+                    </div>
+
+                    <div id="endgame-front-wrapper" class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4">
+                        <h2 class="text-xl font-semibold text-red-400 mb-2">The Threat Looms</h2>
+                        <div class="clock">
+                            <div class="clock-face near-full" id="endgame-front-clock-face">
+                                <!-- Segments generated dynamically -->
+                            </div>
+                            <span id="endgame-front-name" class="clock-name">Unknown Threat</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2 flex flex-col h-[80vh]">
+                    <div class="flex-grow bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4 overflow-y-auto" id="narrative-log"></div>
+
+                    <div id="interaction-panel" class="mt-4 bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4">
+                        <div id="chapter-phase-ui">
+                            <textarea id="player-input" 
+                                      class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500" 
+                                      rows="3" 
+                                      placeholder="Describe your character's action..."></textarea>
+                            
+                            <button id="submit-action-btn" class="w-full mt-3 px-4 py-3 bg-emerald-700 text-white rounded-lg font-bold hover:bg-emerald-800 shadow-md">
+                                Submit Action
+                            </button>
+                            
+                            <p class="text-xs text-gray-500 text-center mt-2">Press <kbd class="px-1 bg-gray-700 rounded">Enter</kbd> to submit (Shift+Enter for new line)</p>
+                        </div>
+                        
+                        <div id="interlude-phase-ui" class="hidden">
+                            <p class="text-lg text-gray-300 mb-4">You have a moment for an Interlude. What is your priority?</p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <button id="interlude-train-btn" class="interlude-button">Seek Training (1 XP)</button>
+                                <button id="interlude-asset-btn" class="interlude-button">Acquire an Asset (1 XP)</button>
+                                <button id="interlude-reflect-btn" class="interlude-button">Reflect & Integrate (1 XP)</button>
+                                <button id="interlude-end-btn" class="interlude-button end-interlude">End Interlude</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<script type="module">
+        console.log("ðŸš€ SCRIPT TAG IS EXECUTING!");
+        
+        const appId = 'rpg-prototype-ca0b2';
+        const firebaseConfigStr = JSON.stringify({
+            apiKey: "AIzaSyAeHZIk7gc0oSWdv_PddXhhoWpx2Mu8BC4",
+            authDomain: "rpg-prototype-ca0b2.firebaseapp.com",
+            projectId: "rpg-prototype-ca0b2",
+            storageBucket: "rpg-prototype-ca0b2.firebasestorage.app",
+            messagingSenderId: "4118036014",
+            appId: "1:4118036014:web:2d9e4ee696120c8bfde9bf",
+            measurementId: "G-219NSHTPY9"
+        });
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : undefined;
+        
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, addDoc, setLogLevel, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        let db, auth;
+        let userId = null;
+        let currentCampaignId = "ashlords_covenant_main_v1";
+        let currentCharacterId = null;
+        let currentCharacterData = null; 
+        let currentChatHistory = [];
+        let currentGameState = null;
+
+        let authStatusEl, narrativeLogEl, playerInputEl, characterSheetWrapperEl;
+        let characterSheetHeaderEl, characterSheetContentEl, characterSheetDataEl;
+        let characterSheetLoadingEl, loadingOverlayEl, errorModalEl, errorMessageEl, errorTitleEl;
+        let mainGameUiEl, charCreationUiEl, callingOptionsEl, burdenOptionsEl, charNameEl;
+        let burdenDetailWrapperEl, burdenDetailLabelEl, burdenDetailInputEl;
+        let loadingTextEl, chapterPhaseUiEl, interludePhaseUiEl;
+        let worldClocksContainerEl, worldClocksLoadingEl;
+
+        const CONTENT_PACK_ASHLORDS = {
+            talent_mechanics: {
+                "battle_born": {
+                    type: "passive",
+                    trigger: "charging_into_fight",
+                    effect: "act_first_and_ignore_one_hit",
+                    tier_modification: "reduce_combat_tier_by_1"
+                },
+                "vicious_strike": {
+                    type: "conditional",
+                    trigger: "attacking_unaware_or_vulnerable_target",
+                    effect: "exceptionally_brutal_damage",
+                    tags_add: ["Vicious Reputation"]
+                },
+                "i_know_your_kind": {
+                    type: "passive",
+                    trigger: "first_meeting_high_status_npc",
+                    effect: "learn_leverage_automatically",
+                    mechanical_note: "AI must reveal a secret or weakness"
+                },
+                "hunted_your_kind": {
+                    type: "conditional",
+                    trigger: "first_encounter_supernatural_threat",
+                    effect: "recall_useful_information",
+                    tier_modification: "reduce_tier_by_1_for_this_creature_type"
+                },
+                "unleash": {
+                    type: "active_choice",
+                    trigger: "player_declares_unleashing_power",
+                    effect: "achieve_goal_with_collateral_damage",
+                    mandatory_consequence: "collateral_damage_to_surroundings_or_allies"
+                },
+                "shadows_move": {
+                    type: "failure_triggered",
+                    trigger: "any_failure_roll",
+                    effect: "shadow_makes_move",
+                    options: ["isolate_from_allies", "speak_deepest_fears", "offer_dark_bargain"]
+                },
+                "speak_the_name": {
+                    type: "active_choice",
+                    trigger: "learned_true_name",
+                    effect: "compel_target_one_command_or_question",
+                    cost: "target_learns_piece_of_your_name"
+                },
+                "balance_track": {
+                    type: "triggered",
+                    trigger: "acting_on_core_principles",
+                    effect: "draw_strength_from_convictions",
+                    risk: "if_lean_too_far_trigger_major_complication"
+                },
+                "letter_of_the_law": {
+                    type: "active_choice",
+                    trigger: "making_formal_oath",
+                    effect: "specify_exact_terms_for_later_exploitation",
+                    mechanical_note: "wording_is_leverage"
+                },
+                "resist_curse": {
+                    type: "forced_choice",
+                    trigger: "perfect_opportunity_to_indulge_curse",
+                    effect: "must_choose_indulge_or_resist",
+                    resist_cost: "take_harm_or_complication",
+                    failure: "curse_takes_over_completely"
+                }
+            },
+            callings: [
+                {id: "sellsword", name: "The Sellsword", description: "A blade for hire.", primaryApproach: "FORCE", stats: { "FORCE": 2, "FINESSE": 0, "INFLUENCE": -1, "WITS": 0, "RESOLVE": 0 }, talents: [{ id: "battle_born", name: "Battle-Born", description: "When you charge headlong into a fight, you can shrug off a blow to act first, no matter the situation." }], equipment: [{ name: "Heavy Blade", properties: ["melee", "heavy", "worn"] }, { name: "Boiled Leather", properties: ["armor", "medium", "worn"] }]},
+                {id: "cutthroat", name: "The Cutthroat", description: "Works in the shadows.", primaryApproach: "FINESSE", stats: { "FORCE": -1, "FINESSE": 2, "INFLUENCE": 0, "WITS": 0, "RESOLVE": 0 }, talents: [{ id: "vicious_strike", name: "A Vicious Strike", description: "When you attack an unaware or vulnerable target, your strike is exceptionally brutal." }], equipment: [{ name: "Matched Daggers", properties: ["melee", "light", "hidden"] }, { name: "Dark Garb", properties: ["armor", "light", "concealing"] }]},
+                {id: "disgraced", name: "The Disgraced", description: "A noble name, now in the gutter.", primaryApproach: "INFLUENCE", stats: { "FORCE": 0, "FINESSE": 0, "INFLUENCE": 2, "WITS": 0, "RESOLVE": -1 }, talents: [{ id: "i_know_your_kind", name: "I Know Your Kind", description: "When you first meet a new high-status person (noble, guild master, etc.), you always seem to know a piece of leverage you have over them, some rumor or shared secret." }], equipment: [{ name: "Ornate Rapier", properties: ["melee", "light", "finesse"] }, { name: "Faded Finery", properties: ["armor", "light", "shabby"] }]},
+                {id: "hexenjager", name: "The Hexenjager", description: "A professional monster hunter.", primaryApproach: "WITS", stats: { "FORCE": 0, "FINESSE": 0, "INFLUENCE": -1, "WITS": 2, "RESOLVE": 0 }, talents: [{ id: "hunted_your_kind", name: "I've Hunted Your Kind Before", description: "When you first encounter a new supernatural threat, you recall one specific, useful piece of information about it. You've seen it all." }], equipment: [{ name: "Silvered Arming Sword", properties: ["melee", "light", "silvered"] }, { name: "Crossbow", properties: ["ranged", "heavy"] }, { name: "Trench Coat", properties: ["armor", "light", "utility"] }]},
+                {id: "unspoken", name: "The Channeler", description: "You are a conduit for a power you barely control.", primaryApproach: "RESOLVE", stats: { "FORCE": 0, "FINESSE": 0, "INFLUENCE": -1, "WITS": 0, "RESOLVE": 2 }, talents: [{ id: "unleash", name: "Unleash", description: "When you stop holding back and unleash your power, you achieve exactly what you wanted, but this raw power causes collateral damage to your surroundings or allies." }], equipment: [{ name: "Focus Charm", properties: ["trinket", "fragile"] }, { name: "Heavy Bindings", properties: ["armor", "light", "concealing"] }]}
+            ],
+            burdens: [
+                {id: "haunted", name: "The Haunted", description: "Your Shadow hunts you.", requiresInput: true, inputLabel: "Who or what is your Shadow?", stats: { "FORCE": 0, "FINESSE": 0, "INFLUENCE": -1, "WITS": 0, "RESOLVE": 1 }, talents: [{ id: "shadows_move", name: "The Shadow's Move", description: "When you fail, your Shadow makes its move, isolating you, speaking your deepest fears, or offering you a dark bargain." }], tags: ["My Shadow Hunts Me"]},
+                {id: "namer", name: "The Namer", description: "You seek the True Name of all things.", requiresInput: false, stats: { "FORCE": -1, "FINESSE": 0, "INFLUENCE": 0, "WITS": 1, "RESOLVE": 0 }, talents: [{ id: "speak_the_name", name: "Speak the Name", description: "When you have learned someone's 'True Name,' you can compel them. You may be able to force them to answer one question truthfully or obey one command. Be warned: they may learn a piece of your own name in return." }], tags: ["I Seek the True Name"]},
+                {id: "seeker", name: "The Seeker", description: "You walk the Middle Path between two opposing principles.", requiresInput: true, inputLabel: "What are your two opposing principles?", stats: { "FORCE": 0, "FINESSE": 0, "INFLUENCE": 1, "WITS": 0, "RESOLVE": -1 }, talents: [{ id: "balance_track", name: "The Balance Track", description: "When you act on one of your core principles, you draw strength from your convictions. But if you lean too far to one side, you'll lose your balance, triggering a major complication." }], tags: ["I Walk the Middle Path"]},
+                {id: "oathbound", name: "The Oathbound", description: "Your word is your bond. When you make a promise, you fulfill it with exacting precision—to the letter, if not the spirit.", requiresInput: false, stats: { "FORCE": 0, "FINESSE": 1, "INFLUENCE": 0, "WITS": 0, "RESOLVE": -1 }, talents: [{ id: "letter_of_the_law", name: "Letter of the Law", description: "When you make a formal oath, you may specify its EXACT terms. Later, you can exploit the precise wording to your advantage. Your meticulous attention to detail in language gives you unexpected freedom within your bonds." }], tags: ["My Word is My Bond"]},
+                {id: "cursed", name: "The Cursed", description: "You have a dark compulsion.", requiresInput: true, inputLabel: "What is your dark compulsion?", stats: { "FORCE": 1, "FINESSE": 0, "INFLUENCE": 0, "WITS": -1, "RESOLVE": 0 }, talents: [{ id: "resist_curse", name: "Resist Your Curse", description: "When a 'perfect opportunity' to indulge your Curse appears, you must either indulge it or struggle to resist. Resisting may cost you, and failure means your Curse takes over completely." }], tags: ["I Have a Dark Compulsion"]}
+            ],
+            achievement_quests: {
+                FORCE: {
+                    quest_id: "arena_champion_duel",
+                    title: "Blood on the Iron",
+                    intro: "Word spreads: the Arena of Iron Fangs seeks challengers for its undefeated champion, Kael the Unchained. Three years. No losses. No mercy.",
+                    chapters: [
+                        { chapter: 1, title: "The Gauntlet", objective: "Prove yourself worthy by defeating three lesser champions", tier: 2, stat: "FORCE", xp_reward: 2 },
+                        { chapter: 2, title: "The Champion's Challenge", objective: "Face Kael in ritual combat before the Iron Assembly", tier: 2, stat: "FORCE", extended: true, xp_reward: 3 }
+                    ],
+                    success: { narrative: "Kael falls. The crowd roars. You are now the Champion of Iron Fangs.", stat_increase: "FORCE", tags_add: ["Champion of Iron Fangs"] },
+                    integration: "The Iron Arena is tied to the Mercenary Captains Front. Winning gains their respect."
+                },
+                FINESSE: {
+                    quest_id: "vault_of_mirrors_heist",
+                    title: "The Impossible Theft",
+                    intro: "The Alchemist's Guild controls the city through one source: The Vault of Mirrors. Never breached. Never robbed. Until now.",
+                    chapters: [
+                        { chapter: 1, title: "The Inside Man", objective: "Recruit a guild insider or steal the vault blueprints", tier: 2, stat: "FINESSE", xp_reward: 2 },
+                        { chapter: 2, title: "The Heist", objective: "Infiltrate the vault, disable wards, steal the guild's fortune", tier: 2, stat: "FINESSE", extended: true, xp_reward: 3 }
+                    ],
+                    success: { narrative: "The vault is empty. You vanish into legend—the thief who did the impossible.", stat_increase: "FINESSE", tags_add: ["Master Thief", "Guild Enemy"] },
+                    integration: "Success bankrupts the Guild Front, triggering power vacuum"
+                },
+                INFLUENCE: {
+                    quest_id: "unite_rival_houses",
+                    title: "The Peacemaker's Gambit",
+                    intro: "Two noble houses have warred for a generation. The city bleeds. You see an opportunity.",
+                    chapters: [
+                        { chapter: 1, title: "The Secret Meeting", objective: "Convince both houses to negotiate, despite decades of hatred", tier: 2, stat: "INFLUENCE", xp_reward: 2 },
+                        { chapter: 2, title: "The Marriage Alliance", objective: "Broker a political marriage or treaty that both sides will honor", tier: 2, stat: "INFLUENCE", xp_reward: 3 }
+                    ],
+                    success: { narrative: "The houses unite. The city celebrates. You are the architect of peace.", stat_increase: "INFLUENCE", tags_add: ["The Peacemaker"] },
+                    integration: "The peace won't last—you know it. But you've bought time."
+                },
+                WITS: {
+                    quest_id: "decipher_ancient_codex",
+                    title: "The Scholar's Obsession",
+                    intro: "The Codex of Ancients has stumped scholars for 200 years. You've found a lead.",
+                    chapters: [
+                        { chapter: 1, title: "The Missing Key", objective: "Locate the cipher key hidden in the city's oldest library", tier: 2, stat: "WITS", xp_reward: 2 },
+                        { chapter: 2, title: "The Translation", objective: "Decipher the codex and learn its terrible secret", tier: 2, stat: "WITS", xp_reward: 3 }
+                    ],
+                    success: { narrative: "You solve it. The codex reveals the origin of the Blight. Knowledge is power... and burden.", stat_increase: "WITS", tags_add: ["Scholar of the Forbidden"] },
+                    integration: "Codex reveals that Blight was CREATED by Alchemist Guild as population control"
+                },
+                RESOLVE: {
+                    quest_id: "trial_of_shadows",
+                    title: "The Unbroken",
+                    intro: "The Trial of Shadows is an ancient ordeal. Face your deepest fears. Survive, or be consumed.",
+                    chapters: [
+                        { chapter: 1, title: "Enter the Shadow Realm", objective: "Willingly enter the supernatural trial ground", tier: 2, stat: "RESOLVE", xp_reward: 2 },
+                        { chapter: 2, title: "The Gauntlet of Fears", objective: "Endure three manifestations of your worst nightmares", tier: 2, stat: "RESOLVE", extended: true, xp_reward: 3 }
+                    ],
+                    success: { narrative: "You emerge, unbroken. Your will is iron. Nothing can break you now.", stat_increase: "RESOLVE", tags_add: ["Unbreakable Will"] },
+                    integration: "Trial tests your deepest fears and emerges legendary"
+                }
+            },
+            legendary_quests: {
+                sellsword: {
+                    quest_id: "iron_throne_succession",
+                    title: "The Mercenary's Legacy",
+                    core_narrative: "Warlord Malgrath has fallen. Five mercenary captains circle the Iron Throne like wolves. Your path to legend lies in ending this war.",
+                    variants: {
+                        FORCE: {
+                            path: "The Path of Steel",
+                            chapters: [
+                                { title: "Blood on Steel", objective: "Duel Captain Ironheart in single combat", tier: 2, stat: "FORCE" },
+                                { title: "Storm the Fortress", objective: "Assault Blackwall's stronghold with your forces", tier: 2, stat: "FORCE" },
+                                { title: "Break the Alliance", objective: "Fight Goldhand and Shadowmere when they unite against you", tier: 2, stat: "FORCE" },
+                                { title: "The Last Captain", objective: "Defeat Ashbane, the deadliest warrior alive", tier: 2, stat: "FORCE" },
+                                { title: "The Iron Throne", objective: "Hold the throne against assassination and coup attempts", tier: 2, stat: "FORCE", extended: true }
+                            ],
+                            success: "You stand before the Iron Throne, five captains defeated. The warlords kneel—not from love, but from fear. You are the Iron Lord.",
+                            epilogue: "You rule through strength. The throne is yours. The land trembles.",
+                            tags_add: ["Iron Lord", "Undefeated Champion"]
+                        },
+                        FINESSE: {
+                            path: "The Path of Shadows",
+                            chapters: [
+                                { title: "Silent Death", objective: "Assassinate Ironheart during his victory feast", tier: 2, stat: "FINESSE" },
+                                { title: "The Frame", objective: "Make Blackwall believe Goldhand ordered Ironheart's death", tier: 2, stat: "WITS" },
+                                { title: "The Shadow War", objective: "Survive when ALL captains hunt you simultaneously", tier: 2, stat: "FINESSE" },
+                                { title: "The Final Blade", objective: "Kill Ashbane before he reaches the throne", tier: 2, stat: "FINESSE", extended: true }
+                            ],
+                            success: "One by one, the captains fell—poison, accidents, betrayals. When the dust settles, only you remain. You emerge from shadows to claim an empty throne.",
+                            epilogue: "You rule from the shadows. The city fears the throne's occupant, for they never see you coming.",
+                            tags_add: ["Shadow Ruler", "The Ghost"]
+                        },
+                        INFLUENCE: {
+                            path: "The Path of Command",
+                            chapters: [
+                                { title: "The First Ally", objective: "Convince Goldhand to betray the others", tier: 2, stat: "INFLUENCE" },
+                                { title: "The Marriage Alliance", objective: "Broker deal between Shadowmere's spy network and your faction", tier: 2, stat: "INFLUENCE" },
+                                { title: "The Grand Council", objective: "Stand before all five captains and make them kneel", tier: 2, stat: "INFLUENCE", extended: true }
+                            ],
+                            success: "You speak, and they listen. One by one, the captains kneel—not from fear, but from respect. The throne is yours by consent, not conquest.",
+                            epilogue: "You rule through loyalty. The throne is yours. The land heals, slowly.",
+                            tags_add: ["The Chosen Lord", "Uniter of Captains"]
+                        },
+                        WITS: {
+                            path: "The Path of Strategy",
+                            chapters: [
+                                { title: "Information War", objective: "Gather intelligence on all five captains—find their weaknesses", tier: 2, stat: "WITS" },
+                                { title: "The Perfect Trap", objective: "Lure all five captains into a situation they cannot escape", tier: 2, stat: "WITS" },
+                                { title: "Checkmate", objective: "Present them the choice: serve you or lose everything", tier: 2, stat: "INFLUENCE", extended: true }
+                            ],
+                            success: "You reveal their secrets, their debts, their vulnerabilities. They realize: you've already won. The throne was yours before they knew the game started.",
+                            epilogue: "You rule through information. The throne is yours. The land fears your intellect.",
+                            tags_add: ["Master Strategist", "The Chessmaster"]
+                        },
+                        RESOLVE: {
+                            path: "The Path of Endurance",
+                            chapters: [
+                                { title: "The Long Siege", objective: "Survive Ironheart's month-long siege of your stronghold", tier: 2, stat: "RESOLVE" },
+                                { title: "The Poison Chalice", objective: "Resist Goldhand's assassination attempts through willpower alone", tier: 2, stat: "RESOLVE" },
+                                { title: "The Unbroken", objective: "Stand firm as all five captains throw everything at you", tier: 2, stat: "RESOLVE", extended: true }
+                            ],
+                            success: "They break against you like waves on stone. One by one, they exhaust themselves. You remain. Unbroken. Unmoved. The throne is yours by sheer will.",
+                            epilogue: "You rule through endurance. The throne is yours. The land respects your iron will.",
+                            tags_add: ["The Unbroken", "Stone Lord"]
+                        }
+                    }
+                },
+                cutthroat: {
+                    quest_id: "guild_conspiracy",
+                    title: "The Guild's Fall",
+                    core_narrative: "The Alchemist's Guild controls the city through fear and gold. You've discovered their darkest secret: they CREATED the Blight to justify their power.",
+                    variants: {
+                        FINESSE: {
+                            path: "The Impossible Heist",
+                            chapters: [
+                                { title: "The Inside Man", objective: "Recruit or blackmail a Guild insider for access", tier: 2, stat: "INFLUENCE" },
+                                { title: "The Vault", objective: "Infiltrate the Guild's vault, steal the evidence", tier: 2, stat: "FINESSE" },
+                                { title: "The Publication", objective: "Survive long enough to publish the truth across the city", tier: 2, stat: "FINESSE" },
+                                { title: "The Reckoning", objective: "Escape as the Guild collapses into chaos", tier: 2, stat: "FINESSE", extended: true }
+                            ],
+                            success: "The documents spread like wildfire. The Guild's lies exposed. Their empire crumbles. You vanish into legend—the thief who broke the unbreakable.",
+                            epilogue: "The Guild is shattered. You watch from the shadows as a new order rises. Your work is done.",
+                            tags_add: ["Guild Breaker", "Truth Thief"]
+                        },
+                        WITS: {
+                            path: "The Paper Trail",
+                            chapters: [
+                                { title: "Follow the Money", objective: "Trace Guild finances to discover their Blight operation", tier: 2, stat: "WITS" },
+                                { title: "Build the Case", objective: "Gather irrefutable proof of the conspiracy", tier: 2, stat: "WITS" },
+                                { title: "The Trial", objective: "Present evidence at the Grand Assembly", tier: 2, stat: "INFLUENCE" },
+                                { title: "Survive Retribution", objective: "Outlast Guild's assassination attempts after trial", tier: 2, stat: "RESOLVE", extended: true }
+                            ],
+                            success: "The evidence is undeniable. The Assembly condemns the Guild. Their leaders are executed. The truth has won.",
+                            epilogue: "The Guild is disbanded. The city celebrates. You become the hero who exposed corruption.",
+                            tags_add: ["Truth Seeker", "Guild Slayer"]
+                        },
+                        INFLUENCE: {
+                            path: "The Puppet Master",
+                            chapters: [
+                                { title: "Sow Discord", objective: "Turn junior Guild members against the leadership", tier: 2, stat: "INFLUENCE" },
+                                { title: "The Civil War", objective: "Escalate internal Guild conflict into open warfare", tier: 2, stat: "INFLUENCE" },
+                                { title: "Install Your Puppet", objective: "Place your chosen leader as new Guild Master", tier: 2, stat: "INFLUENCE", extended: true }
+                            ],
+                            success: "The Guild tears itself apart from within. When the dust settles, your chosen puppet sits on the Guild throne. You control the city's true power.",
+                            epilogue: "The Guild survives, but serves you now. The city never knew you orchestrated it all.",
+                            tags_add: ["Shadow Kingmaker", "Guild Master (Secret)"]
+                        },
+                        FORCE: {
+                            path: "The Direct Assault",
+                            chapters: [
+                                { title: "Rally the Mob", objective: "Gather the oppressed citizens into an army", tier: 2, stat: "INFLUENCE" },
+                                { title: "Storm the Tower", objective: "Lead the assault on Guild headquarters", tier: 2, stat: "FORCE" },
+                                { title: "The Guild Masters", objective: "Fight through Guild enforcers to reach leadership", tier: 2, stat: "FORCE" },
+                                { title: "Burn It Down", objective: "Destroy the Guild's Blight laboratory", tier: 2, stat: "FORCE", extended: true }
+                            ],
+                            success: "The Guild Tower burns. The Masters hang from the walls. The city is free from their tyranny. You are the liberator.",
+                            epilogue: "The Guild is ashes. The people celebrate in the streets. You are hailed as hero.",
+                            tags_add: ["The Liberator", "Guild Destroyer"]
+                        },
+                        RESOLVE: {
+                            path: "The Whistleblower",
+                            chapters: [
+                                { title: "Gather Evidence", objective: "Collect proof while avoiding Guild assassins", tier: 2, stat: "WITS" },
+                                { title: "The First Publication", objective: "Release first wave of evidence, survive retaliation", tier: 2, stat: "RESOLVE" },
+                                { title: "The Hunt", objective: "Stay alive as Guild mobilizes everything to kill you", tier: 2, stat: "RESOLVE" },
+                                { title: "The Final Revelation", objective: "Release complete evidence, watch Guild collapse", tier: 2, stat: "RESOLVE", extended: true }
+                            ],
+                            success: "You survived. Every assassination attempt failed. The truth is out. The Guild is finished. Your will was unbreakable.",
+                            epilogue: "The Guild crumbles. You are scarred but alive. The city owes you everything.",
+                            tags_add: ["The Survivor", "Unbowed"]
+                        }
+                    }
+                },
+                disgraced: {
+                    quest_id: "restoration_of_honor",
+                    title: "The Name Reclaimed",
+                    core_narrative: "Your family name was destroyed by lies. You've spent years in the gutter. Now, you have the evidence to prove innocence and destroy those who framed you.",
+                    variants: {
+                        INFLUENCE: {
+                            path: "The Social Coup",
+                            chapters: [
+                                { title: "Gather Allies", objective: "Rebuild relationships with old family friends", tier: 2, stat: "INFLUENCE" },
+                                { title: "The Grand Ball", objective: "Secure invitation to the Assembly's annual gala", tier: 2, stat: "INFLUENCE" },
+                                { title: "The Accusation", objective: "Publicly accuse your enemies before the nobility", tier: 2, stat: "INFLUENCE" },
+                                { title: "The Vote", objective: "Convince the Assembly to restore your family seat", tier: 2, stat: "INFLUENCE", extended: true }
+                            ],
+                            success: "The Assembly votes. Your name is restored. Your enemies are stripped of titles. You reclaim your family's seat.",
+                            epilogue: "Your house rises again. The nobility whispers your name with respect. You have won.",
+                            tags_add: ["House Restored", "Master of the Court"]
+                        },
+                        WITS: {
+                            path: "The Truth Revealed",
+                            chapters: [
+                                { title: "The Final Proof", objective: "Locate the document that proves the conspiracy", tier: 2, stat: "WITS" },
+                                { title: "The Witnesses", objective: "Find survivors who can testify to the truth", tier: 2, stat: "WITS" },
+                                { title: "The Presentation", objective: "Present evidence to the Grand Assembly", tier: 2, stat: "INFLUENCE" },
+                                { title: "Watch Them Fall", objective: "Witness your enemies' arrest and execution", tier: 2, stat: "RESOLVE", extended: true }
+                            ],
+                            success: "The evidence is irrefutable. Your enemies confess. The Assembly restores your house. Justice is served.",
+                            epilogue: "Your name is cleared. Your enemies are dead. Your family's honor is restored.",
+                            tags_add: ["Vindicated", "Truth Bringer"]
+                        },
+                        FINESSE: {
+                            path: "The Silent Revenge",
+                            chapters: [
+                                { title: "The First Kill", objective: "Assassinate the conspirator who gave false testimony", tier: 2, stat: "FINESSE" },
+                                { title: "The Second Kill", objective: "Make the judge who condemned your family disappear", tier: 2, stat: "FINESSE" },
+                                { title: "The Architect", objective: "Kill the mastermind who orchestrated everything", tier: 2, stat: "FINESSE" },
+                                { title: "Reclaim the Seat", objective: "With enemies dead, take your rightful place", tier: 2, stat: "INFLUENCE", extended: true }
+                            ],
+                            success: "They're all dead. Every one who destroyed your family. You walk into the Assembly and take your seat. No one dares question you.",
+                            epilogue: "Your revenge is complete. Your house restored through blood. They fear you now.",
+                            tags_add: ["Silent Avenger", "The Ghost of Vengeance"]
+                        },
+                        FORCE: {
+                            path: "The Duel of Honor",
+                            chapters: [
+                                { title: "The Challenge", objective: "Issue formal duel challenges to each conspirator", tier: 2, stat: "INFLUENCE" },
+                                { title: "First Blood", objective: "Defeat the conspirators one by one in single combat", tier: 2, stat: "FORCE" },
+                                { title: "The Final Duel", objective: "Face the mastermind in the Arena of Justice", tier: 2, stat: "FORCE", extended: true }
+                            ],
+                            success: "Your blade spoke the truth. Every duel won. Your enemies lie dead. The Assembly restores your house by right of combat.",
+                            epilogue: "Your house stands again, restored through honorable combat. Your name is legend.",
+                            tags_add: ["Blade of Justice", "Honor Restored"]
+                        },
+                        RESOLVE: {
+                            path: "The Long Game",
+                            chapters: [
+                                { title: "Endure", objective: "Survive years of assassination attempts while gathering evidence", tier: 2, stat: "RESOLVE" },
+                                { title: "Wait", objective: "Let your enemies think you're broken while you prepare", tier: 2, stat: "RESOLVE" },
+                                { title: "Strike", objective: "When they're complacent, reveal everything at once", tier: 2, stat: "INFLUENCE" },
+                                { title: "Reclaim", objective: "Watch them fall, take your seat", tier: 2, stat: "RESOLVE", extended: true }
+                            ],
+                            success: "You waited. You endured. You survived. Now they pay. Your house is restored. Your patience was rewarded.",
+                            epilogue: "Years of suffering are over. Your house rises. Your enemies are destroyed. You never broke.",
+                            tags_add: ["The Patient", "Unbowed House"]
+                        }
+                    }
+                },
+                hexenjager: {
+                    quest_id: "slay_the_blight_source",
+                    title: "The Monster's Heart",
+                    core_narrative: "You've hunted everything. Now, you hunt the source of the Blight itself—the Ash-Lord, deep in the Blighted Wastes. This is your final hunt.",
+                    variants: {
+                        FORCE: {
+                            path: "The Direct Assault",
+                            chapters: [
+                                { title: "Into the Wastes", objective: "March into the Blighted Wastes, survive the journey", tier: 2, stat: "RESOLVE" },
+                                { title: "The Corrupted Army", objective: "Fight through legions of Blighted creatures", tier: 2, stat: "FORCE" },
+                                { title: "The Ash-Lord's Throne", objective: "Reach the heart of the Blight, confront the Ash-Lord", tier: 2, stat: "FORCE" },
+                                { title: "Slay the Source", objective: "Kill the Ash-Lord in single combat", tier: 2, stat: "FORCE", extended: true }
+                            ],
+                            success: "Your blade finds the Ash-Lord's heart. It screams. The Blight begins to recede. You are the monster slayer who saved the world.",
+                            epilogue: "The Blight fades. The Wastes heal slowly. You are the greatest hunter who ever lived.",
+                            tags_add: ["Ash-Lord Slayer", "The Final Hunter"]
+                        },
+                        WITS: {
+                            path: "The Weakness Found",
+                            chapters: [
+                                { title: "Research", objective: "Study ancient texts to find the Ash-Lord's vulnerability", tier: 2, stat: "WITS" },
+                                { title: "The Relic", objective: "Locate the weapon that can kill the Ash-Lord", tier: 2, stat: "WITS" },
+                                { title: "Into the Wastes", objective: "Journey to the Ash-Lord's domain", tier: 2, stat: "RESOLVE" },
+                                { title: "The Perfect Strike", objective: "Use the relic to strike at the moment of vulnerability", tier: 2, stat: "FINESSE", extended: true }
+                            ],
+                            success: "Your research was perfect. The timing exact. The Ash-Lord falls. The Blight dies with it. Knowledge defeated the monster.",
+                            epilogue: "The world is saved through your intellect. You are remembered as the scholar-hunter.",
+                            tags_add: ["Lore Master", "Ash-Lord's Bane"]
+                        },
+                        FINESSE: {
+                            path: "The Silent Kill",
+                            chapters: [
+                                { title: "Scout the Wastes", objective: "Map the path through the Blight undetected", tier: 2, stat: "FINESSE" },
+                                { title: "Evade the Guardians", objective: "Slip past the Ash-Lord's corrupted sentinels", tier: 2, stat: "FINESSE" },
+                                { title: "Infiltrate the Sanctum", objective: "Enter the Ash-Lord's throne room unseen", tier: 2, stat: "FINESSE" },
+                                { title: "The Assassination", objective: "Strike before the Ash-Lord can react", tier: 2, stat: "FINESSE", extended: true }
+                            ],
+                            success: "One strike. Silent. Perfect. The Ash-Lord dies before it knows you're there. The Blight collapses. You are the ghost who saved the world.",
+                            epilogue: "The Blight recedes. No one knows how the Ash-Lord died. Only you.",
+                            tags_add: ["Shadow of Death", "The Silent Savior"]
+                        },
+                        RESOLVE: {
+                            path: "The Endurance Trial",
+                            chapters: [
+                                { title: "Enter the Wastes", objective: "Survive the corrupting influence of the Blight", tier: 2, stat: "RESOLVE" },
+                                { title: "The Long March", objective: "Walk through the Wastes for weeks without succumbing", tier: 2, stat: "RESOLVE" },
+                                { title: "The Threshold", objective: "Cross into the heart of Blight, resist total corruption", tier: 2, stat: "RESOLVE" },
+                                { title: "Face the Source", objective: "Confront the Ash-Lord while holding onto your humanity", tier: 2, stat: "RESOLVE", extended: true }
+                            ],
+                            success: "The Blight tried to break you. It failed. You reach the Ash-Lord, still human, still determined. You end it. Your will was stronger than the Blight.",
+                            epilogue: "The world is saved by your unbreakable will. The Blight dies. You are the strongest human ever born.",
+                            tags_add: ["Corruption-Immune", "The Unyielding"]
+                        },
+                        INFLUENCE: {
+                            path: "The Coalition",
+                            chapters: [
+                                { title: "Unite the Factions", objective: "Convince every faction to join the final assault", tier: 2, stat: "INFLUENCE" },
+                                { title: "The Grand Army", objective: "Lead the united army into the Blighted Wastes", tier: 2, stat: "INFLUENCE" },
+                                { title: "The Final Battle", objective: "Command the forces against the Ash-Lord's army", tier: 2, stat: "WITS" },
+                                { title: "Strike Together", objective: "Coordinate the killing blow with all factions", tier: 2, stat: "INFLUENCE", extended: true }
+                            ],
+                            success: "The world united under your command. Together, you slay the Ash-Lord. The Blight dies. You are the general who saved humanity.",
+                            epilogue: "The Blight is gone. The factions remain united under your leadership. You changed the world.",
+                            tags_add: ["Uniter of Nations", "Commander of the Final War"]
+                        }
+                    }
+                },
+                channeler: {
+                    quest_id: "master_the_power",
+                    title: "The Binding Breaks",
+                    core_narrative: "You've held your power at bay your entire life. The entity within grows stronger. Now, you must either master it completely... or be consumed by it forever.",
+                    variants: {
+                        RESOLVE: {
+                            path: "The Will Triumphant",
+                            chapters: [
+                                { title: "Face the Entity", objective: "Confront the power within your own mind", tier: 2, stat: "RESOLVE" },
+                                { title: "The Battle Within", objective: "Fight for control in the spiritual realm", tier: 2, stat: "RESOLVE" },
+                                { title: "Break Its Will", objective: "Dominate the entity through pure determination", tier: 2, stat: "RESOLVE" },
+                                { title: "The Binding", objective: "Permanently bind the entity to your will", tier: 2, stat: "RESOLVE", extended: true }
+                            ],
+                            success: "The entity submits. Your will is absolute. You are master now. The power is yours to command completely.",
+                            epilogue: "You are no longer channeler—you are sovereign. The power serves you absolutely.",
+                            tags_add: ["Master of Power", "Will Absolute"]
+                        },
+                        FORCE: {
+                            path: "The Unleashing",
+                            chapters: [
+                                { title: "Stop Holding Back", objective: "Release the power completely for the first time", tier: 2, stat: "FORCE" },
+                                { title: "Embrace Destruction", objective: "Accept what you become when you unleash", tier: 2, stat: "RESOLVE" },
+                                { title: "The Weapon", objective: "Learn to direct the raw power as a weapon", tier: 2, stat: "FORCE" },
+                                { title: "Merge", objective: "Become one with the power, sacrifice your humanity", tier: 2, stat: "RESOLVE", extended: true }
+                            ],
+                            success: "You stop holding back. The power floods through you. You and the entity merge. You are no longer human—you are something more.",
+                            epilogue: "Humanity is gone. You are pure power. The world trembles at what you've become.",
+                            tags_add: ["Living Weapon", "Beyond Human"]
+                        },
+                        WITS: {
+                            path: "The True Name",
+                            chapters: [
+                                { title: "Research the Entity", objective: "Learn what the power truly is", tier: 2, stat: "WITS" },
+                                { title: "Speak to It", objective: "Communicate with the entity as equal", tier: 2, stat: "INFLUENCE" },
+                                { title: "The Bargain", objective: "Negotiate terms of control", tier: 2, stat: "WITS" },
+                                { title: "Speak Its Name", objective: "Learn and speak the entity's True Name", tier: 2, stat: "WITS", extended: true }
+                            ],
+                            success: "You know its Name. You speak it. The entity is bound by ancient law. You are master through knowledge.",
+                            epilogue: "You control the power through understanding. Knowledge is true mastery.",
+                            tags_add: ["Name Keeper", "Scholar of Power"]
+                        },
+                        INFLUENCE: {
+                            path: "The Bargain",
+                            chapters: [
+                                { title: "Open Dialogue", objective: "Establish communication with the entity", tier: 2, stat: "INFLUENCE" },
+                                { title: "Understand Its Wants", objective: "Learn what the entity truly desires", tier: 2, stat: "WITS" },
+                                { title: "Offer Terms", objective: "Propose a partnership that benefits both", tier: 2, stat: "INFLUENCE" },
+                                { title: "Seal the Pact", objective: "Formalize the agreement, become partners", tier: 2, stat: "INFLUENCE", extended: true }
+                            ],
+                            success: "The entity agrees. You are no longer host and parasite—you are partners. Together, you are unstoppable.",
+                            epilogue: "You share the power as equals. Two minds, one purpose. Harmony achieved.",
+                            tags_add: ["Power Partnership", "The Bonded"]
+                        },
+                        FINESSE: {
+                            path: "The Surgical Control",
+                            chapters: [
+                                { title: "Precision Practice", objective: "Learn to channel exact amounts of power", tier: 2, stat: "FINESSE" },
+                                { title: "The Discipline", objective: "Master techniques to prevent power leakage", tier: 2, stat: "RESOLVE" },
+                                { title: "The Perfect Balance", objective: "Achieve harmony between restraint and release", tier: 2, stat: "FINESSE" },
+                                { title: "The Master", objective: "Demonstrate perfect control under extreme stress", tier: 2, stat: "FINESSE", extended: true }
+                            ],
+                            success: "You control every ounce. Never too much, never too little. Perfect precision. You are the master of your power.",
+                            epilogue: "You wield power with surgical precision. Complete control achieved through discipline.",
+                            tags_add: ["Perfect Control", "The Disciplined"]
+                        }
+                    }
+                }
+            },
+            endgame_fronts: {
+                sellsword: { name: "Mercenary War Escalation", segments: 8, catastrophe: "Ironheart claims throne, becomes tyrant" },
+                cutthroat: { name: "Guild Consolidation", segments: 8, catastrophe: "Guild becomes de facto rulers" },
+                disgraced: { name: "House Extinction", segments: 8, catastrophe: "Your name erased from history" },
+                hexenjager: { name: "Ash-Lord Awakening", segments: 8, catastrophe: "Blight consumes the world" },
+                channeler: { name: "Entity Dominance", segments: 8, catastrophe: "Power consumes you completely" }
+            },
+            TIER_1_TWISTS: ["Your tool breaks.", "You attract unwanted attention.", "You leave a clue behind.", "You use up a resource.", "The situation becomes slightly more complicated.", "You take a minor physical toll.", "An onlooker is now suspicious of you."],
+            TIER_2_TWISTS: [
+                { complication: "Brutal Violence: A new, superior foe arrives.", twist: "...and they seem just as bored and annoyed by this as you are." },
+                { complication: "Political Backstab: An ally is revealed to be a traitor.", twist: "...but they apologize, explaining they're getting a really good price for it." },
+                { complication: "Personal Failure: You lose a resource or gain a negative Condition.", twist: "...and you also realize you've left something embarrassing behind." },
+                { complication: "Cynical World: An NPC you're protecting proves to be a terrible person.", twist: "...and they mock you for believing they were anything else." },
+                { complication: "Dark Humor: The situation becomes absurdly complicated.", twist: "...and a bystander makes a sarcastic comment about your performance." }
+            ],
+            talent_mechanics: {
+                battle_born: { type: "passive", trigger: "charging_into_fight", effect: "act_first_and_ignore_one_hit", tier_modification: "reduce_combat_tier_by_1" },
+                vicious_strike: { type: "conditional", trigger: "attacking_unaware_vulnerable", effect: "exceptionally_brutal_damage", tags_add: ["Vicious Reputation"] },
+                i_know_your_kind: { type: "passive", trigger: "first_meeting_high_status", effect: "learn_leverage_automatically", note: "AI must reveal secret or weakness" },
+                hunted_your_kind: { type: "conditional", trigger: "first_encounter_supernatural", effect: "recall_useful_information", tier_modification: "reduce_tier_by_1" },
+                unleash: { type: "active_choice", trigger: "player_declares_unleashing", effect: "achieve_goal_with_collateral", mandatory_consequence: "collateral_damage" },
+                shadows_move: { type: "failure_triggered", trigger: "any_failure", effect: "shadow_makes_move", options: ["isolate", "speak_fears", "offer_bargain"] },
+                speak_the_name: { type: "active_choice", trigger: "learned_true_name", effect: "compel_target", cost: "target_learns_your_name_piece" },
+                balance_track: { type: "triggered", trigger: "acting_on_principles", effect: "draw_strength", risk: "major_complication_if_imbalanced" },
+                letter_of_the_law: { type: "active_choice", trigger: "making_formal_oath", effect: "specify_exact_terms", note: "wording_is_leverage" },
+                resist_curse: { type: "forced_choice", trigger: "opportunity_to_indulge", effect: "must_choose", resist_cost: "harm_or_complication", failure: "curse_takes_over" }
+            },
+            achievement_quests: {
+                FORCE: {
+                    id: "arena_champion", title: "Blood on the Iron", chapters: 2,
+                    intro: "Word spreads: the Arena of Iron Fangs seeks challengers. Kael the Unchained—three years undefeated. Prove yourself worthy, then face him.",
+                    chapter1: { title: "The Gauntlet", objective: "Defeat three lesser champions", tier: 2, stat: "FORCE", xp: 2 },
+                    chapter2: { title: "The Champion Falls", objective: "Face Kael in ritual combat", tier: 2, stat: "FORCE", extended: true, xp: 3,
+                        success: "Kael falls. The crowd roars. You are the Champion of Iron Fangs.",
+                        failure: "Kael's blade finds your throat. You survive... barely. The crowd jeers." },
+                    success_tags: ["Champion of Iron Fangs"], integration: "Gains respect of Mercenary Captains"
+                },
+                FINESSE: {
+                    id: "vault_heist", title: "The Impossible Theft", chapters: 2,
+                    intro: "The Vault of Mirrors—never breached, never robbed. The Alchemist's Guild keeps their fortune there. Until now.",
+                    chapter1: { title: "The Inside Man", objective: "Recruit insider or steal blueprints", tier: 2, stat: "INFLUENCE or FINESSE", xp: 2 },
+                    chapter2: { title: "The Heist", objective: "Infiltrate vault, disable wards, steal fortune", tier: 2, stat: "FINESSE", extended: true, xp: 3,
+                        success: "The vault empties. You vanish into legend.",
+                        failure: "Guards swarm. You escape, but the vault remains unbroken." },
+                    success_tags: ["Master Thief", "Guild Enemy"], integration: "Weakens Alchemist Guild Front"
+                },
+                INFLUENCE: {
+                    id: "unite_houses", title: "The Peacemaker's Gambit", chapters: 2,
+                    intro: "Two noble houses have warred for generations. The city bleeds. You see an opportunity.",
+                    chapter1: { title: "Secret Meeting", objective: "Convince both houses to negotiate", tier: 2, stat: "INFLUENCE", xp: 2 },
+                    chapter2: { title: "The Alliance", objective: "Broker marriage or treaty both honor", tier: 2, stat: "INFLUENCE", xp: 3,
+                        success: "The houses unite. The city celebrates. You are the Peacemaker.",
+                        failure: "Negotiations collapse. The war intensifies. You are blamed." },
+                    success_tags: ["The Peacemaker"], note: "Peace won't last—you know it. But you bought time."
+                },
+                WITS: {
+                    id: "decipher_codex", title: "The Scholar's Obsession", chapters: 2,
+                    intro: "The Codex of Ancients—200 years unsolved. You've found a lead.",
+                    chapter1: { title: "The Missing Key", objective: "Locate cipher key in oldest library", tier: 2, stat: "WITS", xp: 2 },
+                    chapter2: { title: "The Translation", objective: "Decipher the codex, learn its secret", tier: 2, stat: "WITS", xp: 3,
+                        success: "You solve it. The codex reveals the Blight's origin. Knowledge is burden.",
+                        failure: "The cipher eludes you. The secret remains locked." },
+                    success_tags: ["Scholar of the Forbidden"], integration: "Reveals Guild created Blight"
+                },
+                RESOLVE: {
+                    id: "trial_shadows", title: "The Unbroken", chapters: 2,
+                    intro: "The Trial of Shadows—face your deepest fears. Survive, or be consumed.",
+                    chapter1: { title: "Enter Shadow Realm", objective: "Willingly enter supernatural trial", tier: 2, stat: "RESOLVE", xp: 2 },
+                    chapter2: { title: "Gauntlet of Fears", objective: "Endure three nightmare manifestations", tier: 2, stat: "RESOLVE", extended: true, xp: 3,
+                        success: "You emerge unbroken. Your will is iron.",
+                        failure: "The shadows consume you. You escape, but something broke inside." },
+                    success_tags: ["Unbreakable Will"]
+                }
+            }
+        };
+
+        const LEGENDARY_QUESTS = {
+            sellsword: {
+                id: "iron_throne", title: "The Mercenary's Legacy",
+                narrative: "Warlord Malgrath has fallen. Five mercenary captains circle the Iron Throne. Your legend lies in ending this war.",
+                variants: {
+                    FORCE: { path: "The Path of Steel", chapters: ["Blood on Steel: Duel Ironheart", "Storm the Fortress: Assault Blackwall", "Break Alliance: Fight Goldhand & Shadowmere", "The Last Captain: Face Ashbane", "The Iron Throne: Survive coup attempts"],
+                        victory: "You stand before the Iron Throne, blade in hand. The warlords kneel. You are the Iron Lord.", tragedy: "Ashbane's blade finds your heart. Your legend dies with you." },
+                    FINESSE: { path: "The Path of Shadows", chapters: ["Silent Death: Assassinate Ironheart", "The Frame: Blame Goldhand", "Shadow War: Survive being hunted"],
+                        victory: "One by one, captains fall. You emerge from shadows to claim empty throne.", tragedy: "You're caught. The captains unite against you. You die in the dark." },
+                    INFLUENCE: { path: "The Path of Command", chapters: ["First Ally: Convince Goldhand", "Marriage Alliance: Broker deal with Shadowmere", "Grand Council: Make all five kneel"],
+                        victory: "You speak, they kneel. The throne is yours by consent, not conquest.", tragedy: "They laugh at your words. You have no army. They kill you together." },
+                    WITS: { path: "The Path of Strategy", chapters: ["Information War: Gather intel on all five", "Perfect Trap: Lure them all", "Checkmate: Present choice—serve or lose everything"],
+                        victory: "You reveal their secrets. They realize you've already won.", tragedy: "They saw through your plan. The trap springs on you instead." },
+                    RESOLVE: { path: "The Path of Endurance", chapters: ["Long Siege: Survive Ironheart's month-long siege", "Poison Chalice: Resist Goldhand's assassinations", "The Unbroken: Stand firm as all five attack"],
+                        victory: "They break against you like waves. You remain. Unbroken.", tragedy: "Even stone erodes. You fall, finally broken." }
+                }
+            },
+            cutthroat: {
+                id: "guild_fall", title: "The Guild's Fall",
+                narrative: "The Alchemist's Guild controls the city. You've discovered their secret: they CREATED the Blight. Now you'll destroy them.",
+                variants: {
+                    FINESSE: { path: "Master Heist", chapters: ["Steal evidence of conspiracy", "Expose Guild publicly", "Survive their retaliation"],
+                        victory: "Evidence spreads. Guild collapses. City freed.", tragedy: "They catch you. Evidence burns. Guild tightens grip." },
+                    WITS: { path: "Paper Trail", chapters: ["Follow the money", "Build case", "Publish truth"],
+                        victory: "Truth revealed. Guild leaders arrested. You vanish.", tragedy: "They kill you before publication. Truth dies with you." },
+                    INFLUENCE: { path: "Puppet Master", chapters: ["Turn Guild members", "Start civil war within", "Install new leadership"],
+                        victory: "Guild tears itself apart from within. New regime owes you.", tragedy: "They discover your manipulation. You're executed publicly." }
+                }
+            },
+            disgraced: {
+                id: "name_reclaimed", title: "The Name Reclaimed",
+                narrative: "Your family was destroyed by lies. You have evidence to prove innocence and destroy those who framed you.",
+                variants: {
+                    INFLUENCE: { path: "Social Coup", chapters: ["Gather allies", "Grand Ball confrontation", "Reclaim seat"],
+                        victory: "At the ball, you reveal truth. Your enemies fall. Name restored.", tragedy: "They laugh. No one believes you. You're cast out again." },
+                    WITS: { path: "Truth Revealed", chapters: ["Find final proof", "Present to Assembly", "Watch enemies fall"],
+                        victory: "Evidence irrefutable. Your name cleared. Theirs ruined.", tragedy: "Evidence is destroyed. You're labeled conspiracy theorist." }
+                }
+            },
+            hexenjager: {
+                id: "slay_source", title: "The Monster's Heart",
+                narrative: "You've hunted everything. Now you hunt the source—the Ash-Lord, deep in the Blighted Wastes.",
+                variants: {
+                    FORCE: { path: "Direct Assault", chapters: ["March into Wastes", "Fight through Blighted horrors", "Face Ash-Lord in combat"],
+                        victory: "You strike the final blow. The Ash-Lord falls. Blight begins to recede.", tragedy: "The Ash-Lord was too powerful. You fall, consumed by Blight." },
+                    WITS: { path: "Find Weakness", chapters: ["Research Ash-Lord", "Discover vulnerability", "Strike at perfect moment"],
+                        victory: "You found the weakness. One precise strike. The monster dies.", tragedy: "Your research was wrong. The weakness doesn't exist. You die." }
+                }
+            },
+            channeler: {
+                id: "master_power", title: "The Binding Breaks",
+                narrative: "You've held your power at bay your entire life. Now you'll master it completely... or be consumed.",
+                variants: {
+                    RESOLVE: { path: "Will Triumphant", chapters: ["Face entity within", "Battle for control", "Bind it permanently"],
+                        victory: "You bend the entity to your will. The power is yours, truly.", tragedy: "The entity was stronger. It consumes you. You become the monster." },
+                    FORCE: { path: "The Unleashing", chapters: ["Stop holding back", "Embrace the power", "Become the weapon"],
+                        victory: "You unleash everything. The world trembles. You are the storm.", tragedy: "The power overwhelms you. You explode in apocalyptic fury." }
+                }
+            }
+        };
+
+        const ENDGAME_FRONTS = {
+            sellsword: { name: "Mercenary War", segments: 8, portents: ["Ironheart defeats Redblade", "Siege of Blackwall", "Ironheart controls 40%", "Ironheart claims throne—CAMPAIGN FAILS"] },
+            cutthroat: { name: "Guild Consolidation", segments: 8, portents: ["Blight Tax raised", "Witch hunts begin", "Fake cure distributed", "Guild becomes de facto rulers—CAMPAIGN FAILS"] },
+            disgraced: { name: "House Extinction", segments: 8, portents: ["Enemies consolidate", "Last ally betrays", "House formally dissolved", "Name erased forever—CAMPAIGN FAILS"] },
+            hexenjager: { name: "Ash-Lord Awakening", segments: 8, portents: ["Blight spreads faster", "Ash-Lord stirs", "First city consumed", "Ash-Lord fully awake—CAMPAIGN FAILS"] },
+            channeler: { name: "Entity Dominance", segments: 8, portents: ["Power grows stronger", "Blackouts increase", "First possession", "Entity takes full control—CAMPAIGN FAILS"] }
+        };
+
+        const LOADING_PHRASES = ["Fate weaves your path...", "The world conspires...", "The covenant demands its price...", "The shadows lengthen...", "The world reacts..."];
+
+        function showLoadingOverlay() {
+            if (loadingTextEl && loadingOverlayEl) {
+                const randomText = LOADING_PHRASES[Math.floor(Math.random() * LOADING_PHRASES.length)];
+                loadingTextEl.textContent = randomText;
+                loadingOverlayEl.style.display = 'flex';
+            }
+        }
+
+        function showErrorModal(title, message) {
+            if (errorTitleEl && errorMessageEl && errorModalEl) {
+                errorTitleEl.textContent = title;
+                errorMessageEl.textContent = message;
+                errorModalEl.style.display = 'block';
+            } else {
+                console.error("MODAL ERROR:", title, message);
+            }
+        }
+        
+        function addMessageToChat(role, text) {
+            const chatCollectionRef = collection(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "chat_history");
+            return addDoc(chatCollectionRef, { role: role, content: text, timestamp: serverTimestamp() });
+        }
+        
+        function showToast(message, duration = 3000) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, duration);
+        }
+function validateStateUpdate(update, currentData) {
+            if (update.xp_spend && update.xp_spend > (currentData.xp || 0)) {
+                throw new Error("Cannot spend more XP than available");
+            }
+            if (update.stats) {
+                for (const [stat, mod] of Object.entries(update.stats)) {
+                    const currentVal = currentData.stats[stat] || 0;
+                    const newVal = currentVal + mod;
+                    if (newVal < -3 || newVal > 5) {
+                        throw new Error(`Stat ${stat} would exceed bounds (-3 to +5)`);
+                    }
+                }
+            }
+            return true;
+        }
+
+        function displayChatHistory(querySnapshot) {
+            if (!narrativeLogEl) return;
+            narrativeLogEl.innerHTML = '';
+            let messages = [];
+            querySnapshot.forEach((doc) => { messages.push({ id: doc.id, ...doc.data() }); });
+            messages.sort((a, b) => (a.timestamp?.toDate() || new Date(0)) - (b.timestamp?.toDate() || new Date(0)));
+            currentChatHistory = messages.slice(-10).map(msg => { return { role: msg.role, content: msg.content }; });
+
+            const ALL_MECHANICAL_TERMS = ["FORCE", "FINESSE", "INFLUENCE", "WITS", "RESOLVE", "Sellsword", "Cutthroat", "Hexenjager", "Disgraced", "Channeler", "Haunted", "Namer", "Seeker", "Oathbound", "Cursed"];
+            const TERM_REGEX = new RegExp(`\\b(${ALL_MECHANICAL_TERMS.join('|')})\\b`, 'gi');
+
+            messages.forEach((msgData) => {
+                const msg = msgData;
+                const bubble = document.createElement('div');
+                const isUser = msg.role === 'user';
+                bubble.className = isUser ? 'narrative-bubble-user' : 'narrative-bubble-model';
+                const textContent = document.createElement('p');
+                let htmlContent = msg.content.replace(/\n/g, '<br>');
+                htmlContent = htmlContent.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); 
+                htmlContent = htmlContent.replace(/\*(.*?)\*/g, '<strong>$1</strong>'); 
+                htmlContent = htmlContent.replace(TERM_REGEX, (match) => { return `<strong class="game-term">${match}</strong>`; });
+                textContent.innerHTML = htmlContent;
+                textContent.className = isUser ? 'text-emerald-100' : 'text-gray-300';
+                bubble.appendChild(textContent);
+                narrativeLogEl.appendChild(bubble);
+            });
+            narrativeLogEl.scrollTop = narrativeLogEl.scrollHeight;
+        }
+
+        function displayCharacter(data) {
+            if (!data || !characterSheetDataEl) return;
+            let statsHtml = '';
+            const statDescriptions = {
+                "FORCE": "Physical power, violence, and intimidation",
+                "FINESSE": "Agility, stealth, and precision",
+                "INFLUENCE": "Charm, deception, and command",
+                "WITS": "Observation, deduction, and quick thinking",
+                "RESOLVE": "Willpower, endurance, and resisting terror"
+            };
+            const calling = CONTENT_PACK_ASHLORDS.callings.find(c => c.name === data.playbook.calling);
+            const burden = CONTENT_PACK_ASHLORDS.burdens.find(b => b.name === data.playbook.burden);
+
+            for (const [stat, value] of Object.entries(data.stats)) {
+                let colorClass = "text-gray-300";
+                if (value > 0) colorClass = "text-emerald-400";
+                if (value < 0) colorClass = "text-gray-500";
+                const callingVal = calling?.stats[stat] || 0;
+                const burdenVal = burden?.stats[stat] || 0;
+                const tooltipText = `${statDescriptions[stat] || ''}<br><br><strong>Calculation:</strong><br>Calling: ${callingVal > 0 ? '+' : ''}${callingVal}<br>Burden: ${burdenVal > 0 ? '+' : ''}${burdenVal}<br>Total: ${value > 0 ? '+' : ''}${value}`;
+                statsHtml += `
+                    <div class="stat-block col-span-1 p-2 rounded-lg text-center tooltip" data-stat="${stat}">
+                        <div class="text-xs text-gray-400 uppercase tracking-wider">${stat.substring(0,3)}</div>
+                        <div class="text-2xl font-bold ${colorClass}">${value > 0 ? '+' : ''}${value}</div>
+                        <span class="tooltip-text">${tooltipText}</span>
+                    </div>
+                `;
+            }
+
+            let tagsHtml = (data.tags || []).map(tag => 
+                `<span class="tag text-xs font-medium mr-2 mb-2 px-2.5 py-1 rounded-full bg-gray-700 text-gray-300">${tag}</span>`
+            ).join('');
+
+            let talentsHtml = (data.talents || []).map(talent =>
+                `<div class="talent-block col-span-1 p-3 rounded-lg text-center" data-talent-name="${talent.name}" data-description="${talent.description}">
+                    <span class="text-md font-semibold text-gray-200">${talent.name}</span>
+                </div>`
+            ).join('');
+
+        let equipmentHtml = (data.equipment || []).map(item => {
+    const propertiesText = item.properties ? item.properties.join(', ') : 'none';
+    return `<li class="text-sm text-gray-300 list-disc list-inside cursor-pointer hover:text-emerald-400 transition equipment-item" data-properties="${propertiesText}">
+        ${item.name}
+    </li>`;
+}).join('');
+
+            characterSheetDataEl.innerHTML = `
+                <div class="space-y-4">
+                    <div>
+                        <h3 class="text-xl font-bold text-white">${data.name}</h3>
+                        <p class="text-sm text-emerald-400">${data.playbook.calling} / ${data.playbook.burden}</p>
+                    </div>
+                    <div class="grid grid-cols-5 gap-2">${statsHtml}</div>
+                    <div>
+                        <div class="grid grid-cols-2 gap-2">${talentsHtml || '<p class="text-sm text-gray-500 italic col-span-2">No talents.</p>'}</div>
+                        <div id="description-display" class="text-sm text-left text-gray-400 min-h-[2.5em] p-2 mt-2 bg-gray-900 rounded-lg border border-gray-700">
+                            Tap a stat or talent for its description.
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-md font-semibold text-gray-200 mb-2">Conditions</h4>
+                        <div class="flex flex-wrap">${tagsHtml || '<p class="text-sm text-gray-500 italic">No conditions.</p>'}</div>
+                    </div>
+                    <div>
+                        <h4 class="text-md font-semibold text-gray-200 mb-2">Equipment</h4>
+                        <ul class="space-y-1">${equipmentHtml || '<p class="text-sm text-gray-500 italic">No equipment.</p>'}</ul>
+                    </div>
+                    <div>
+                        <h4 class="text-md font-semibold text-gray-200 mb-1">Experience (XP)</h4>
+                        <p class="text-lg font-bold text-emerald-400">${data.xp} XP${data.xp_locked > 0 ? ` <span class="text-sm text-gray-500">(${data.xp_locked} locked)</span>` : ''}</p>
+                    </div>
+                </div>
+            `;
+
+            characterSheetDataEl.querySelectorAll('.talent-block').forEach(block => {
+                block.addEventListener('click', () => { 
+                    const descriptionDisplay = document.getElementById('description-display'); 
+                    const description = block.dataset.description;
+                    const talentName = block.dataset.talentName;
+                    let formattedDescription = description.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                    formattedDescription = formattedDescription.replace(/\*(.*?)\*/g, '<strong>$1</strong>');
+                    const newHtml = `<strong>${talentName}:</strong> ${formattedDescription}`;
+                    if (descriptionDisplay && descriptionDisplay.innerHTML === newHtml) {
+                        descriptionDisplay.innerHTML = "Tap a stat or talent for its description."; 
+                    } else if (descriptionDisplay) {
+                        descriptionDisplay.innerHTML = newHtml;
+                    }
+                });
+            });
+characterSheetDataEl.querySelectorAll('.equipment-item').forEach(item => {
+    item.addEventListener('click', () => {
+        const descriptionDisplay = document.getElementById('description-display');
+        const properties = item.dataset.properties;
+        const itemName = item.textContent.trim();
+        const newHtml = `<strong>${itemName}:</strong> Properties: ${properties}`;
+        if (descriptionDisplay && descriptionDisplay.innerHTML === newHtml) {
+            descriptionDisplay.innerHTML = "Tap a stat or talent for its description.";
+        } else if (descriptionDisplay) {
+            descriptionDisplay.innerHTML = newHtml;
+        }
+    });
+});
+        }
+
+        function renderCharacterCreation() {
+            if (!callingOptionsEl || !burdenOptionsEl) return;
+            callingOptionsEl.innerHTML = '';
+            burdenOptionsEl.innerHTML = '';
+
+            const createStatLine = (stats) => {
+                let posLine = '', negLine = '';
+                for (const [stat, val] of Object.entries(stats)) {
+                    const fullStatName = stat.charAt(0) + stat.slice(1).toLowerCase();
+                    if (val > 0) {
+                        posLine += `<span class="font-medium text-emerald-400">${fullStatName} +${val}</span> `;
+                    } else if (val < 0) {
+                        negLine += `<span class="font-medium text-gray-500">${fullStatName} ${val}</span> `;
+                    }
+                }
+                return (posLine + negLine).trim() || 'All stats 0';
+            };
+
+            CONTENT_PACK_ASHLORDS.callings.forEach(calling => {
+                const talentsHtml = (calling.talents || []).map(talent => `
+                    <div>
+                        <h5 class="text-sm font-bold text-gray-200">${talent.name}</h5>
+                        <p class="text-xs text-gray-400">${talent.description}</p>
+                    </div>
+                `).join('');
+                const card = document.createElement('div');
+                card.className = 'playbook-card p-4 rounded-lg cursor-pointer';
+                card.dataset.id = calling.id;
+                card.dataset.type = 'calling';
+                card.innerHTML = `
+                    <h4 class="text-lg font-bold text-white">${calling.name}</h4>
+                    <p class="text-sm text-gray-400 mb-2">${calling.description}</p>
+                    <p class="text-xs text-gray-300">Stats: ${createStatLine(calling.stats)}</p>
+                    ${talentsHtml ? `<div class="border-t border-gray-600 border-opacity-50 my-2"></div>` : ''}
+                    <div class="space-y-1">${talentsHtml}</div>
+                `;
+                card.addEventListener('click', () => selectPlaybookCard(card, 'calling'));
+                callingOptionsEl.appendChild(card);
+            });
+
+            CONTENT_PACK_ASHLORDS.burdens.forEach(burden => {
+                const talentsHtml = (burden.talents || []).map(talent => `
+                    <div>
+                        <h5 class="text-sm font-bold text-gray-200">${talent.name}</h5>
+                        <p class="text-xs text-gray-400">${talent.description}</p>
+                    </div>
+                `).join('');
+                const card = document.createElement('div');
+                card.className = 'playbook-card p-4 rounded-lg cursor-pointer';
+                card.dataset.id = burden.id;
+                card.dataset.type = 'burden';
+                card.dataset.requiresInput = burden.requiresInput || false;
+                card.dataset.inputLabel = burden.inputLabel || "";
+                card.innerHTML = `
+                    <h4 class="text-lg font-bold text-white">${burden.name}</h4>
+                    <p class="text-sm text-gray-400 mb-2">${burden.description}</p>
+                    <p class="text-xs text-gray-300">Stats: ${createStatLine(burden.stats)}</p>
+                    ${talentsHtml ? `<div class="border-t border-gray-600 border-opacity-50 my-2"></div>` : ''}
+                    <div class="space-y-1">${talentsHtml}</div>
+                `;
+                card.addEventListener('click', () => selectPlaybookCard(card, 'burden'));
+                burdenOptionsEl.appendChild(card);
+            });
+        }
+
+        function selectPlaybookCard(selectedCard, type) {
+            const optionsContainer = (type === 'calling') ? callingOptionsEl : burdenOptionsEl;
+            optionsContainer.querySelectorAll('.playbook-card').forEach(card => { card.classList.remove('selected'); });
+            selectedCard.classList.add('selected');
+
+            if (type === 'burden') {
+                if (selectedCard.dataset.requiresInput === 'true') {
+                    burdenDetailWrapperEl.style.display = 'block';
+                    burdenDetailLabelEl.textContent = selectedCard.dataset.inputLabel;
+                    const burdenId = selectedCard.dataset.id;
+                    let placeholderText = "e.g., ";
+                    if (burdenId === 'haunted') placeholderText += "a scorned lover, a debt unpaid";
+                    else if (burdenId === 'seeker') placeholderText += "order vs. chaos, love vs. hate";
+                    else if (burdenId === 'cursed') placeholderText += "I must steal, I am a vampire";
+                    else placeholderText += "Define the details..."; 
+                    burdenDetailInputEl.placeholder = placeholderText;
+                } else {
+                    burdenDetailWrapperEl.style.display = 'none';
+                    burdenDetailInputEl.value = '';
+                }
+            }
+        }
+
+        function displayWorldClocks(data) {
+            if (!data || !worldClocksContainerEl) return;
+            worldClocksLoadingEl.style.display = 'none';
+            worldClocksContainerEl.innerHTML = '';
+            if (!data.clocks || data.clocks.length === 0) {
+                worldClocksContainerEl.innerHTML = '<p class="text-gray-400 italic col-span-2">No active world clocks.</p>';
+                return;
+            }
+
+            data.clocks.forEach(clock => {
+                const clockDiv = document.createElement('div');
+                clockDiv.className = 'clock';
+                let segmentsHtml = '';
+                const segments = clock.segments || 6;
+                const filled = clock.current || 0;
+                const angle = 360 / segments;
+                const isNearlyFull = filled >= segments - 1 && filled < segments;
+
+                for (let i = 0; i < segments; i++) {
+                    const rotation = angle * i;
+                    const isFilled = i < filled;
+                    segmentsHtml += `<div class="clock-segment ${isFilled ? 'filled' : ''}" style="transform: rotate(${rotation}deg);"></div>`;
+                }
+
+                clockDiv.innerHTML = `
+                    <div class="clock-face ${isNearlyFull ? 'near-full' : ''}">
+                        ${segmentsHtml}
+                    </div>
+                    <span class="clock-name">${clock.name} (${filled}/${segments})</span>
+                `;
+                worldClocksContainerEl.appendChild(clockDiv);
+            });
+        }
+
+        function displayDestinyClock(data) {
+            const destinyClockFace = document.getElementById('destiny-clock-face');
+            const destinyNarrative = document.getElementById('destiny-narrative');
+            if (!destinyClockFace || !destinyNarrative) return;
+
+            const segments = 8;
+            const filled = data?.current || 0;
+            const angle = 360 / segments;
+            
+            let segmentsHtml = '';
+            for (let i = 0; i < segments; i++) {
+                const rotation = angle * i;
+                const isFilled = i < filled;
+                segmentsHtml += `<div class="clock-segment ${isFilled ? 'filled' : ''}" style="transform: rotate(${rotation}deg); background-color: ${isFilled ? 'var(--c-alchemical-gold)' : 'transparent'};"></div>`;
+            }
+            destinyClockFace.innerHTML = segmentsHtml;
+
+            const narrativeBeats = {
+                0: "You are nobody. Just another blade for hire in a dying world.",
+                1: "You are nobody. Just another blade for hire in a dying world.",
+                2: "People start to notice. You're more than just competent.",
+                3: "Rumors spread. Your name carries weight.",
+                4: "Rumors spread. Your name carries weight.",
+                5: "You're a legend in the making. Enemies fear you. Allies seek you.",
+                6: "The world is changing, and you are at the center of it all.",
+                7: "Your destiny awaits. The time has come to seize it.",
+                8: "Your legend is ready to be written. Will you claim it or be consumed?"
+            };
+            
+            destinyNarrative.textContent = narrativeBeats[filled] || "Your path unfolds...";
+            
+            if (filled >= 7) {
+                destinyClockFace.classList.add('near-full');
+            }
+        }
+
+        function displayEndgameFront(data) {
+            const frontClockFace = document.getElementById('endgame-front-clock-face');
+            const frontName = document.getElementById('endgame-front-name');
+            if (!frontClockFace || !frontName) return;
+
+            const segments = 8;
+            const filled = data?.current || 0;
+            const angle = 360 / segments;
+            const name = data?.name || "Unknown Threat";
+            
+            let segmentsHtml = '';
+            for (let i = 0; i < segments; i++) {
+                const rotation = angle * i;
+                const isFilled = i < filled;
+                segmentsHtml += `<div class="clock-segment ${isFilled ? 'filled' : ''}" style="transform: rotate(${rotation}deg);"></div>`;
+            }
+            frontClockFace.innerHTML = segmentsHtml;
+            frontName.textContent = `${name} (${filled}/8)`;
+            
+            if (filled >= 6) {
+                frontClockFace.classList.add('near-full');
+            }
+        }
+
+        function displayQuestProgress(questData) {
+            const wrapper = document.getElementById('quest-progress-wrapper');
+            const title = document.getElementById('quest-title');
+            const chapter = document.getElementById('quest-chapter');
+            const progressText = document.getElementById('quest-progress-text');
+            const progressBar = document.getElementById('quest-progress-bar');
+            const xpEarned = document.getElementById('quest-xp-earned');
+            
+            if (!wrapper || !questData) return;
+            
+            wrapper.style.display = 'block';
+            
+            // Get quest details from content pack
+            let questInfo;
+            if (questData.type === 'achievement') {
+                questInfo = CONTENT_PACK_ASHLORDS.achievement_quests[questData.stat];
+            }
+            
+            if (questInfo) {
+                title.textContent = questInfo.title;
+                const currentChapter = questData.current_chapter || 1;
+                const totalChapters = questData.total_chapters || questInfo.chapters.length;
+                const chapterInfo = questInfo.chapters[currentChapter - 1];
+                
+                if (chapterInfo) {
+                    chapter.textContent = `Chapter ${currentChapter}: ${chapterInfo.title}`;
+                } else {
+                    chapter.textContent = `Chapter ${currentChapter} of ${totalChapters}`;
+                }
+                
+                progressText.textContent = `${currentChapter}/${totalChapters}`;
+                const progressPercent = (currentChapter / totalChapters) * 100;
+                progressBar.style.width = `${progressPercent}%`;
+                
+                const earned = questData.xp_earned_during_quest || 0;
+                const required = 5; // Achievement quests require 5 XP
+                xpEarned.textContent = `Quest XP: ${earned}/5 earned`;
+            } else {
+                title.textContent = `${questData.type} Quest`;
+                chapter.textContent = `Chapter ${questData.current_chapter || 1}`;
+            }
+        }
+        
+        function hideQuestProgress() {
+            const wrapper = document.getElementById('quest-progress-wrapper');
+            if (wrapper) {
+                wrapper.style.display = 'none';
+            }
+        }
+
+        function setupFirestoreListeners() {
+            console.log("ðŸ”¥ [FIRESTORE] Setting up listeners...");
+            const charRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "characters", currentCharacterId);
+            onSnapshot(charRef, (docSnap) => {
+                console.log("ðŸ“„ [CHARACTER] Snapshot received, exists:", docSnap.exists());
+                if (docSnap.exists()) {
+                    charCreationUiEl.style.display = 'none';
+                    mainGameUiEl.style.display = 'block';
+                    loadingOverlayEl.style.display = 'none';
+                    characterSheetLoadingEl.style.display = 'none';
+                    currentCharacterData = docSnap.data();
+                    displayCharacter(currentCharacterData);
+                } else {
+                    mainGameUiEl.style.display = 'none';
+                    charCreationUiEl.style.display = 'block';
+                    loadingOverlayEl.style.display = 'none';
+                    currentCharacterData = null;
+                    renderCharacterCreation();
+                }
+            }, (error) => {
+                console.error("âŒ [CHARACTER] Listener error:", error);
+                showErrorModal("Connection Error", `Lost connection to character data. Error: ${error.message}`);
+            });
+
+            const chatQuery = query(collection(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "chat_history"));
+            onSnapshot(chatQuery, (querySnapshot) => {
+                console.log("ðŸ’¬ [CHAT] Chat history updated, messages:", querySnapshot.size);
+                displayChatHistory(querySnapshot);
+            }, (error) => {
+                console.error("âŒ [CHAT] Listener error:", error);
+            });
+
+            const gameStateRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "game_state", "main");
+            onSnapshot(gameStateRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    currentGameState = docSnap.data();
+                    const phase = currentGameState.phase || 'chapter';
+                    if (phase === 'interlude') {
+                        chapterPhaseUiEl.style.display = 'none';
+                        interludePhaseUiEl.classList.remove('hidden');
+                    } else {
+                        chapterPhaseUiEl.style.display = 'block';
+                        interludePhaseUiEl.classList.add('hidden');
+                    }
+                } else {
+                    currentGameState = { phase: 'chapter', turns_since_interlude: 0 };
+                    chapterPhaseUiEl.style.display = 'block';
+                    interludePhaseUiEl.classList.add('hidden');
+                }
+            }, (error) => {
+                console.error("âŒ [GAME STATE] Listener error:", error);
+            });
+
+            const worldClocksRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "game_state", "world_clocks");
+            onSnapshot(worldClocksRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    displayWorldClocks(docSnap.data());
+                } else {
+                    displayWorldClocks({ clocks: [] });
+                }
+            }, (error) => {
+                console.error("âŒ [WORLD CLOCKS] Listener error:", error);
+            });
+            
+            // Quest state listener
+            const questStateRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "quest_state", "current_quest");
+            onSnapshot(questStateRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const questData = docSnap.data();
+                    displayQuestProgress(questData);
+                } else {
+                    hideQuestProgress();
+                }
+            }, (error) => {
+                console.error("Quest state listener error:", error);
+            });
+        }
+
+        async function checkAndCreateCampaign() {
+            console.log("ðŸŽ² [CAMPAIGN] Checking campaign...");
+            const campaignRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId);
+            const campaignSnap = await getDoc(campaignRef);
+
+            if (!campaignSnap.exists()) {
+                console.log("ðŸŽ² [CAMPAIGN] Creating new campaign...");
+                await setDoc(campaignRef, {
+                    name: "Ash-Lord's Covenant (Prototype)",
+                    gmId: "ai_gm_gemini",
+                    playerIds: [userId],
+                    activeContentPackId: "ashlords_covenant_v1",
+                    createdAt: serverTimestamp() 
+                });
+                
+                const gameStateRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "game_state", "main");
+                await setDoc(gameStateRef, { phase: "chapter", turns_since_interlude: 0 });
+
+                const worldClocksRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "game_state", "world_clocks");
+                await setDoc(worldClocksRef, {
+                    clocks: [
+                        { id: "blight_tax_unrest", name: "City unrest over the 'Blight Tax'", segments: 6, current: 1 },
+                        { id: "alchemists_plot", name: "The Alchemist's Guild plot", segments: 8, current: 0 }
+                    ]
+                });
+            } else {
+                const campaignData = campaignSnap.data();
+                if (!campaignData.playerIds.includes(userId)) {
+                    await updateDoc(campaignRef, {
+                        playerIds: [...campaignData.playerIds, userId]
+                    });
+                }
+            }
+        }
+
+        async function resetGame() {
+            if (!currentCharacterId) {
+                showErrorModal("Error", "No character is loaded to reset.");
+                return;
+            }
+            showLoadingOverlay();
+            try {
+                await deleteChatHistory();
+                const charRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "characters", currentCharacterId);
+                await deleteDoc(charRef);
+                const gameStateRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "game_state", "main");
+                await deleteDoc(gameStateRef);
+                const worldClocksRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "game_state", "world_clocks");
+                await deleteDoc(worldClocksRef);
+                await checkAndCreateCampaign();
+            } catch (error) {
+                console.error("âŒ [RESET] Error:", error);
+                showErrorModal("Reset Failed", `Could not reset game data. Error: ${error.message}`);
+                loadingOverlayEl.style.display = 'none';
+            }
+        }
+
+        async function deleteChatHistory() {
+            const chatCollectionRef = collection(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "chat_history");
+            const q = query(chatCollectionRef);
+            const querySnapshot = await getDocs(q);
+            const deletePromises = [];
+            querySnapshot.forEach((doc) => { deletePromises.push(deleteDoc(doc.ref)); });
+            await Promise.all(deletePromises);
+        }
+        
+        async function createCharacterAndStartGame() {
+            const charName = charNameEl.value.trim();
+            const selectedCallingEl = callingOptionsEl.querySelector('.selected');
+            const selectedBurdenEl = burdenOptionsEl.querySelector('.selected');
+
+            if (!charName) return showErrorModal("Missing Info", "Please enter a name for your character.");
+            if (!selectedCallingEl) return showErrorModal("Missing Info", "Please choose a Calling.");
+            if (!selectedBurdenEl) return showErrorModal("Missing Info", "Please choose a Burden.");
+
+            showLoadingOverlay();
+
+            try {
+                const callingId = selectedCallingEl.dataset.id;
+                const burdenId = selectedBurdenEl.dataset.id;
+                const calling = CONTENT_PACK_ASHLORDS.callings.find(c => c.id === callingId);
+                const burden = CONTENT_PACK_ASHLORDS.burdens.find(b => b.id === burdenId);
+
+                const combinedStats = { FORCE: 0, FINESSE: 0, INFLUENCE: 0, WITS: 0, RESOLVE: 0 };
+                for (const stat in combinedStats) {
+                    combinedStats[stat] = (calling.stats[stat] || 0) + (burden.stats[stat] || 0);
+                }
+
+                const newCharacter = {
+                    playerId: userId,
+                    name: charName,
+                    playbook: { calling: calling.name, burden: burden.name },
+                    stats: combinedStats,
+                    talents: [...(calling.talents || []), ...(burden.talents || [])],
+                    tags: [...(calling.tags || []), ...(burden.tags || [])],
+                    equipment: [...(calling.equipment || []), ...(burden.equipment || [])],
+                    xp: 0,
+                    xp_locked: 0
+                };
+
+                if (selectedBurdenEl.dataset.requiresInput === 'true') {
+                    const detail = burdenDetailInputEl.value.trim();
+                    if (!detail) {
+                        loadingOverlayEl.style.display = 'none';
+                        return showErrorModal("Missing Info", `Please define the details for your Burden: ${burdenDetailLabelEl.textContent}`);
+                    }
+                    if (burden.tags && burden.tags.length > 0) {
+                        const baseTag = burden.tags[0]; 
+                        newCharacter.tags = newCharacter.tags.filter(tag => tag !== baseTag);
+                        newCharacter.tags.push(`${baseTag}: ${detail}`);
+                    }
+                }
+
+                const charRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "characters", currentCharacterId);
+                await setDoc(charRef, newCharacter);
+                await addMessageToChat("model", 
+                    "You are in a dimly lit tavern, the air thick with stale ale and desperation. " +
+                    "Corrupt City Watch enforcers are shaking down the tavern keeper over a fake 'Blight Tax'. " +
+                    "One guard, his face a mask of bored cruelty, shoves the old man. 'Pay up, or we shut you down.' " +
+                    "What do you do?"
+                );
+            } catch (error) {
+                console.error("âŒ [CHARACTER] Error creating:", error);
+                showErrorModal("Creation Failed", `Could not save character. Error: ${error.message}`);
+                loadingOverlayEl.style.display = 'none';
+            }
+        }
+
+        async function loadGameData() {
+            if (!userId || !currentCharacterId) return;
+            try {
+                console.log("ðŸŽ® [GAME] Loading game data...");
+                await checkAndCreateCampaign();
+                setupFirestoreListeners();
+            } catch (error) {
+                console.error("âŒ [GAME] Error loading:", error);
+                showErrorModal("Game Load Failed", `Could not load game data from Firestore. Error: ${error.message}`);
+            }
+        }
+
+        async function processPlayerAction(inputText, actionType = 'chapter') {
+            if (!inputText) {
+                showErrorModal("Action Required", "Please describe your character's action in the text box first.");
+                return;
+            }
+            if (!currentCharacterData) {
+                showErrorModal("Loading Error", "Character data is not yet loaded. Please wait.");
+                return;
+            }
+
+            showLoadingOverlay();
+            if (actionType === 'chapter') {
+                playerInputEl.value = '';
+                playerInputEl.disabled = true;
+                document.getElementById('submit-action-btn').disabled = true;
+            } else {
+                interludePhaseUiEl.style.display = 'none';
+            }
+
+            try {
+                await addMessageToChat('user', inputText);
+                const aiResponse = await callAIGM(inputText);
+                let parsedResponse;
+                try {
+                    parsedResponse = JSON.parse(aiResponse);
+                } catch (e) {
+                    console.error("âŒ [AI] Failed to parse JSON:", e);
+                    await addMessageToChat('model', `(AI Parse Error) ${aiResponse}`);
+                    throw new Error("The AI GM's response was not in the correct JSON format.");
+                }
+
+                if (parsedResponse.narrative) {
+                    await addMessageToChat('model', parsedResponse.narrative);
+                }
+                if (parsedResponse.state_update) {
+                    await processStateUpdate(parsedResponse.state_update);
+                }
+            } catch (error) {
+                console.error("âŒ [ACTION] Error:", error);
+                await addMessageToChat('model', `--- SYSTEM ERROR --- \n${error.message} \nPlease try again.`);
+            } finally {
+                loadingOverlayEl.style.display = 'none';
+                if (actionType === 'chapter') {
+                    playerInputEl.disabled = false;
+                    document.getElementById('submit-action-btn').disabled = false;
+                    playerInputEl.focus();
+                } else if (currentGameState && currentGameState.phase === 'interlude') {
+                    interludePhaseUiEl.style.display = 'block';
+                }
+            }
+        }
+
+        async function handlePlayerAction() {
+            const inputText = playerInputEl.value.trim();
+            await processPlayerAction(inputText, 'chapter');
+        }
+        
+        async function handleInterludeAction(actionType) {
+            if (!currentCharacterData) {
+                showErrorModal("Loading Error", "Character data is not yet loaded. Please wait.");
+                return;
+            }
+            
+            if (actionType === 'end_interlude') {
+                await endInterlude();
+                return;
+            }
+
+            // Special handling for seek_training - check for achievement quest eligibility
+            if (actionType === 'seek_training') {
+                const currentXP = currentCharacterData.xp || 0;
+                
+                // Find stats at +3 that could trigger achievement quest
+                const eligibleStats = Object.entries(currentCharacterData.stats)
+                    .filter(([stat, value]) => value === 3)
+                    .map(([stat]) => stat);
+                
+                // If player has stat at +3 and 15+ XP, offer achievement quest
+                if (eligibleStats.length > 0 && currentXP >= 15) {
+                    presentAchievementQuestChoice(eligibleStats);
+                    return;
+                }
+            }
+
+            const currentXP = currentCharacterData.xp || 0;
+            if (currentXP < 1) {
+                showErrorModal("Action Failed", "You do not have enough XP (1 required) to perform this action.");
+                return;
+            }
+            
+            const actionTextMap = {
+                'seek_training': "I want to spend 1 XP to seek training and improve an approach.",
+                'acquire_asset': "I want to spend 1 XP to acquire a new asset or resource.",
+                'reflect': "I want to spend 1 XP to reflect on my experiences and learn from them."
+            };
+            
+            const playerInput = actionTextMap[actionType];
+            if (!playerInput) return;
+            await processPlayerAction(playerInput, 'interlude');
+        }
+        
+        function presentAchievementQuestChoice(eligibleStats) {
+            // Hide normal interlude UI, show achievement quest choice
+            interludePhaseUiEl.innerHTML = `
+                <div class="space-y-4">
+                    <h3 class="text-xl font-bold text-white mb-2">A Moment of Destiny</h3>
+                    <p class="text-gray-300 mb-4">You stand at the threshold of legend. You have the experience and skill to attempt a breakthrough—to push beyond normal limits and become truly exceptional.</p>
+                    <p class="text-gray-400 text-sm mb-4">You can attempt an <strong class="text-emerald-400">Achievement Quest</strong> to increase one of your stats from +3 to +4. This is a dangerous undertaking that will test you to your limits.</p>
+                    
+                    <div class="bg-gray-900 border border-gray-700 rounded-lg p-4 mb-4">
+                        <h4 class="font-semibold text-emerald-400 mb-2">Achievement Quest Requirements:</h4>
+                        <ul class="text-sm text-gray-300 space-y-1">
+                            <li>• Cost: 15 XP (locked until quest complete)</li>
+                            <li>• 2-3 chapters of dangerous challenges</li>
+                            <li>• Must earn 5+ XP during the quest</li>
+                            <li>• Success: Stat increases to +4, gain legendary reputation</li>
+                            <li>• Failure: Serious injuries, must earn 2 more XP to retry</li>
+                        </ul>
+                    </div>
+                    
+                    <h4 class="font-semibold text-white mb-2">Choose your path:</h4>
+                    <div class="grid grid-cols-1 gap-3" id="achievement-quest-options"></div>
+                    
+                    <button id="decline-achievement-btn" class="w-full mt-4 px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition">
+                        Not Yet - Continue Normal Training
+                    </button>
+                </div>
+            `;
+            
+            const optionsContainer = document.getElementById('achievement-quest-options');
+            
+            // Add a button for each eligible stat
+            eligibleStats.forEach(stat => {
+                const quest = CONTENT_PACK_ASHLORDS.achievement_quests[stat];
+                if (!quest) return;
+                
+                const btn = document.createElement('button');
+                btn.className = 'interlude-button text-left';
+                btn.innerHTML = `
+                    <div class="font-bold text-lg text-emerald-400">${stat}: ${quest.title}</div>
+                    <div class="text-sm text-gray-300 mt-1">${quest.intro}</div>
+                `;
+                btn.addEventListener('click', () => startAchievementQuest(stat, quest));
+                optionsContainer.appendChild(btn);
+            });
+            
+            // Decline button
+            document.getElementById('decline-achievement-btn').addEventListener('click', () => {
+                // Return to normal interlude UI
+                location.reload(); // Simple reset - in production, would restore interlude UI
+            });
+        }
+        
+        async function startAchievementQuest(stat, quest) {
+            showLoadingOverlay();
+            
+            try {
+                // Create quest state in Firestore
+                const questStateRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "quest_state", "current_quest");
+                await setDoc(questStateRef, {
+                    type: "achievement",
+                    quest_id: quest.quest_id,
+                    stat: stat,
+                    current_chapter: 1,
+                    total_chapters: quest.chapters.length,
+                    xp_locked: 15,
+                    xp_earned_during_quest: 0,
+                    started_at: serverTimestamp(),
+                    chapters_completed: []
+                });
+                
+                // Lock 15 XP by reducing available XP
+                const charRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "characters", currentCharacterId);
+                await updateDoc(charRef, {
+                    xp_locked: 15
+                });
+                
+                // Send quest intro to chat
+                const questIntro = `--- ACHIEVEMENT QUEST BEGINS ---\n\n**${quest.title}**\n\n${quest.intro}\n\n**Chapter 1: ${quest.chapters[0].title}**\n${quest.chapters[0].objective}\n\nYou have committed 15 XP to this endeavor. There is no turning back now.`;
+                await addMessageToChat('model', questIntro);
+                
+                // Transition back to chapter phase
+                const gameStateRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "game_state", "main");
+                await setDoc(gameStateRef, { phase: "chapter", turns_since_interlude: 0 });
+                
+                showToast(`Achievement Quest: ${quest.title} - BEGUN`);
+            } catch (error) {
+                console.error("❌ [QUEST] Error starting achievement quest:", error);
+                showErrorModal("Quest Start Failed", `Could not begin achievement quest. Error: ${error.message}`);
+            } finally {
+                loadingOverlayEl.style.display = 'none';
+            }
+        }
+        
+        async function endInterlude() {
+            showLoadingOverlay();
+            let grimPortents = [];
+            try {
+                const worldClocksRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "game_state", "world_clocks");
+                const clocksSnap = await getDoc(worldClocksRef);
+                
+                if (clocksSnap.exists()) {
+                    let clocksData = clocksSnap.data();
+                    let updatedClocks = clocksData.clocks.map(clock => {
+                        let newCurrent = clock.current + 1;
+                        if (newCurrent >= clock.segments) {
+                            grimPortents.push(`The clock '${clock.name}' has filled! A grim portent occurs.`);
+                            newCurrent = 0;
+                        }
+                        return {
+...clock, current: newCurrent };
+                    });
+                    await setDoc(worldClocksRef, { clocks: updatedClocks });
+                }
+
+                const playerInput = `(SYSTEM: We are ending Interlude. The "World Turn" has advanced. The following grim portents occurred: ${grimPortents.length > 0 ? grimPortents.join('; ') : 'None.'} Please narrate the consequences and set the scene for the next adventure.)`;
+                await addMessageToChat('user', playerInput);
+                const aiResponse = await callAIGM(playerInput);
+                let parsedResponse;
+                try {
+                    parsedResponse = JSON.parse(aiResponse);
+                } catch (e) {
+                    await addMessageToChat('model', `(AI Parse Error) ${aiResponse}`);
+                    throw new Error("The AI GM's response was not in the correct JSON format.");
+                }
+
+                if (parsedResponse.narrative) {
+                    await addMessageToChat('model', parsedResponse.narrative);
+                }
+                
+                const gameStateRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "game_state", "main");
+                await setDoc(gameStateRef, { phase: "chapter", turns_since_interlude: 0 });
+            } catch (error) {
+                console.error("âŒ [INTERLUDE] Error:", error);
+                showErrorModal("Error", `Could not end interlude. Error: ${error.message}`);
+                const gameStateRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "game_state", "main");
+                await setDoc(gameStateRef, { phase: "interlude" });
+            } finally {
+                loadingOverlayEl.style.display = 'none';
+            }
+        }
+
+        async function completeAchievementQuest(questData) {
+            showLoadingOverlay();
+            try {
+                const questInfo = CONTENT_PACK_ASHLORDS.achievement_quests[questData.stat];
+                const xpEarned = questData.xp_earned_during_quest || 0;
+                
+                if (xpEarned < 5) {
+                    showErrorModal("Quest Failed", `You did not earn enough XP during the quest (${xpEarned}/5). The quest has failed.`);
+                    await failAchievementQuest(questData);
+                    return;
+                }
+                
+                // Success! Increase stat to +4
+                const charRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "characters", currentCharacterId);
+                await updateDoc(charRef, {
+                    [`stats.${questData.stat}`]: 4,
+                    xp_locked: 0,
+                    tags: [...(currentCharacterData.tags || []), ...questInfo.success.tags_add]
+                });
+                
+                // Send success narrative
+                const successMsg = `--- ACHIEVEMENT QUEST COMPLETE ---\n\n**${questInfo.title}**\n\n${questInfo.success.narrative}\n\nYour ${questData.stat} has increased from +3 to +4. You have become legendary.`;
+                await addMessageToChat('model', successMsg);
+                
+                showToast(`🏆 ${questInfo.title} - COMPLETE!`);
+                
+                // Advance destiny clock
+                const destinyRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "game_state", "destiny_clock");
+                const destinySnap = await getDoc(destinyRef);
+                const currentDestiny = destinySnap.exists() ? (destinySnap.data().current || 0) : 0;
+                await setDoc(destinyRef, { 
+                    name: "Path to Legend", 
+                    segments: 8, 
+                    current: Math.min(8, currentDestiny + 3) 
+                });
+                
+            } catch (error) {
+                console.error("❌ [QUEST] Error completing quest:", error);
+                showErrorModal("Quest Completion Error", error.message);
+            } finally {
+                loadingOverlayEl.style.display = 'none';
+            }
+        }
+        
+        async function failAchievementQuest(questData) {
+            try {
+                const questInfo = CONTENT_PACK_ASHLORDS.achievement_quests[questData.stat];
+                
+                // 15 XP remains locked but can be used to retry after earning 2 more
+                const charRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "characters", currentCharacterId);
+                // Don't unlock XP yet - they need to earn 2 more to retry
+                
+                const failMsg = `--- ACHIEVEMENT QUEST FAILED ---\n\n**${questInfo.title}**\n\nYou were not strong enough. The ${questData.stat} breakthrough remains beyond your reach... for now.\n\nYour 15 XP remains committed. Earn 2 more XP and recover from your wounds, then you may attempt this quest again.`;
+                await addMessageToChat('model', failMsg);
+                
+                showToast(`Quest Failed - ${questInfo.title}`);
+            } catch (error) {
+                console.error("❌ [QUEST] Error handling quest failure:", error);
+            }
+        }
+
+        async function processStateUpdate(update) {
+            const charRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "characters", currentCharacterId);
+            try {
+                validateStateUpdate(update, currentCharacterData);
+            } catch (error) {
+                console.error("âŒ [STATE] Validation failed:", error);
+                showErrorModal("Invalid Update", error.message);
+                return;
+            }
+
+            let firestoreUpdate = {};
+
+            if (update.stats) {
+                for (const [stat, mod] of Object.entries(update.stats)) {
+                    const currentVal = currentCharacterData.stats[stat] || 0;
+                    firestoreUpdate[`stats.${stat}`] = currentVal + mod;
+                }
+            }
+
+            let currentTags = [...(currentCharacterData.tags || [])];
+            if (update.tags_add) {
+                currentTags = [...new Set([...currentTags, ...update.tags_add])];
+            }
+            if (update.tags_remove) {
+                currentTags = currentTags.filter(tag => !update.tags_remove.includes(tag));
+            }
+            if (JSON.stringify(currentTags) !== JSON.stringify(currentCharacterData.tags || [])) {
+                 firestoreUpdate.tags = currentTags;
+            }
+
+            let currentEquipment = [...(currentCharacterData.equipment || [])];
+            if (update.equipment_add && Array.isArray(update.equipment_add)) {
+                currentEquipment = [...currentEquipment, ...update.equipment_add];
+            }
+            if (update.equipment_remove && Array.isArray(update.equipment_remove)) {
+                currentEquipment = currentEquipment.filter(item => !update.equipment_remove.includes(item.name));
+            }
+            if (JSON.stringify(currentEquipment) !== JSON.stringify(currentCharacterData.equipment || [])) {
+                 firestoreUpdate.equipment = currentEquipment;
+            }
+            
+            if (update.xp_gain && update.xp_gain > 0) {
+                firestoreUpdate.xp = (currentCharacterData.xp || 0) + update.xp_gain;
+                showToast(`+${update.xp_gain} XP gained!`);
+            }
+            
+            if (update.xp_spend && update.xp_spend > 0) {
+                const currentXP = currentCharacterData.xp || 0;
+                firestoreUpdate.xp = Math.max(0, currentXP - update.xp_spend);
+            }
+            
+            if (update.talent_used) {
+                showToast(`Talent: ${update.talent_used}`);
+            }
+            
+            // Quest progress tracking
+            const questStateRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "quest_state", "current_quest");
+            const questSnap = await getDoc(questStateRef);
+            
+            if (questSnap.exists()) {
+                const questData = questSnap.data();
+                let questUpdates = {};
+                
+                // Track XP earned during quest
+                if (update.xp_gain && update.xp_gain > 0) {
+                    questUpdates.xp_earned_during_quest = (questData.xp_earned_during_quest || 0) + update.xp_gain;
+                }
+                
+                // Check for quest completion signal
+                if (update.quest_chapter_complete) {
+                    const nextChapter = (questData.current_chapter || 1) + 1;
+                    const totalChapters = questData.total_chapters || 2;
+                    
+                    if (nextChapter > totalChapters) {
+                        // Quest complete!
+                        await completeAchievementQuest(questData);
+                        await deleteDoc(questStateRef);
+                    } else {
+                        questUpdates.current_chapter = nextChapter;
+                        questUpdates.chapters_completed = [...(questData.chapters_completed || []), questData.current_chapter];
+                    }
+                }
+                
+                // Check for quest failure
+                if (update.quest_failed) {
+                    await failAchievementQuest(questData);
+                    await deleteDoc(questStateRef);
+                }
+                
+                if (Object.keys(questUpdates).length > 0) {
+                    await updateDoc(questStateRef, questUpdates);
+                }
+            }
+            
+            if (update.transition_to_interlude) {
+                const turnsSince = currentGameState?.turns_since_interlude || 0;
+                if (turnsSince >= 3) {
+                    const gameStateRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "game_state", "main");
+                    await setDoc(gameStateRef, { phase: "interlude", turns_since_interlude: 0 });
+                }
+            } else if (currentGameState?.phase === 'chapter') {
+                const gameStateRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "game_state", "main");
+                await updateDoc(gameStateRef, {
+                    turns_since_interlude: (currentGameState.turns_since_interlude || 0) + 1
+                });
+            }
+
+            if (Object.keys(firestoreUpdate).length > 0) {
+                await updateDoc(charRef, firestoreUpdate);
+            }
+        }
+
+        async function callAIGM(playerInput) {
+            const escalationRoll = 1 + Math.floor(Math.random() * 6);
+            let escalationData = "";
+            if (escalationRoll <= 4) {
+                const twist = CONTENT_PACK_ASHLORDS.TIER_1_TWISTS[Math.floor(Math.random() * CONTENT_PACK_ASHLORDS.TIER_1_TWISTS.length)];
+                escalationData = `(Tier 1) Minor Twist: "${twist}"`;
+            } else if (escalationRoll === 5) {
+                escalationData = `(Tier 1) Minor Twist + Advance a hidden Threat Clock.`;
+            } else {
+                const majorTwist = CONTENT_PACK_ASHLORDS.TIER_2_TWISTS[Math.floor(Math.random() * CONTENT_PACK_ASHLORDS.TIER_2_TWISTS.length)];
+                escalationData = `(Tier 2) Major Oracle Twist: ${majorTwist.complication} ${majorTwist.twist}`;
+            }
+
+            let chatHistoryForPrompt = "This is the first turn.";
+            if (currentChatHistory.length > 0) {
+                chatHistoryForPrompt = currentChatHistory.map(msg => {
+                    return `${msg.role === 'user' ? 'Player' : 'GM'}: ${msg.content}`;
+                }).join('\n');
+            }
+
+            const apiKey = "AIzaSyCvTDAmgByYSyxrwinqqcHNKZaYJ9_hV8M";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`;
+
+            async function fetchWithRetry(url, options, retries = 3, delay = 2000) {
+                try {
+                    const response = await fetch(url, options);
+                    if (!response.ok) {
+                        const errorBody = await response.text();
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                } catch (error) {
+                    if (retries > 0) {
+                        await new Promise(res => setTimeout(res, delay));
+                        return fetchWithRetry(url, options, retries - 1, delay * 2);
+                    } else {
+                        throw new Error(`Failed to fetch from Gemini after retries: ${error.message}`);
+                    }
+                }
+            }
+
+            // FIRST AI CALL: Evaluate tier and stat
+            const evaluationPrompt = `You are evaluating an action for difficulty tier. Respond ONLY with valid JSON in this exact format:
+{"tier": 0, "stat": "FORCE", "reasoning": "Brief explanation"}
+
+TIER DEFINITIONS:
+- TIER 0: Trivial, auto-succeed (competent character, no opposition)
+- TIER 1: Challenging (opposition or risk of setback, but not dangerous)
+- TIER 2: Perilous (risk of harm, capture, or major loss)
+
+EVALUATE THIS ACTION: "${playerInput}"
+Character stats: ${JSON.stringify(currentCharacterData.stats)}
+
+Return JSON with tier (0, 1, or 2), stat (FORCE/FINESSE/INFLUENCE/WITS/RESOLVE or NONE for tier 0), and brief reasoning.`;
+
+            const evalPayload = {
+                contents: [{ parts: [{ text: evaluationPrompt }] }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    temperature: 0.3,
+                    maxOutputTokens: 256,
+                }
+            };
+
+            const evalResult = await fetchWithRetry(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(evalPayload)
+            });
+
+            let tier = 1, statName = "FORCE";
+            try {
+                const evalText = evalResult.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+                const evalData = JSON.parse(evalText);
+                tier = evalData.tier || 1;
+                statName = evalData.stat || "FORCE";
+                console.log(`🎲 [EVALUATION] Tier ${tier}, Stat: ${statName}, Reasoning: ${evalData.reasoning}`);
+            } catch (e) {
+                console.error("❌ [EVALUATION] Failed to parse:", e);
+                tier = 1; // Default to Tier 1
+            }
+
+            // Roll dice if needed
+            let rollData = null;
+            if (tier === 0) {
+                console.log(`✅ [RESOLUTION] Tier 0 - Auto-success`);
+            } else {
+                const roll = Math.floor(Math.random() * 10) + 1; // 1d10
+                const statValue = statName === "NONE" ? 0 : (currentCharacterData.stats[statName] || 0);
+                const total = roll + statValue;
+                
+                let outcome = "FAILURE";
+                if (tier === 1) {
+                    // Tier 1: 8+ full success, 5-7 success with cost, 4- failure
+                    if (total >= 8) outcome = "FULL_SUCCESS";
+                    else if (total >= 5) outcome = "SUCCESS_WITH_MINOR_COST";
+                    else outcome = "FAILURE";
+                } else { // tier 2
+                    // Tier 2: 11+ full, 8-10 minor cost, 6-7 major cost, 5- failure
+                    if (total >= 11) outcome = "FULL_SUCCESS";
+                    else if (total >= 8) outcome = "SUCCESS_WITH_MINOR_COST";
+                    else if (total >= 6) outcome = "SUCCESS_WITH_MAJOR_COST";
+                    else outcome = "FAILURE_WITH_CONSEQUENCE";
+                }
+                
+                rollData = { tier, roll, stat: statName, statValue, total, outcome };
+                console.log(`🎲 [RESOLUTION] Roll: ${roll} + ${statValue} (${statName}) = ${total} → ${outcome}`);
+            }
+
+            // SECOND AI CALL: Narrate based on outcome
+            const systemPrompt = `SYSTEM: You are the AI Game Master for "The Ash-Lord's Covenant," a grimdark investigative RPG.
+
+=== CORE PRINCIPLES ===
+1. TONE: Dark, cynical, morally ambiguous. No clean victories. Heroes are grey, villains are human. System beats heroism.
+2. GAMEPLAY: Investigate → Discover Cynical Truth → Make Ugly Choice. Surface narrative is always a lie.
+3. FAILURE DRIVES STORY: Every failure advances plot negatively—not "you miss" but "situation worsens."
+
+=== TIERED ACTION RESOLUTION ===
+TIER 0 (TRIVIAL): Competent character, no opposition → AUTO-SUCCESS, no roll
+TIER 1 (CHALLENGING): Opposition or setback risk, not dangerous → 1d10+stat: 8+ Full Success, 5-7 Success with Minor Cost, 4- Failure
+TIER 2 (PERILOUS): Risk of harm/capture/major loss → 1d10+stat: 11+ Full Success, 8-10 Success with Minor Cost, 6-7 Success with Major Cost, 5- Failure with Consequence
+
+EVALUATION: Is character competent? (Tier 0). Opposition/risk? (Tier 1). Serious harm risk? (Tier 2). Relevant talent? (May reduce tier).
+
+=== TALENT SYSTEM ===
+ALWAYS CHECK: Does a talent apply to this situation?
+
+PASSIVE (Always Active):
+- Battle-Born (Sellsword): Charging into fight → act first + ignore one hit, reduces combat to Tier 1
+- I Know Your Kind (Disgraced): Meeting high-status NPC → automatically know leverage over them
+- Hunted Your Kind (Hexenjager): First supernatural encounter → recall useful info, reduces tier by 1
+
+TRIGGERED (Specific Conditions):
+- Shadow's Move (Haunted): MANDATORY on ANY failure → Shadow isolates/tempts/threatens
+- Resist Curse (Cursed): When opportunity to indulge appears → FORCED CHOICE: indulge OR resist with cost
+- Balance Track (Seeker): Acting on principles → gain strength BUT risk major complication if imbalanced
+
+ACTIVE (Player Choice):
+- Unleash (Channeler): Player chooses to unleash → achieve goal BUT collateral damage occurs
+- Speak the Name (Namer): When learned True Name → compel target BUT they learn piece of your name
+- Letter of the Law (Oathbound): Making formal oath → specify exact terms for later exploitation
+- Vicious Strike (Cutthroat): Attacking unaware/vulnerable → exceptionally brutal damage
+
+MECHANICS:
+- Passive talents may reduce tier automatically
+- Triggered talents add complications to state_update
+- Failure-triggered talents (Shadow's Move) MUST activate on any failure
+- NEVER say "talent activates"—show through fiction
+
+=== XP & PROGRESSION ===
+XP AWARDS: Tier 1/2 success (1 XP), Success with cost (1 XP), Significant achievement (1 XP). Tier 0 = 0 XP.
+
+STAT COSTS: +1=3XP, +2=5XP, +3=8XP, +4=15XP+Achievement Quest, +5=15XP+Legendary Quest (ENDS CAMPAIGN)
+
+ACHIEVEMENT QUESTS (+4 Breakthrough):
+- Triggered when stat at +3, player has 15 XP, requests training during Interlude
+- 2-3 chapters, stat-specific (FORCE: Arena Champion, FINESSE: Vault Heist, INFLUENCE: Unite Houses, WITS: Decipher Codex, RESOLVE: Trial of Shadows)
+- Must earn 5+ XP during quest
+- Success: Stat +4, legendary reputation, unlock endgame potential
+- Failure: Serious conditions, 15 XP locked, retry after earning 2 more XP
+
+QUEST TRACKING RULES:
+- When player completes a quest chapter objective, include "quest_chapter_complete": true in state_update
+- Normal XP awards still apply during quest (tracked separately as xp_earned_during_quest)
+- If player takes 3+ harmful conditions or narratively fails, include "quest_failed": true
+- Final chapter success triggers automatic quest completion if 5+ XP earned
+- Do NOT manually increase stats—system handles stat increase on quest completion
+
+LEGENDARY QUESTS (+5 Campaign Finale):
+- Triggered when ANY stat at +4, 15+ XP, Destiny Clock 8/8 OR Front Clock 7/8
+- 5-7 chapters, Calling-specific with stat-variant paths
+- Sellsword can claim Iron Throne through FORCE (combat), FINESSE (assassination), INFLUENCE (diplomacy), WITS (strategy), or RESOLVE (endurance)
+- Success: Stat +5, CAMPAIGN ENDS (Victory), calling-specific epilogue
+- Failure: CAMPAIGN ENDS (Tragedy), catastrophic outcome
+
+=== DESTINY CLOCK ===
+"Path to Legend" (8 segments): Tracks progress toward endgame
+Advances on: Stat milestones (+3=2seg, +4=3seg), World crises (2seg), XP>40 (1seg)
+
+FORESHADOWING BY LEVEL:
+0-2seg: Casual mentions ("throne sits empty...")
+3-5seg: Direct ("you could be the one...")
+6-7seg: Urgent ("you MUST act now!")
+8seg: Formal invitation to legendary quest
+
+=== ENDGAME FRONTS ===
+Each Calling has background threat (8 segments):
+- Sellsword: Mercenary War (Ironheart claims throne)
+- Cutthroat: Guild Conspiracy (total control)
+- Disgraced: House Extinction (name erased)
+- Hexenjager: Ash-Lord Awakening (Blight consumes world)
+- Channeler: Entity Dominance (power consumes host)
+
+URGENCY: Advances 1seg/3-4ch (early), 1seg/2ch (mid), 1seg/1ch (late)
+AT SEGMENT 8: BAD ENDING if player hasn't triggered endgame—Front wins catastrophically
+
+FORESHADOWING: 0-2=rumors, 3-4=concern, 5-6=urgent, 7=crisis, 8=too late
+
+=== ORACLE GUIDANCE (Content Generation) ===
+ACTIONS: Betray, Corrupt, Exploit, Manipulate, Infect, Consume, Decay, Abandon, Blackmail, Frame, Poison, Isolate, Hunt, Drain
+THEMES: Ledger, Debt, Oath, Prophecy, Faction, Shadow, Ash, Blood, Rust, Soot, Cinder, Bone, Corruption
+LOCATIONS: [Ash-Choked/Rust-Cankered/Blight-Twisted/Shadow-Haunted] + [Abbey/Gallows/Fortress/Vault/Cistern/Ossuary]
+
+COMBINE FOR EMERGENCE: "Betray+Faction"=ally's faction loyalty overrides promise, "Corrupt+Ledger"=falsified accounts, "Infect+Prophecy"=prophecy is Blight corruption
+
+=== NPC SYSTEM ===
+Every important NPC has INSTINCT (selfish desire) vs OBLIGATION (tattered duty)
+INSTINCTS: Paranoia, Greed, Addiction, Vengeance, Pride, Cowardice, Desperation, Ambition, Envy, Lust
+OBLIGATIONS: Protect Guild, Serve Family, Honor Oath, Uphold Law, Maintain Faith, Preserve Secret, Repay Debt, Protect Weak
+
+SOCIAL ENCOUNTERS: Appeal to Obligation (INFLUENCE check), Exploit Instinct (trigger selfishness)
+BETRAYAL: When Instinct > Obligation, NPC betrays (hard move)
+
+=== INVESTIGATIVE STRUCTURE ===
+RUMOR vs TRUTH paradigm:
+- Rumor: "Noble hires you to rescue daughter"
+- Truth: "Daughter ran away, noble wants forced marriage"
+
+ALWAYS include cynical twist. Surface answer ≠ full truth.
+
+EVIDENCE TYPES: Blood-stained ledger, heretical journal, forged treaty, alchemical formula (creates Blight, not cures), intercepted letter, unreliable witness
+MACGUFFINS: The Cure (that's infection), Prophecy (planted by enemies), True Name (enslaves speaker), Evidence (implicates everyone including PCs)
+
+=== ACTIVE BLIGHT (Environmental Threats) ===
+The Blight is ACTIVE ANTAGONIST. Use on: Tier 2 failure in Blighted area, soft move for tension, rest in unsafe location
+
+EFFECTS:
+- Whispering Cysts: Burst from walls, whisper madness (RESOLVE or "Paranoid")
+- Corrupting Touch: Equipment decays ("Ash-Rusted")
+- Hollow Hunger: Blighted creature emerges, mindless consuming
+- Choking Cloud: Ash-storm, visibility zero, party separated
+- The Meld: Blight tries to merge (RESOLVE or "Partially Corrupted")
+- Betrayal of Flesh: Cysts burst from character's skin
+- The Calling: Seductive whispers promise power (Instinct check or compelled)
+
+CORRUPTION PROGRESSION: Track accumulation, 2+ Blight conditions = corruption risk
+TRAITS: Ash-cysts, clouded eyes, coughs ash, grey cracked skin, constant whispers, endless hunger
+
+CORRUPTED CREATURES: Any NPC/monster can be Blighted. Add ONE trait:
+- Ash-Lungs (exhales choking cloud), Cyst-Burst (explodes on damage), Blight-Touch (spreads corruption), Endless Hunger (fights til destroyed)
+EFFECT: +1 to encounter tier
+
+=== CONSEQUENCES ===
+ON FAILURE (Hard Moves):
+1. Tattered Ally: NPC's Instinct overrides Obligation, betrays
+2. Awful Truth: Reveal cynical truth (quest-giver is villain)
+3. Price Paid: Take serious condition
+4. Blight's Touch: Environment attacks
+5. New Enemy: Rival faction arrives
+6. Worse Than Expected: Situation escalates
+
+SCORE COMPLICATIONS:
+- New faction offers better deal to betray client
+- Evidence implicates YOU
+- Ally revealed as spy
+- Must choose: save ally OR complete mission
+- Success triggers worse consequences
+
+=== STATE UPDATE RULES ===
+MANDATORY:
+1. XP: Only for Tier 1/2 with risk/cost
+2. CONDITIONS: When narrative mentions, MUST add "tags_add"
+3. EQUIPMENT REMOVAL: When lost/broken, MUST add "equipment_remove"
+4. TALENT COSTS: Unleash → "tags_add": ["Collateral Damage Caused"]
+
+FORBIDDEN: Never reference HP, mana, rations, stamina. Only: Stats, Equipment, Conditions/Tags, XP, Talents
+
+=== CAMPAIGN ENDING ===
+VICTORY: Player completes legendary quest, Stat→+5, calling-specific epilogue
+TRAGEDY: Player fails legendary quest OR Front reaches 8/8 before endgame, catastrophic outcome
+CRITICAL: +5 is MAXIMUM. Campaign ends when any stat reaches +5.
+
+=== OUTPUT FORMAT ===
+ALWAYS respond with valid JSON:
+{"narrative": "Description", "state_update": {"xp_gain": 1, "stats": {"FORCE": 1}, "tags_add": ["Bruised"], "equipment_remove": ["Heavy Blade"], "talent_used": "Battle-Born", "transition_to_interlude": false}}
+
+NO markdown, NO code blocks, ONLY raw JSON.`;
+
+            let narrativeQuery = `CONTEXT: 1. CHAT HISTORY: ${chatHistoryForPrompt} 2. CHARACTER: ${JSON.stringify(currentCharacterData)} 3. GAME STATE: Phase=${currentGameState?.phase || 'chapter'}, Turns=${currentGameState?.turns_since_interlude || 0} 4. ACTION: "${playerInput}" 5. ESCALATION: d6=${escalationRoll}, ${escalationData}`;
+            
+            if (rollData) {
+                narrativeQuery += `\n\n6. RESOLUTION: Tier ${rollData.tier} action using ${rollData.stat}. Roll: ${rollData.roll} + ${rollData.statValue} = ${rollData.total}. OUTCOME: ${rollData.outcome}. Narrate this ${rollData.outcome} following Tier ${rollData.tier} outcome rules.`;
+            } else {
+                narrativeQuery += `\n\n6. RESOLUTION: Tier 0 (Trivial) - Auto-succeed. Narrate immediate success.`;
+            }
+
+            const payload = {
+                contents: [{ parts: [{ text: narrativeQuery }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    temperature: 0.8,
+                    maxOutputTokens: 2048,
+                }
+            };
+
+            const result = await fetchWithRetry(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const candidate = result.candidates?.[0];
+            if (candidate && candidate.content?.parts?.[0]?.text) {
+                return candidate.content.parts[0].text;
+            } else {
+                throw new Error("Invalid or empty response from Gemini API.");
+            }
+        }
+
+        async function initializeGame() {
+            console.log("ðŸŽ® [INIT] Starting game initialization...");
+            authStatusEl = document.getElementById('auth-status');
+            narrativeLogEl = document.getElementById('narrative-log');
+            playerInputEl = document.getElementById('player-input');
+            characterSheetWrapperEl = document.getElementById('character-sheet-wrapper');
+            characterSheetHeaderEl = document.getElementById('character-sheet-header');
+            characterSheetContentEl = document.getElementById('character-sheet-content');
+            characterSheetDataEl = document.getElementById('character-sheet-data');
+            characterSheetLoadingEl = document.getElementById('character-sheet-loading');
+            loadingOverlayEl = document.getElementById('loading-overlay');
+            errorModalEl = document.getElementById('error-modal');
+            errorMessageEl = document.getElementById('error-message');
+            errorTitleEl = document.getElementById('error-title');
+            mainGameUiEl = document.getElementById('main-game-ui');
+            charCreationUiEl = document.getElementById('character-creation-ui');
+            callingOptionsEl = document.getElementById('calling-options');
+            burdenOptionsEl = document.getElementById('burden-options');
+            charNameEl = document.getElementById('character-name');
+            burdenDetailWrapperEl = document.getElementById('burden-detail-input-wrapper');
+            burdenDetailLabelEl = document.getElementById('burden-detail-label');
+            burdenDetailInputEl = document.getElementById('burden-detail-input');
+            loadingTextEl = document.getElementById('loading-text');
+            chapterPhaseUiEl = document.getElementById('chapter-phase-ui');
+            interludePhaseUiEl = document.getElementById('interlude-phase-ui');
+            worldClocksContainerEl = document.getElementById('world-clocks-container');
+            worldClocksLoadingEl = document.getElementById('world-clocks-loading');
+            
+            console.log("ðŸŽ® [INIT] All DOM elements loaded");
+            
+            document.getElementById('submit-action-btn').addEventListener('click', handlePlayerAction);
+            characterSheetHeaderEl.addEventListener('click', () => {
+                characterSheetWrapperEl.classList.toggle('accordion-closed');
+            });
+            playerInputEl.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handlePlayerAction();
+                }
+            });
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    if (document.activeElement === playerInputEl) {
+                        handlePlayerAction();
+                    }
+                }
+            });
+            document.getElementById('close-modal-btn').addEventListener('click', () => {
+                errorModalEl.style.display = 'none';
+            });
+            document.getElementById('create-character-btn').addEventListener('click', createCharacterAndStartGame);
+            document.getElementById('reset-game-btn').addEventListener('click', resetGame);
+            document.getElementById('interlude-train-btn').addEventListener('click', () => handleInterludeAction('seek_training'));
+            document.getElementById('interlude-asset-btn').addEventListener('click', () => handleInterludeAction('acquire_asset'));
+            document.getElementById('interlude-reflect-btn').addEventListener('click', () => handleInterludeAction('reflect'));
+            document.getElementById('interlude-end-btn').addEventListener('click', () => handleInterludeAction('end_interlude'));
+            
+            console.log("ðŸŽ® [INIT] Event listeners attached");
+            
+            try {
+                showLoadingOverlay();
+                loadingTextEl.textContent = "Connecting to Firebase...";
+                console.log("ðŸ”¥ [FIREBASE] Parsing config...");
+                const firebaseConfig = JSON.parse(firebaseConfigStr);
+                console.log("ðŸ”¥ [FIREBASE] Config parsed:", firebaseConfig);
+                
+                if (firebaseConfig.projectId === "YOUR_PROJECT_ID") {
+                    throw new Error("Firebase config is not set. Using placeholder.");
+                }
+                
+                console.log("ðŸ”¥ [FIREBASE] Initializing app...");
+                const app = initializeApp(firebaseConfig);
+                console.log("ðŸ”¥ [FIREBASE] App initialized");
+                
+                console.log("ðŸ”¥ [FIREBASE] Getting Firestore instance...");
+                db = getFirestore(app);
+                console.log("ðŸ”¥ [FIREBASE] Firestore ready");
+                
+                console.log("ðŸ”¥ [FIREBASE] Getting Auth instance...");
+                auth = getAuth(app);
+                console.log("ðŸ”¥ [FIREBASE] Auth ready");
+                
+                setLogLevel('error');
+
+                console.log("ðŸ” [AUTH] Setting up auth state listener...");
+                onAuthStateChanged(auth, (user) => {
+                    console.log("ðŸ” [AUTH] Auth state changed:", user ? `User ID: ${user.uid}` : "No user");
+                    if (user) {
+                        userId = user.uid;
+                        currentCharacterId = `char_${userId}`;
+                        authStatusEl.innerHTML = `<p class="text-sm font-medium text-gray-400">Auth Status: Signed In</p><p class="text-xs text-gray-500 font-mono">UID: ${userId.substring(0, 10)}...</p>`;
+                        console.log("ðŸŽ® [GAME] Loading game data for user:", userId);
+                        loadGameData();
+                    } else {
+                        userId = null;
+                        currentCharacterId = null;
+                        currentCharacterData = null;
+                        authStatusEl.innerHTML = `<p class="text-sm font-medium text-red-400">Auth Status: Signed Out</p>`;
+                        mainGameUiEl.style.display = 'none';
+                        charCreationUiEl.style.display = 'none';
+                        loadingOverlayEl.style.display = 'none';
+                        console.log("ðŸ” [AUTH] No user - showing signed out state");
+                    }
+                });
+
+                if (initialAuthToken) {
+                    loadingTextEl.textContent = "Authenticating...";
+                    console.log("ðŸ” [AUTH] Signing in with custom token...");
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    loadingTextEl.textContent = "Authenticating anonymously...";
+                    console.log("ðŸ” [AUTH] Signing in anonymously...");
+                    await signInAnonymously(auth);
+                    console.log("ðŸ” [AUTH] Anonymous sign-in successful!");
+                }
+            } catch (error) {
+                console.error("âŒ [ERROR] Firebase Initialization Error:", error);
+                console.error("âŒ [ERROR] Error stack:", error.stack);
+                if (error.message.includes("placeholder")) {
+                     showErrorModal("Setup Error", "This app is not connected to a Firebase project. Please check the environment configuration.");
+                } else {
+                     showErrorModal("Initialization Failed", `Could not connect to Firebase. Error: ${error.message}`);
+                }
+                loadingOverlayEl.style.display = 'none';
+            }
+        }
+
+        window.onload = initializeGame;
+    </script>
+</body>
+</html>

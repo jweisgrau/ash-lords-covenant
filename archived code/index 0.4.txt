@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital RPG: Ash-Lord's Covenant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=IM+Fell+English+SC&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Reset and base styles */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        /* Utility classes to replace Tailwind */
+        .container { width: 100%; margin: 0 auto; }
+        .mx-auto { margin-left: auto; margin-right: auto; }
+        .max-w-7xl { max-width: 80rem; }
+        .max-w-3xl { max-width: 48rem; }
+        .p-4 { padding: 1rem; }
+        .p-3 { padding: 0.75rem; }
+        .p-2 { padding: 0.5rem; }
+        .p-6 { padding: 1.5rem; }
+        .px-4 { padding-left: 1rem; padding-right: 1rem; }
+        .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+        .px-2\.5 { padding-left: 0.625rem; padding-right: 0.625rem; }
+        .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+        .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+        .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .mb-3 { margin-bottom: 0.75rem; }
+        .mb-6 { margin-bottom: 1.5rem; }
+        .mb-1 { margin-bottom: 0.25rem; }
+        .mt-4 { margin-top: 1rem; }
+        .mt-3 { margin-top: 0.75rem; }
+        .mt-2 { margin-top: 0.5rem; }
+        .mt-6 { margin-top: 1.5rem; }
+        .mr-2 { margin-right: 0.5rem; }
+        .ml-4 { margin-left: 1rem; }
+        .w-full { width: 100%; }
+        .w-6 { width: 1.5rem; }
+        .h-6 { height: 1.5rem; }
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .flex-grow { flex-grow: 1; }
+        .flex-wrap { flex-wrap: wrap; }
+        .grid { display: grid; }
+        .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+        .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+        .gap-4 { gap: 1rem; }
+        .gap-3 { gap: 0.75rem; }
+        .gap-2 { gap: 0.5rem; }
+        .gap-1 { gap: 0.25rem; }
+        .space-y-4 > * + * { margin-top: 1rem; }
+        .space-y-3 > * + * { margin-top: 0.75rem; }
+        .space-y-1 > * + * { margin-top: 0.25rem; }
+        .space-x-4 > * + * { margin-left: 1rem; }
+        .rounded-lg { border-radius: 0.5rem; }
+        .rounded-full { border-radius: 9999px; }
+        .rounded { border-radius: 0.25rem; }
+        .border { border-width: 1px; }
+        .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+        .shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .overflow-y-auto { overflow-y: auto; }
+        .overflow-hidden { overflow: hidden; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .justify-center { justify-content: center; }
+        .text-center { text-align: center; }
+        .text-left { text-align: left; }
+        .text-right { text-align: right; }
+        .text-xs { font-size: 0.75rem; line-height: 1rem; }
+        .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+        .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+        .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+        .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+        .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+        .text-md { font-size: 1rem; line-height: 1.5rem; }
+        .font-bold { font-weight: 700; }
+        .font-semibold { font-weight: 600; }
+        .font-medium { font-weight: 500; }
+        .uppercase { text-transform: uppercase; }
+        .italic { font-style: italic; }
+        .block { display: block; }
+        .inline { display: inline; }
+        .hidden { display: none; }
+        .fixed { position: fixed; }
+        .absolute { position: absolute; }
+        .relative { position: relative; }
+        .top-0 { top: 0; }
+        .left-0 { left: 0; }
+        .cursor-pointer { cursor: pointer; }
+        .cursor-help { cursor: help; }
+        .transition { transition-property: all; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
+        .antialiased { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        .list-disc { list-style-type: disc; }
+        .list-inside { list-style-position: inside; }
+        .col-span-1 { grid-column: span 1 / span 1; }
+        .col-span-2 { grid-column: span 2 / span 2; }
+        button { cursor: pointer; border: none; }
+        input:focus, textarea:focus { outline: none; }
+        @media (min-width: 640px) {
+            .sm\:flex-row { flex-direction: row; }
+            .sm\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (min-width: 768px) {
+            .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (min-width: 1024px) {
+            .lg\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .lg\:col-span-1 { grid-column: span 1 / span 1; }
+            .lg\:col-span-2 { grid-column: span 2 / span 2; }
+        }
+        .h-\[80vh\] { height: 80vh; }
+        kbd { padding: 0 0.25rem; background-color: var(--c-shadow-silt); border-radius: 0.25rem; font-family: monospace; }
+        
+        :root {
+            --c-void-slate: #1B1F23;
+            --c-bone-white: #E3DAC9;
+            --c-shadow-silt: #4A4441;
+            --c-oxidized-copper: #4E6E5D;
+            --c-dried-cinnabar: #8A3324;
+            --c-alchemical-gold: #C5A059;
+            --f-header: 'IM Fell English SC', serif;
+            --f-subheader: 'Cinzel', serif;
+            --f-body: 'Crimson Text', serif;
+            --f-data: 'Lato', sans-serif;
+        }
+        body {
+            font-family: var(--f-body);
+            background-color: var(--c-void-slate);
+            color: var(--c-bone-white);
+            font-size: 1.1rem;
+        }
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABWKLW/AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAB5JREFUeNpiZGBg6GDEwMAAxAAGJM0MmAACDAA1PQHwPWeoXwAAAABJRU5ErkJggg==);
+            opacity: 0.1;
+            pointer-events: none;
+            z-index: 100;
+        }
+        h1 { 
+            font-family: var(--f-header); 
+            color: var(--c-alchemical-gold); 
+            font-size: 2.5rem;
+            line-height: 1.1;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+        }
+        @media (max-width: 640px) {
+            h1 { font-size: 1.75rem; }
+        }
+        h2, h3, h4 { 
+            font-family: var(--f-subheader); 
+            letter-spacing: 0.1em; 
+            text-transform: uppercase;
+        }
+        strong {
+            font-weight: 700;
+            color: var(--c-bone-white);
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.2);
+        }
+        .game-term {
+            font-weight: 700;
+            color: var(--c-alchemical-gold) !important;
+        }
+        p, label, span, div { font-family: var(--f-body); }
+        .font-mono {
+            font-family: var(--f-data);
+            font-size: 0.8rem;
+        }
+        .bg-gray-800 { background-color: var(--c-void-slate) !important; }
+        .bg-gray-900 { background-color: #111 !important; }
+        .bg-gray-700 { background-color: var(--c-shadow-silt) !important; }
+        .border-gray-700 { border: 2px double rgba(227, 218, 201, 0.3) !important; }
+        .border-b.border-gray-700 {
+            border-bottom: 2px double rgba(227, 218, 201, 0.3) !important;
+            border-top: 0 !important;
+            border-left: 0 !important;
+            border-right: 0 !important;
+        }
+        input.border-gray-700 { border: 1px solid rgba(227, 218, 201, 0.3) !important; }
+        .focus\:ring-emerald-500:focus { --tw-ring-color: var(--c-alchemical-gold) !important; }
+        .text-white { color: var(--c-bone-white) !important; }
+        .text-gray-300 { color: var(--c-bone-white) !important; }
+        .text-gray-400 { color: rgba(227, 218, 201, 0.7) !important; }
+        .text-gray-500 { color: rgba(227, 218, 201, 0.5) !important; }
+        .placeholder-gray-500::placeholder { color: rgba(227, 218, 201, 0.5) !important; }
+        .text-gray-200 { color: var(--c-bone-white) !important; }
+        .text-emerald-400 { color: var(--c-alchemical-gold) !important; }
+        .text-indigo-300 { color: var(--c-dried-cinnabar) !important; }
+        .text-green-400 { color: var(--c-alchemical-gold) !important; }
+        .text-red-400 { color: var(--c-dried-cinnabar) !important; }
+        .text-emerald-100 { color: var(--c-bone-white) !important; }
+        .bg-red-700:hover {
+            background-color: var(--c-dried-cinnabar) !important; 
+            color: var(--c-bone-white) !important; 
+        }
+        .bg-emerald-700 {
+            background-color: var(--c-alchemical-gold) !important; 
+            color: var(--c-void-slate) !important; 
+            font-family: var(--f-subheader);
+            font-weight: 700;
+            border: 1px solid rgba(227, 218, 201, 0.5);
+        }
+        .bg-emerald-700:hover { background-color: #e0b968 !important; }
+        .bg-emerald-600 {
+            background-color: var(--c-alchemical-gold) !important; 
+            color: var(--c-void-slate) !important; 
+            font-family: var(--f-subheader);
+            font-weight: 700;
+        }
+        .bg-emerald-600:hover { background-color: #e0b968 !important; }
+        .interlude-button {
+            background-color: var(--c-shadow-silt);
+            border: 1px solid rgba(227, 218, 201, 0.3);
+            color: var(--c-bone-white);
+            font-family: var(--f-subheader);
+            font-weight: 700;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+        }
+        .interlude-button:hover {
+            background-color: var(--c-oxidized-copper);
+            border-color: rgba(227, 218, 201, 0.5);
+        }
+        .interlude-button.end-interlude { background-color: var(--c-dried-cinnabar); }
+        .interlude-button.end-interlude:hover { background-color: #a64230; }
+        .spinner {
+            border: 4px solid var(--c-shadow-silt);
+            border-top: 4px solid var(--c-alchemical-gold);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .narrative-bubble-model { 
+            background-color: #2a2624;
+            border: 1px solid var(--c-shadow-silt);
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 1.15rem;
+        }
+        .narrative-bubble-user { 
+            background-color: var(--c-oxidized-copper); 
+            color: var(--c-bone-white); 
+            border: 1px solid rgba(227, 218, 201, 0.4);
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 1.15rem;
+        }
+        .playbook-card { 
+            background-color: var(--c-shadow-silt); 
+            border: 1px solid rgba(227, 218, 201, 0.2);
+            transition: all 0.2s ease;
+        }
+        .playbook-card:hover {
+            border-color: rgba(227, 218, 201, 0.5);
+        }
+        .playbook-card.selected { 
+            border-color: var(--c-alchemical-gold) !important; 
+            box-shadow: 0 0 15px rgba(197, 160, 89, 0.3);
+            transform: translateY(-2px);
+        }
+        .stat-block, .talent-block { 
+            background-color: var(--c-shadow-silt); 
+            border: 1px solid rgba(227, 218, 201, 0.2);
+            font-family: var(--f-data);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .stat-block:hover, .talent-block:hover {
+            border-color: rgba(227, 218, 201, 0.5);
+            transform: translateY(-1px);
+        }
+        .talent-block {
+            font-family: var(--f-subheader); 
+            font-weight: 700;
+        }
+        .stat-block .text-xs {
+             font-family: var(--f-subheader);
+             letter-spacing: 0.1em;
+        }
+        #description-display { 
+            background-color: #0c0e10;
+            border: 1px solid rgba(227, 218, 201, 0.2); 
+            font-family: var(--f-body);
+        }
+        #error-modal {
+            display: none;
+            position: fixed;
+            top: 0; 
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 200;
+            padding-top: 10vh;
+        }
+        .modal-content { 
+            background-color: var(--c-void-slate); 
+            border: 2px double rgba(227, 218, 201, 0.3);
+            margin: 0 auto; 
+            max-width: 500px;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        #accordion-icon { transition: transform 0.3s ease; }
+        .accordion-closed #accordion-icon { transform: rotate(-90deg); }
+        #character-sheet-content {
+            transition: max-height 0.3s ease-out;
+            overflow: hidden;
+            max-height: 2000px;
+        }
+        .accordion-closed #character-sheet-content { max-height: 0; }
+        #character-creation-ui, #main-game-ui { display: none; }
+        
+        .tooltip {
+            position: relative;
+            cursor: help;
+        }
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 200px;
+            background-color: var(--c-shadow-silt);
+            color: var(--c-bone-white);
+            text-align: left;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 150;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.85rem;
+            border: 1px solid rgba(227, 218, 201, 0.3);
+            pointer-events: none;
+        }
+        .tooltip .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: var(--c-shadow-silt) transparent transparent transparent;
+        }
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: var(--c-alchemical-gold);
+            color: var(--c-void-slate);
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 300;
+            font-family: var(--f-subheader);
+            font-weight: 700;
+            animation: slideIn 0.3s ease-out, slideOut 0.3s ease-in 2.7s;
+            animation-fill-mode: forwards;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+        
+        #world-clocks-wrapper { background-color: var(--c-void-slate) !important; }
+        .clock {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .clock-face {
+            width: 100px;
+            height: 100px;
+            border: 2px solid var(--c-shadow-silt);
+            border-radius: 50%;
+            position: relative;
+            background-color: #111;
+            transition: all 0.3s ease;
+        }
+        .clock-face.near-full {
+            animation: pulse-danger 2s ease-in-out infinite;
+            border-color: var(--c-dried-cinnabar);
+        }
+        @keyframes pulse-danger {
+            0%, 100% { 
+                box-shadow: 0 0 5px rgba(138, 51, 36, 0.3);
+            }
+            50% { 
+                box-shadow: 0 0 20px rgba(138, 51, 36, 0.8);
+            }
+        }
+        .clock-segment {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            clip-path: polygon(50% 50%, 50% 0, 100% 0, 100% 50%);
+            transform-origin: 50% 50%;
+        }
+        .clock-segment.filled {
+            background-color: var(--c-dried-cinnabar);
+        }
+        .clock-name {
+            font-family: var(--f-subheader);
+            font-size: 0.9rem;
+            color: var(--c-bone-white);
+            text-align: center;
+            margin-top: 0.5rem;
+            max-width: 150px;
+        }
+        
+        @media (max-width: 1024px) {
+            .grid.grid-cols-1.lg\:grid-cols-3 {
+                grid-template-columns: 1fr !important;
+            }
+            .lg\:col-span-2 {
+                grid-column: span 1 !important;
+            }
+            #character-sheet-wrapper, #world-clocks-wrapper {
+                margin-bottom: 1rem;
+            }
+            .h-\[80vh\] {
+                height: 50vh !important;
+            }
+        }
+        @media (max-width: 640px) {
+            .playbook-card {
+                font-size: 0.9rem;
+            }
+            .grid-cols-5 {
+                grid-template-columns: repeat(3, 1fr) !important;
+            }
+            .grid-cols-1.sm\:grid-cols-2 {
+                grid-template-columns: 1fr !important;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div id="loading-overlay" class="flex fixed top-0 left-0 w-screen h-screen bg-black/80 z-[199] justify-center items-center" style="z-index: 199; background-color: rgba(0,0,0,0.8); width: 100vw; height: 100vh;">
+        <div class="spinner"></div>
+        <span id="loading-text" class="ml-4 text-lg text-gray-300"></span>
+    </div>
+
+    <div id="error-modal">
+        <div class="modal-content">
+            <h2 id="error-title" class="text-xl font-bold text-red-400 mb-4">Error</h2>
+            <p id="error-message" class="text-gray-300 mb-6">Something went wrong.</p>
+            <button id="close-modal-btn" class="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition">
+                OK
+            </button>
+        </div>
+    </div>
+
+    <div class="container mx-auto max-w-7xl p-4">
+        <header class="mb-4 p-4 bg-gray-800 rounded-lg border border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-white">Ash-Lord's Covenant</h1>
+                <p class="text-sm text-gray-400">Digital RPG Prototype (Build v0.4)</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div id="auth-status" class="text-right">
+                    <p class="text-sm font-medium text-gray-400">Auth Status:</p>
+                    <p class="text-xs text-gray-500 font-mono">Loading...</p>
+                </div>
+                <button id="reset-game-btn" class="px-3 py-2 bg-gray-700 text-xs text-gray-300 rounded-lg hover:bg-red-700 hover:text-white transition">
+                    Reset Game
+                </button>
+            </div>
+        </header>
+
+        <div id="character-creation-ui">
+            <div class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-6 max-w-3xl mx-auto">
+                <h2 class="text-3xl font-bold text-white mb-2">Create Your Character</h2>
+                <p class="text-gray-400 mb-6">Every hero in this cursed world is defined by what they do (their Calling) and what haunts them (their Burden).</p>
+                
+                <div class="mb-4">
+                    <label for="character-name" class="block text-sm font-medium text-gray-300 mb-1">What is your name?</label>
+                    <input type="text" id="character-name" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h3 class="text-xl font-semibold text-emerald-400 mb-3">Choose a Calling</h3>
+                        <div id="calling-options" class="space-y-3"></div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-indigo-300 mb-3">Choose a Burden</h3>
+                        <div id="burden-options" class="space-y-3"></div>
+                        
+                        <div id="burden-detail-input-wrapper" class="mt-3" style="display: none;">
+                            <label for="burden-detail-input" id="burden-detail-label" class="block text-sm font-medium text-gray-300 mb-1">Define your Burden:</label>
+                            <input type="text" id="burden-detail-input" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                    </div>
+                </div>
+
+                <button id="create-character-btn" class="w-full mt-6 px-4 py-3 bg-emerald-700 text-white rounded-lg font-bold hover:bg-emerald-800 shadow-md">
+                    Begin Your Story
+                </button>
+            </div>
+        </div>
+
+        <div id="main-game-ui">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div class="lg:col-span-1 space-y-4">
+                    <div id="character-sheet-wrapper" class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg">
+                        <div id="character-sheet-header" class="flex justify-between items-center p-4 border-b border-gray-700 cursor-pointer">
+                            <h2 class="text-xl font-semibold text-white">Character Sheet</h2>
+                            <svg id="accordion-icon" class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                        <div id="character-sheet-content" class="p-4 space-y-4">
+                            <p id="character-sheet-loading" class="text-gray-400 italic">Loading character data...</p>
+                            <div id="character-sheet-data"></div>
+                        </div>
+                    </div>
+
+                    <div id="world-clocks-wrapper" class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4">
+                         <h2 class="text-xl font-semibold text-white mb-4">World Clocks</h2>
+                         <div id="world-clocks-container" class="grid grid-cols-2 gap-4">
+                             <p id="world-clocks-loading" class="text-gray-400 italic col-span-2">Loading world state...</p>
+                         </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2 flex flex-col h-[80vh]">
+                    <div class="flex-grow bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4 overflow-y-auto" id="narrative-log"></div>
+
+                    <div id="interaction-panel" class="mt-4 bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4">
+                        <div id="chapter-phase-ui">
+                            <textarea id="player-input" 
+                                      class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500" 
+                                      rows="3" 
+                                      placeholder="Describe your character's action..."></textarea>
+                            
+                            <button id="submit-action-btn" class="w-full mt-3 px-4 py-3 bg-emerald-700 text-white rounded-lg font-bold hover:bg-emerald-800 shadow-md">
+                                Submit Action
+                            </button>
+                            
+                            <p class="text-xs text-gray-500 text-center mt-2">Press <kbd class="px-1 bg-gray-700 rounded">Enter</kbd> to submit (Shift+Enter for new line)</p>
+                        </div>
+                        
+                        <div id="interlude-phase-ui" class="hidden">
+                            <p class="text-lg text-gray-300 mb-4">You have a moment for an Interlude. What is your priority?</p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <button id="interlude-train-btn" class="interlude-button">Seek Training (1 XP)</button>
+                                <button id="interlude-asset-btn" class="interlude-button">Acquire an Asset (1 XP)</button>
+                                <button id="interlude-reflect-btn" class="interlude-button">Reflect & Integrate (1 XP)</button>
+                                <button id="interlude-end-btn" class="interlude-button end-interlude">End Interlude</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<script type="module">
+        console.log("🚀 SCRIPT TAG IS EXECUTING!");
+        
+        const appId = 'rpg-prototype-ca0b2';
+        const firebaseConfigStr = JSON.stringify({
+            apiKey: "AIzaSyAeHZIk7gc0oSWdv_PddXhhoWpx2Mu8BC4",
+            authDomain: "rpg-prototype-ca0b2.firebaseapp.com",
+            projectId: "rpg-prototype-ca0b2",
+            storageBucket: "rpg-prototype-ca0b2.firebasestorage.app",
+            messagingSenderId: "4118036014",
+            appId: "1:4118036014:web:2d9e4ee696120c8bfde9bf",
+            measurementId: "G-219NSHTPY9"
+        });
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : undefined;
+        
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, addDoc, setLogLevel, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        let db, auth;
+        let userId = null;
+        let currentCampaignId = "ashlords_covenant_main_v1";
+        let currentCharacterId = null;
+        let currentCharacterData = null; 
+        let currentChatHistory = [];
+        let currentGameState = null;
+
+        let authStatusEl, narrativeLogEl, playerInputEl, characterSheetWrapperEl;
+        let characterSheetHeaderEl, characterSheetContentEl, characterSheetDataEl;
+        let characterSheetLoadingEl, loadingOverlayEl, errorModalEl, errorMessageEl, errorTitleEl;
+        let mainGameUiEl, charCreationUiEl, callingOptionsEl, burdenOptionsEl, charNameEl;
+        let burdenDetailWrapperEl, burdenDetailLabelEl, burdenDetailInputEl;
+        let loadingTextEl, chapterPhaseUiEl, interludePhaseUiEl;
+        let worldClocksContainerEl, worldClocksLoadingEl;
+
+        const CONTENT_PACK_ASHLORDS = {
+            callings: [
+                {id: "sellsword", name: "The Sellsword", description: "A blade for hire.", primaryApproach: "FORCE", stats: { "FORCE": 2, "FINESSE": 0, "INFLUENCE": -1, "WITS": 0, "RESOLVE": 0 }, talents: [{ id: "battle_born", name: "Battle-Born", description: "When you charge headlong into a fight, you can shrug off a blow to act first, no matter the situation." }], equipment: [{ name: "Heavy Blade", properties: ["melee", "heavy", "worn"] }, { name: "Boiled Leather", properties: ["armor", "medium", "worn"] }]},
+                {id: "cutthroat", name: "The Cutthroat", description: "Works in the shadows.", primaryApproach: "FINESSE", stats: { "FORCE": -1, "FINESSE": 2, "INFLUENCE": 0, "WITS": 0, "RESOLVE": 0 }, talents: [{ id: "vicious_strike", name: "A Vicious Strike", description: "When you attack an unaware or vulnerable target, your strike is exceptionally brutal." }], equipment: [{ name: "Matched Daggers", properties: ["melee", "light", "hidden"] }, { name: "Dark Garb", properties: ["armor", "light", "concealing"] }]},
+                {id: "disgraced", name: "The Disgraced", description: "A noble name, now in the gutter.", primaryApproach: "INFLUENCE", stats: { "FORCE": 0, "FINESSE": 0, "INFLUENCE": 2, "WITS": 0, "RESOLVE": -1 }, talents: [{ id: "i_know_your_kind", name: "I Know Your Kind", description: "When you first meet a new high-status person (noble, guild master, etc.), you always seem to know a piece of leverage you have over them, some rumor or shared secret." }], equipment: [{ name: "Ornate Rapier", properties: ["melee", "light", "finesse"] }, { name: "Faded Finery", properties: ["armor", "light", "shabby"] }]},
+                {id: "hexenjager", name: "The Hexenjager", description: "A professional monster hunter.", primaryApproach: "WITS", stats: { "FORCE": 0, "FINESSE": 0, "INFLUENCE": -1, "WITS": 2, "RESOLVE": 0 }, talents: [{ id: "hunted_your_kind", name: "I've Hunted Your Kind Before", description: "When you first encounter a new supernatural threat, you recall one specific, useful piece of information about it. You've seen it all." }], equipment: [{ name: "Silvered Arming Sword", properties: ["melee", "light", "silvered"] }, { name: "Crossbow", properties: ["ranged", "heavy"] }, { name: "Trench Coat", properties: ["armor", "light", "utility"] }]},
+                {id: "unspoken", name: "The Channeler", description: "You are a conduit for a power you barely control.", primaryApproach: "RESOLVE", stats: { "FORCE": 0, "FINESSE": 0, "INFLUENCE": -1, "WITS": 0, "RESOLVE": 2 }, talents: [{ id: "unleash", name: "Unleash", description: "When you stop holding back and unleash your power, you achieve exactly what you wanted, but this raw power causes collateral damage to your surroundings or allies." }], equipment: [{ name: "Focus Charm", properties: ["trinket", "fragile"] }, { name: "Heavy Bindings", properties: ["armor", "light", "concealing"] }]}
+            ],
+            burdens: [
+                {id: "haunted", name: "The Haunted", description: "Your Shadow hunts you.", requiresInput: true, inputLabel: "Who or what is your Shadow?", stats: { "FORCE": 0, "FINESSE": 0, "INFLUENCE": -1, "WITS": 0, "RESOLVE": 1 }, talents: [{ id: "shadows_move", name: "The Shadow's Move", description: "When you fail, your Shadow makes its move, isolating you, speaking your deepest fears, or offering you a dark bargain." }], tags: ["My Shadow Hunts Me"]},
+                {id: "namer", name: "The Namer", description: "You seek the True Name of all things.", requiresInput: false, stats: { "FORCE": -1, "FINESSE": 0, "INFLUENCE": 0, "WITS": 1, "RESOLVE": 0 }, talents: [{ id: "speak_the_name", name: "Speak the Name", description: "When you have learned someone's 'True Name,' you can compel them. You may be able to force them to answer one question truthfully or obey one command. Be warned: they may learn a piece of your own name in return." }], tags: ["I Seek the True Name"]},
+                {id: "seeker", name: "The Seeker", description: "You walk the Middle Path between two opposing principles.", requiresInput: true, inputLabel: "What are your two opposing principles?", stats: { "FORCE": 0, "FINESSE": 0, "INFLUENCE": 1, "WITS": 0, "RESOLVE": -1 }, talents: [{ id: "balance_track", name: "The Balance Track", description: "When you act on one of your core principles, you draw strength from your convictions. But if you lean too far to one side, you'll lose your balance, triggering a major complication." }], tags: ["I Walk the Middle Path"]},
+                {id: "oathbound", name: "The Oathbound", description: "Your word is your bond.", requiresInput: false, stats: { "FORCE": 0, "FINESSE": -1, "INFLUENCE": 0, "WITS": 0, "RESOLVE": 1 }, talents: [{ id: "swear_iron_vow", name: "Swear an Iron Vow", description: "When you commit to a perilous quest, you can Swear an Iron Vow. Fulfilling it brings great triumph, but forsaking it will cost you dearly." }], tags: ["My Word is My Bond"]},
+                {id: "destined", name: "The Destined", description: "A prophecy hangs over you, delivered in fragments.", requiresInput: true, inputLabel: "What is the first fragment of your prophecy?", stats: { "FORCE": 0, "FINESSE": 0, "INFLUENCE": -1, "WITS": 1, "RESOLVE": 0 }, talents: [{ id: "bribe_of_fate", name: "The Bribe of Fate", description: "When your personal choice conflicts with your prophecy, you may be offered a 'bribe of fate.' If you follow the prophecy against your judgment, you'll gain an advantage and feel your destiny reaffirmed." }], tags: ["A Prophecy Hangs Over Me"]},
+                {id: "cursed", name: "The Cursed", description: "You have a dark compulsion.", requiresInput: true, inputLabel: "What is your dark compulsion?", stats: { "FORCE": 1, "FINESSE": 0, "INFLUENCE": 0, "WITS": -1, "RESOLVE": 0 }, talents: [{ id: "resist_curse", name: "Resist Your Curse", description: "When a 'perfect opportunity' to indulge your Curse appears, you must either indulge it or struggle to resist. Resisting may cost you, and failure means your Curse takes over completely." }], tags: ["I Have a Dark Compulsion"]}
+            ],
+            TIER_1_TWISTS: ["Your tool breaks.", "You attract unwanted attention.", "You leave a clue behind.", "You use up a resource.", "The situation becomes slightly more complicated.", "You take a minor physical toll.", "An onlooker is now suspicious of you."],
+            TIER_2_TWISTS: [
+                { complication: "Brutal Violence: A new, superior foe arrives.", twist: "...and they seem just as bored and annoyed by this as you are." },
+                { complication: "Political Backstab: An ally is revealed to be a traitor.", twist: "...but they apologize, explaining they're getting a really good price for it." },
+                { complication: "Personal Failure: You lose a resource or gain a negative Condition.", twist: "...and you also realize you've left something embarrassing behind." },
+                { complication: "Cynical World: An NPC you're protecting proves to be a terrible person.", twist: "...and they mock you for believing they were anything else." },
+                { complication: "Dark Humor: The situation becomes absurdly complicated.", twist: "...and a bystander makes a sarcastic comment about your performance." }
+            ]
+        };
+
+        const LOADING_PHRASES = ["Fate weaves your path...", "The world conspires...", "The covenant demands its price...", "The shadows lengthen...", "The world reacts..."];
+
+        function showLoadingOverlay() {
+            if (loadingTextEl && loadingOverlayEl) {
+                const randomText = LOADING_PHRASES[Math.floor(Math.random() * LOADING_PHRASES.length)];
+                loadingTextEl.textContent = randomText;
+                loadingOverlayEl.style.display = 'flex';
+            }
+        }
+
+        function showErrorModal(title, message) {
+            if (errorTitleEl && errorMessageEl && errorModalEl) {
+                errorTitleEl.textContent = title;
+                errorMessageEl.textContent = message;
+                errorModalEl.style.display = 'block';
+            } else {
+                console.error("MODAL ERROR:", title, message);
+            }
+        }
+        
+        function addMessageToChat(role, text) {
+            const chatCollectionRef = collection(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "chat_history");
+            return addDoc(chatCollectionRef, { role: role, content: text, timestamp: serverTimestamp() });
+        }
+        
+        function showToast(message, duration = 3000) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, duration);
+        }
+function validateStateUpdate(update, currentData) {
+            if (update.xp_spend && update.xp_spend > (currentData.xp || 0)) {
+                throw new Error("Cannot spend more XP than available");
+            }
+            if (update.stats) {
+                for (const [stat, mod] of Object.entries(update.stats)) {
+                    const currentVal = currentData.stats[stat] || 0;
+                    const newVal = currentVal + mod;
+                    if (newVal < -3 || newVal > 3) {
+                        throw new Error(`Stat ${stat} would exceed bounds (-3 to +3)`);
+                    }
+                }
+            }
+            return true;
+        }
+
+        function displayChatHistory(querySnapshot) {
+            if (!narrativeLogEl) return;
+            narrativeLogEl.innerHTML = '';
+            let messages = [];
+            querySnapshot.forEach((doc) => { messages.push({ id: doc.id, ...doc.data() }); });
+            messages.sort((a, b) => (a.timestamp?.toDate() || new Date(0)) - (b.timestamp?.toDate() || new Date(0)));
+            currentChatHistory = messages.slice(-10).map(msg => { return { role: msg.role, content: msg.content }; });
+
+            const ALL_MECHANICAL_TERMS = ["FORCE", "FINESSE", "INFLUENCE", "WITS", "RESOLVE", "Sellsword", "Cutthroat", "Hexenjager", "Disgraced", "Channeler", "Haunted", "Namer", "Seeker", "Oathbound", "Destined", "Cursed"];
+            const TERM_REGEX = new RegExp(`\\b(${ALL_MECHANICAL_TERMS.join('|')})\\b`, 'gi');
+
+            messages.forEach((msgData) => {
+                const msg = msgData;
+                const bubble = document.createElement('div');
+                const isUser = msg.role === 'user';
+                bubble.className = isUser ? 'narrative-bubble-user' : 'narrative-bubble-model';
+                const textContent = document.createElement('p');
+                let htmlContent = msg.content.replace(/\n/g, '<br>');
+                htmlContent = htmlContent.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); 
+                htmlContent = htmlContent.replace(/\*(.*?)\*/g, '<strong>$1</strong>'); 
+                htmlContent = htmlContent.replace(TERM_REGEX, (match) => { return `<strong class="game-term">${match}</strong>`; });
+                textContent.innerHTML = htmlContent;
+                textContent.className = isUser ? 'text-emerald-100' : 'text-gray-300';
+                bubble.appendChild(textContent);
+                narrativeLogEl.appendChild(bubble);
+            });
+            narrativeLogEl.scrollTop = narrativeLogEl.scrollHeight;
+        }
+
+        function displayCharacter(data) {
+            if (!data || !characterSheetDataEl) return;
+            let statsHtml = '';
+            const statDescriptions = {
+                "FORCE": "Physical power, violence, and intimidation",
+                "FINESSE": "Agility, stealth, and precision",
+                "INFLUENCE": "Charm, deception, and command",
+                "WITS": "Observation, deduction, and quick thinking",
+                "RESOLVE": "Willpower, endurance, and resisting terror"
+            };
+            const calling = CONTENT_PACK_ASHLORDS.callings.find(c => c.name === data.playbook.calling);
+            const burden = CONTENT_PACK_ASHLORDS.burdens.find(b => b.name === data.playbook.burden);
+
+            for (const [stat, value] of Object.entries(data.stats)) {
+                let colorClass = "text-gray-300";
+                if (value > 0) colorClass = "text-emerald-400";
+                if (value < 0) colorClass = "text-gray-500";
+                const callingVal = calling?.stats[stat] || 0;
+                const burdenVal = burden?.stats[stat] || 0;
+                const tooltipText = `${statDescriptions[stat] || ''}<br><br><strong>Calculation:</strong><br>Calling: ${callingVal > 0 ? '+' : ''}${callingVal}<br>Burden: ${burdenVal > 0 ? '+' : ''}${burdenVal}<br>Total: ${value > 0 ? '+' : ''}${value}`;
+                statsHtml += `
+                    <div class="stat-block col-span-1 p-2 rounded-lg text-center tooltip" data-stat="${stat}">
+                        <div class="text-xs text-gray-400 uppercase tracking-wider">${stat.substring(0,3)}</div>
+                        <div class="text-2xl font-bold ${colorClass}">${value > 0 ? '+' : ''}${value}</div>
+                        <span class="tooltip-text">${tooltipText}</span>
+                    </div>
+                `;
+            }
+
+            let tagsHtml = (data.tags || []).map(tag => 
+                `<span class="tag text-xs font-medium mr-2 mb-2 px-2.5 py-1 rounded-full bg-gray-700 text-gray-300">${tag}</span>`
+            ).join('');
+
+            let talentsHtml = (data.talents || []).map(talent =>
+                `<div class="talent-block col-span-1 p-3 rounded-lg text-center" data-talent-name="${talent.name}" data-description="${talent.description}">
+                    <span class="text-md font-semibold text-gray-200">${talent.name}</span>
+                </div>`
+            ).join('');
+
+        let equipmentHtml = (data.equipment || []).map(item => {
+    const propertiesText = item.properties ? item.properties.join(', ') : 'none';
+    return `<li class="text-sm text-gray-300 list-disc list-inside cursor-pointer hover:text-emerald-400 transition equipment-item" data-properties="${propertiesText}">
+        ${item.name}
+    </li>`;
+}).join('');
+
+            characterSheetDataEl.innerHTML = `
+                <div class="space-y-4">
+                    <div>
+                        <h3 class="text-xl font-bold text-white">${data.name}</h3>
+                        <p class="text-sm text-emerald-400">${data.playbook.calling} / ${data.playbook.burden}</p>
+                    </div>
+                    <div class="grid grid-cols-5 gap-2">${statsHtml}</div>
+                    <div>
+                        <div class="grid grid-cols-2 gap-2">${talentsHtml || '<p class="text-sm text-gray-500 italic col-span-2">No talents.</p>'}</div>
+                        <div id="description-display" class="text-sm text-left text-gray-400 min-h-[2.5em] p-2 mt-2 bg-gray-900 rounded-lg border border-gray-700">
+                            Tap a stat or talent for its description.
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-md font-semibold text-gray-200 mb-2">Conditions</h4>
+                        <div class="flex flex-wrap">${tagsHtml || '<p class="text-sm text-gray-500 italic">No conditions.</p>'}</div>
+                    </div>
+                    <div>
+                        <h4 class="text-md font-semibold text-gray-200 mb-2">Equipment</h4>
+                        <ul class="space-y-1">${equipmentHtml || '<p class="text-sm text-gray-500 italic">No equipment.</p>'}</ul>
+                    </div>
+                    <div>
+                        <h4 class="text-md font-semibold text-gray-200 mb-1">Experience (XP)</h4>
+                        <p class="text-lg font-bold text-emerald-400">${data.xp} XP</p>
+                    </div>
+                </div>
+            `;
+
+            characterSheetDataEl.querySelectorAll('.talent-block').forEach(block => {
+                block.addEventListener('click', () => { 
+                    const descriptionDisplay = document.getElementById('description-display'); 
+                    const description = block.dataset.description;
+                    const talentName = block.dataset.talentName;
+                    let formattedDescription = description.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                    formattedDescription = formattedDescription.replace(/\*(.*?)\*/g, '<strong>$1</strong>');
+                    const newHtml = `<strong>${talentName}:</strong> ${formattedDescription}`;
+                    if (descriptionDisplay && descriptionDisplay.innerHTML === newHtml) {
+                        descriptionDisplay.innerHTML = "Tap a stat or talent for its description."; 
+                    } else if (descriptionDisplay) {
+                        descriptionDisplay.innerHTML = newHtml;
+                    }
+                });
+            });
+characterSheetDataEl.querySelectorAll('.equipment-item').forEach(item => {
+    item.addEventListener('click', () => {
+        const descriptionDisplay = document.getElementById('description-display');
+        const properties = item.dataset.properties;
+        const itemName = item.textContent.trim();
+        const newHtml = `<strong>${itemName}:</strong> Properties: ${properties}`;
+        if (descriptionDisplay && descriptionDisplay.innerHTML === newHtml) {
+            descriptionDisplay.innerHTML = "Tap a stat or talent for its description.";
+        } else if (descriptionDisplay) {
+            descriptionDisplay.innerHTML = newHtml;
+        }
+    });
+});
+        }
+
+        function renderCharacterCreation() {
+            if (!callingOptionsEl || !burdenOptionsEl) return;
+            callingOptionsEl.innerHTML = '';
+            burdenOptionsEl.innerHTML = '';
+
+            const createStatLine = (stats) => {
+                let posLine = '', negLine = '';
+                for (const [stat, val] of Object.entries(stats)) {
+                    const fullStatName = stat.charAt(0) + stat.slice(1).toLowerCase();
+                    if (val > 0) {
+                        posLine += `<span class="font-medium text-emerald-400">${fullStatName} +${val}</span> `;
+                    } else if (val < 0) {
+                        negLine += `<span class="font-medium text-gray-500">${fullStatName} ${val}</span> `;
+                    }
+                }
+                return (posLine + negLine).trim() || 'All stats 0';
+            };
+
+            CONTENT_PACK_ASHLORDS.callings.forEach(calling => {
+                const talentsHtml = (calling.talents || []).map(talent => `
+                    <div>
+                        <h5 class="text-sm font-bold text-gray-200">${talent.name}</h5>
+                        <p class="text-xs text-gray-400">${talent.description}</p>
+                    </div>
+                `).join('');
+                const card = document.createElement('div');
+                card.className = 'playbook-card p-4 rounded-lg cursor-pointer';
+                card.dataset.id = calling.id;
+                card.dataset.type = 'calling';
+                card.innerHTML = `
+                    <h4 class="text-lg font-bold text-white">${calling.name}</h4>
+                    <p class="text-sm text-gray-400 mb-2">${calling.description}</p>
+                    <p class="text-xs text-gray-300">Stats: ${createStatLine(calling.stats)}</p>
+                    ${talentsHtml ? `<div class="border-t border-gray-600 border-opacity-50 my-2"></div>` : ''}
+                    <div class="space-y-1">${talentsHtml}</div>
+                `;
+                card.addEventListener('click', () => selectPlaybookCard(card, 'calling'));
+                callingOptionsEl.appendChild(card);
+            });
+
+            CONTENT_PACK_ASHLORDS.burdens.forEach(burden => {
+                const talentsHtml = (burden.talents || []).map(talent => `
+                    <div>
+                        <h5 class="text-sm font-bold text-gray-200">${talent.name}</h5>
+                        <p class="text-xs text-gray-400">${talent.description}</p>
+                    </div>
+                `).join('');
+                const card = document.createElement('div');
+                card.className = 'playbook-card p-4 rounded-lg cursor-pointer';
+                card.dataset.id = burden.id;
+                card.dataset.type = 'burden';
+                card.dataset.requiresInput = burden.requiresInput || false;
+                card.dataset.inputLabel = burden.inputLabel || "";
+                card.innerHTML = `
+                    <h4 class="text-lg font-bold text-white">${burden.name}</h4>
+                    <p class="text-sm text-gray-400 mb-2">${burden.description}</p>
+                    <p class="text-xs text-gray-300">Stats: ${createStatLine(burden.stats)}</p>
+                    ${talentsHtml ? `<div class="border-t border-gray-600 border-opacity-50 my-2"></div>` : ''}
+                    <div class="space-y-1">${talentsHtml}</div>
+                `;
+                card.addEventListener('click', () => selectPlaybookCard(card, 'burden'));
+                burdenOptionsEl.appendChild(card);
+            });
+        }
+
+        function selectPlaybookCard(selectedCard, type) {
+            const optionsContainer = (type === 'calling') ? callingOptionsEl : burdenOptionsEl;
+            optionsContainer.querySelectorAll('.playbook-card').forEach(card => { card.classList.remove('selected'); });
+            selectedCard.classList.add('selected');
+
+            if (type === 'burden') {
+                if (selectedCard.dataset.requiresInput === 'true') {
+                    burdenDetailWrapperEl.style.display = 'block';
+                    burdenDetailLabelEl.textContent = selectedCard.dataset.inputLabel;
+                    const burdenId = selectedCard.dataset.id;
+                    let placeholderText = "e.g., ";
+                    if (burdenId === 'haunted') placeholderText += "a scorned lover, a debt unpaid";
+                    else if (burdenId === 'seeker') placeholderText += "order vs. chaos, love vs. hate";
+                    else if (burdenId === 'destined') placeholderText += "a child is born, a darkness descends";
+                    else if (burdenId === 'cursed') placeholderText += "I must steal, I am a vampire";
+                    else placeholderText += "Define the details..."; 
+                    burdenDetailInputEl.placeholder = placeholderText;
+                } else {
+                    burdenDetailWrapperEl.style.display = 'none';
+                    burdenDetailInputEl.value = '';
+                }
+            }
+        }
+
+        function displayWorldClocks(data) {
+            if (!data || !worldClocksContainerEl) return;
+            worldClocksLoadingEl.style.display = 'none';
+            worldClocksContainerEl.innerHTML = '';
+            if (!data.clocks || data.clocks.length === 0) {
+                worldClocksContainerEl.innerHTML = '<p class="text-gray-400 italic col-span-2">No active world clocks.</p>';
+                return;
+            }
+
+            data.clocks.forEach(clock => {
+                const clockDiv = document.createElement('div');
+                clockDiv.className = 'clock';
+                let segmentsHtml = '';
+                const segments = clock.segments || 6;
+                const filled = clock.current || 0;
+                const angle = 360 / segments;
+                const isNearlyFull = filled >= segments - 1 && filled < segments;
+
+                for (let i = 0; i < segments; i++) {
+                    const rotation = angle * i;
+                    const isFilled = i < filled;
+                    segmentsHtml += `<div class="clock-segment ${isFilled ? 'filled' : ''}" style="transform: rotate(${rotation}deg);"></div>`;
+                }
+
+                clockDiv.innerHTML = `
+                    <div class="clock-face ${isNearlyFull ? 'near-full' : ''}">
+                        ${segmentsHtml}
+                    </div>
+                    <span class="clock-name">${clock.name} (${filled}/${segments})</span>
+                `;
+                worldClocksContainerEl.appendChild(clockDiv);
+            });
+        }
+
+        function setupFirestoreListeners() {
+            console.log("🔥 [FIRESTORE] Setting up listeners...");
+            const charRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "characters", currentCharacterId);
+            onSnapshot(charRef, (docSnap) => {
+                console.log("📄 [CHARACTER] Snapshot received, exists:", docSnap.exists());
+                if (docSnap.exists()) {
+                    charCreationUiEl.style.display = 'none';
+                    mainGameUiEl.style.display = 'block';
+                    loadingOverlayEl.style.display = 'none';
+                    characterSheetLoadingEl.style.display = 'none';
+                    currentCharacterData = docSnap.data();
+                    displayCharacter(currentCharacterData);
+                } else {
+                    mainGameUiEl.style.display = 'none';
+                    charCreationUiEl.style.display = 'block';
+                    loadingOverlayEl.style.display = 'none';
+                    currentCharacterData = null;
+                    renderCharacterCreation();
+                }
+            }, (error) => {
+                console.error("❌ [CHARACTER] Listener error:", error);
+                showErrorModal("Connection Error", `Lost connection to character data. Error: ${error.message}`);
+            });
+
+            const chatQuery = query(collection(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "chat_history"));
+            onSnapshot(chatQuery, (querySnapshot) => {
+                console.log("💬 [CHAT] Chat history updated, messages:", querySnapshot.size);
+                displayChatHistory(querySnapshot);
+            }, (error) => {
+                console.error("❌ [CHAT] Listener error:", error);
+            });
+
+            const gameStateRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "game_state", "main");
+            onSnapshot(gameStateRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    currentGameState = docSnap.data();
+                    const phase = currentGameState.phase || 'chapter';
+                    if (phase === 'interlude') {
+                        chapterPhaseUiEl.style.display = 'none';
+                        interludePhaseUiEl.classList.remove('hidden');
+                    } else {
+                        chapterPhaseUiEl.style.display = 'block';
+                        interludePhaseUiEl.classList.add('hidden');
+                    }
+                } else {
+                    currentGameState = { phase: 'chapter', turns_since_interlude: 0 };
+                    chapterPhaseUiEl.style.display = 'block';
+                    interludePhaseUiEl.classList.add('hidden');
+                }
+            }, (error) => {
+                console.error("❌ [GAME STATE] Listener error:", error);
+            });
+
+            const worldClocksRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "game_state", "world_clocks");
+            onSnapshot(worldClocksRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    displayWorldClocks(docSnap.data());
+                } else {
+                    displayWorldClocks({ clocks: [] });
+                }
+            }, (error) => {
+                console.error("❌ [WORLD CLOCKS] Listener error:", error);
+            });
+        }
+
+        async function checkAndCreateCampaign() {
+            console.log("🎲 [CAMPAIGN] Checking campaign...");
+            const campaignRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId);
+            const campaignSnap = await getDoc(campaignRef);
+
+            if (!campaignSnap.exists()) {
+                console.log("🎲 [CAMPAIGN] Creating new campaign...");
+                await setDoc(campaignRef, {
+                    name: "Ash-Lord's Covenant (Prototype)",
+                    gmId: "ai_gm_gemini",
+                    playerIds: [userId],
+                    activeContentPackId: "ashlords_covenant_v1",
+                    createdAt: serverTimestamp() 
+                });
+                
+                const gameStateRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "game_state", "main");
+                await setDoc(gameStateRef, { phase: "chapter", turns_since_interlude: 0 });
+
+                const worldClocksRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "game_state", "world_clocks");
+                await setDoc(worldClocksRef, {
+                    clocks: [
+                        { id: "blight_tax_unrest", name: "City unrest over the 'Blight Tax'", segments: 6, current: 1 },
+                        { id: "alchemists_plot", name: "The Alchemist's Guild plot", segments: 8, current: 0 }
+                    ]
+                });
+            } else {
+                const campaignData = campaignSnap.data();
+                if (!campaignData.playerIds.includes(userId)) {
+                    await updateDoc(campaignRef, {
+                        playerIds: [...campaignData.playerIds, userId]
+                    });
+                }
+            }
+        }
+
+        async function resetGame() {
+            if (!currentCharacterId) {
+                showErrorModal("Error", "No character is loaded to reset.");
+                return;
+            }
+            showLoadingOverlay();
+            try {
+                await deleteChatHistory();
+                const charRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "characters", currentCharacterId);
+                await deleteDoc(charRef);
+                const gameStateRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "game_state", "main");
+                await deleteDoc(gameStateRef);
+                const worldClocksRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "game_state", "world_clocks");
+                await deleteDoc(worldClocksRef);
+                await checkAndCreateCampaign();
+            } catch (error) {
+                console.error("❌ [RESET] Error:", error);
+                showErrorModal("Reset Failed", `Could not reset game data. Error: ${error.message}`);
+                loadingOverlayEl.style.display = 'none';
+            }
+        }
+
+        async function deleteChatHistory() {
+            const chatCollectionRef = collection(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "chat_history");
+            const q = query(chatCollectionRef);
+            const querySnapshot = await getDocs(q);
+            const deletePromises = [];
+            querySnapshot.forEach((doc) => { deletePromises.push(deleteDoc(doc.ref)); });
+            await Promise.all(deletePromises);
+        }
+        
+        async function createCharacterAndStartGame() {
+            const charName = charNameEl.value.trim();
+            const selectedCallingEl = callingOptionsEl.querySelector('.selected');
+            const selectedBurdenEl = burdenOptionsEl.querySelector('.selected');
+
+            if (!charName) return showErrorModal("Missing Info", "Please enter a name for your character.");
+            if (!selectedCallingEl) return showErrorModal("Missing Info", "Please choose a Calling.");
+            if (!selectedBurdenEl) return showErrorModal("Missing Info", "Please choose a Burden.");
+
+            showLoadingOverlay();
+
+            try {
+                const callingId = selectedCallingEl.dataset.id;
+                const burdenId = selectedBurdenEl.dataset.id;
+                const calling = CONTENT_PACK_ASHLORDS.callings.find(c => c.id === callingId);
+                const burden = CONTENT_PACK_ASHLORDS.burdens.find(b => b.id === burdenId);
+
+                const combinedStats = { FORCE: 0, FINESSE: 0, INFLUENCE: 0, WITS: 0, RESOLVE: 0 };
+                for (const stat in combinedStats) {
+                    combinedStats[stat] = (calling.stats[stat] || 0) + (burden.stats[stat] || 0);
+                }
+
+                const newCharacter = {
+                    playerId: userId,
+                    name: charName,
+                    playbook: { calling: calling.name, burden: burden.name },
+                    stats: combinedStats,
+                    talents: [...(calling.talents || []), ...(burden.talents || [])],
+                    tags: [...(calling.tags || []), ...(burden.tags || [])],
+                    equipment: [...(calling.equipment || []), ...(burden.equipment || [])],
+                    xp: 0
+                };
+
+                if (selectedBurdenEl.dataset.requiresInput === 'true') {
+                    const detail = burdenDetailInputEl.value.trim();
+                    if (!detail) {
+                        loadingOverlayEl.style.display = 'none';
+                        return showErrorModal("Missing Info", `Please define the details for your Burden: ${burdenDetailLabelEl.textContent}`);
+                    }
+                    if (burden.tags && burden.tags.length > 0) {
+                        const baseTag = burden.tags[0]; 
+                        newCharacter.tags = newCharacter.tags.filter(tag => tag !== baseTag);
+                        newCharacter.tags.push(`${baseTag}: ${detail}`);
+                    }
+                }
+
+                const charRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "characters", currentCharacterId);
+                await setDoc(charRef, newCharacter);
+                await addMessageToChat("model", 
+                    "You are in a dimly lit tavern, the air thick with stale ale and desperation. " +
+                    "Corrupt City Watch enforcers are shaking down the tavern keeper over a fake 'Blight Tax'. " +
+                    "One guard, his face a mask of bored cruelty, shoves the old man. 'Pay up, or we shut you down.' " +
+                    "What do you do?"
+                );
+            } catch (error) {
+                console.error("❌ [CHARACTER] Error creating:", error);
+                showErrorModal("Creation Failed", `Could not save character. Error: ${error.message}`);
+                loadingOverlayEl.style.display = 'none';
+            }
+        }
+
+        async function loadGameData() {
+            if (!userId || !currentCharacterId) return;
+            try {
+                console.log("🎮 [GAME] Loading game data...");
+                await checkAndCreateCampaign();
+                setupFirestoreListeners();
+            } catch (error) {
+                console.error("❌ [GAME] Error loading:", error);
+                showErrorModal("Game Load Failed", `Could not load game data from Firestore. Error: ${error.message}`);
+            }
+        }
+
+        async function processPlayerAction(inputText, actionType = 'chapter') {
+            if (!inputText) {
+                showErrorModal("Action Required", "Please describe your character's action in the text box first.");
+                return;
+            }
+            if (!currentCharacterData) {
+                showErrorModal("Loading Error", "Character data is not yet loaded. Please wait.");
+                return;
+            }
+
+            showLoadingOverlay();
+            if (actionType === 'chapter') {
+                playerInputEl.value = '';
+                playerInputEl.disabled = true;
+                document.getElementById('submit-action-btn').disabled = true;
+            } else {
+                interludePhaseUiEl.style.display = 'none';
+            }
+
+            try {
+                await addMessageToChat('user', inputText);
+                const aiResponse = await callAIGM(inputText);
+                let parsedResponse;
+                try {
+                    parsedResponse = JSON.parse(aiResponse);
+                } catch (e) {
+                    console.error("❌ [AI] Failed to parse JSON:", e);
+                    await addMessageToChat('model', `(AI Parse Error) ${aiResponse}`);
+                    throw new Error("The AI GM's response was not in the correct JSON format.");
+                }
+
+                if (parsedResponse.narrative) {
+                    await addMessageToChat('model', parsedResponse.narrative);
+                }
+                if (parsedResponse.state_update) {
+                    await processStateUpdate(parsedResponse.state_update);
+                }
+            } catch (error) {
+                console.error("❌ [ACTION] Error:", error);
+                await addMessageToChat('model', `--- SYSTEM ERROR --- \n${error.message} \nPlease try again.`);
+            } finally {
+                loadingOverlayEl.style.display = 'none';
+                if (actionType === 'chapter') {
+                    playerInputEl.disabled = false;
+                    document.getElementById('submit-action-btn').disabled = false;
+                    playerInputEl.focus();
+                } else if (currentGameState && currentGameState.phase === 'interlude') {
+                    interludePhaseUiEl.style.display = 'block';
+                }
+            }
+        }
+
+        async function handlePlayerAction() {
+            const inputText = playerInputEl.value.trim();
+            await processPlayerAction(inputText, 'chapter');
+        }
+        
+        async function handleInterludeAction(actionType) {
+            if (!currentCharacterData) {
+                showErrorModal("Loading Error", "Character data is not yet loaded. Please wait.");
+                return;
+            }
+            
+            if (actionType === 'end_interlude') {
+                await endInterlude();
+                return;
+            }
+
+            const currentXP = currentCharacterData.xp || 0;
+            if (currentXP < 1) {
+                showErrorModal("Action Failed", "You do not have enough XP (1 required) to perform this action.");
+                return;
+            }
+            
+            const actionTextMap = {
+                'seek_training': "I want to spend 1 XP to seek training and improve an approach.",
+                'acquire_asset': "I want to spend 1 XP to acquire a new asset or resource.",
+                'reflect': "I want to spend 1 XP to reflect on my experiences and learn from them."
+            };
+            
+            const playerInput = actionTextMap[actionType];
+            if (!playerInput) return;
+            await processPlayerAction(playerInput, 'interlude');
+        }
+        
+        async function endInterlude() {
+            showLoadingOverlay();
+            let grimPortents = [];
+            try {
+                const worldClocksRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "game_state", "world_clocks");
+                const clocksSnap = await getDoc(worldClocksRef);
+                
+                if (clocksSnap.exists()) {
+                    let clocksData = clocksSnap.data();
+                    let updatedClocks = clocksData.clocks.map(clock => {
+                        let newCurrent = clock.current + 1;
+                        if (newCurrent >= clock.segments) {
+                            grimPortents.push(`The clock '${clock.name}' has filled! A grim portent occurs.`);
+                            newCurrent = 0;
+                        }
+                        return {
+...clock, current: newCurrent };
+                    });
+                    await setDoc(worldClocksRef, { clocks: updatedClocks });
+                }
+
+                const playerInput = `(SYSTEM: We are ending Interlude. The "World Turn" has advanced. The following grim portents occurred: ${grimPortents.length > 0 ? grimPortents.join('; ') : 'None.'} Please narrate the consequences and set the scene for the next adventure.)`;
+                await addMessageToChat('user', playerInput);
+                const aiResponse = await callAIGM(playerInput);
+                let parsedResponse;
+                try {
+                    parsedResponse = JSON.parse(aiResponse);
+                } catch (e) {
+                    await addMessageToChat('model', `(AI Parse Error) ${aiResponse}`);
+                    throw new Error("The AI GM's response was not in the correct JSON format.");
+                }
+
+                if (parsedResponse.narrative) {
+                    await addMessageToChat('model', parsedResponse.narrative);
+                }
+                
+                const gameStateRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "game_state", "main");
+                await setDoc(gameStateRef, { phase: "chapter", turns_since_interlude: 0 });
+            } catch (error) {
+                console.error("❌ [INTERLUDE] Error:", error);
+                showErrorModal("Error", `Could not end interlude. Error: ${error.message}`);
+                const gameStateRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "game_state", "main");
+                await setDoc(gameStateRef, { phase: "interlude" });
+            } finally {
+                loadingOverlayEl.style.display = 'none';
+            }
+        }
+
+        async function processStateUpdate(update) {
+            const charRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "characters", currentCharacterId);
+            try {
+                validateStateUpdate(update, currentCharacterData);
+            } catch (error) {
+                console.error("❌ [STATE] Validation failed:", error);
+                showErrorModal("Invalid Update", error.message);
+                return;
+            }
+
+            let firestoreUpdate = {};
+
+            if (update.stats) {
+                for (const [stat, mod] of Object.entries(update.stats)) {
+                    const currentVal = currentCharacterData.stats[stat] || 0;
+                    firestoreUpdate[`stats.${stat}`] = currentVal + mod;
+                }
+            }
+
+            let currentTags = [...(currentCharacterData.tags || [])];
+            if (update.tags_add) {
+                currentTags = [...new Set([...currentTags, ...update.tags_add])];
+            }
+            if (update.tags_remove) {
+                currentTags = currentTags.filter(tag => !update.tags_remove.includes(tag));
+            }
+            if (JSON.stringify(currentTags) !== JSON.stringify(currentCharacterData.tags || [])) {
+                 firestoreUpdate.tags = currentTags;
+            }
+
+            let currentEquipment = [...(currentCharacterData.equipment || [])];
+            if (update.equipment_add && Array.isArray(update.equipment_add)) {
+                currentEquipment = [...currentEquipment, ...update.equipment_add];
+            }
+            if (update.equipment_remove && Array.isArray(update.equipment_remove)) {
+                currentEquipment = currentEquipment.filter(item => !update.equipment_remove.includes(item.name));
+            }
+            if (JSON.stringify(currentEquipment) !== JSON.stringify(currentCharacterData.equipment || [])) {
+                 firestoreUpdate.equipment = currentEquipment;
+            }
+            
+            if (update.xp_gain && update.xp_gain > 0) {
+                firestoreUpdate.xp = (currentCharacterData.xp || 0) + update.xp_gain;
+                showToast(`+${update.xp_gain} XP gained!`);
+            }
+            
+            if (update.xp_spend && update.xp_spend > 0) {
+                const currentXP = currentCharacterData.xp || 0;
+                firestoreUpdate.xp = Math.max(0, currentXP - update.xp_spend);
+            }
+            
+            if (update.talent_used) {
+                showToast(`Talent: ${update.talent_used}`);
+            }
+            
+            if (update.transition_to_interlude) {
+                const turnsSince = currentGameState?.turns_since_interlude || 0;
+                if (turnsSince >= 3) {
+                    const gameStateRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "game_state", "main");
+                    await setDoc(gameStateRef, { phase: "interlude", turns_since_interlude: 0 });
+                }
+            } else if (currentGameState?.phase === 'chapter') {
+                const gameStateRef = doc(db, "artifacts", appId, "public", "data", "campaigns", currentCampaignId, "game_state", "main");
+                await updateDoc(gameStateRef, {
+                    turns_since_interlude: (currentGameState.turns_since_interlude || 0) + 1
+                });
+            }
+
+            if (Object.keys(firestoreUpdate).length > 0) {
+                await updateDoc(charRef, firestoreUpdate);
+            }
+        }
+
+        async function callAIGM(playerInput) {
+            const escalationRoll = 1 + Math.floor(Math.random() * 6);
+            let escalationData = "";
+            if (escalationRoll <= 4) {
+                const twist = CONTENT_PACK_ASHLORDS.TIER_1_TWISTS[Math.floor(Math.random() * CONTENT_PACK_ASHLORDS.TIER_1_TWISTS.length)];
+                escalationData = `(Tier 1) Minor Twist: "${twist}"`;
+            } else if (escalationRoll === 5) {
+                escalationData = `(Tier 1) Minor Twist + Advance a hidden Threat Clock.`;
+            } else {
+                const majorTwist = CONTENT_PACK_ASHLORDS.TIER_2_TWISTS[Math.floor(Math.random() * CONTENT_PACK_ASHLORDS.TIER_2_TWISTS.length)];
+                escalationData = `(Tier 2) Major Oracle Twist: ${majorTwist.complication} ${majorTwist.twist}`;
+            }
+
+            let chatHistoryForPrompt = "This is the first turn.";
+            if (currentChatHistory.length > 0) {
+                chatHistoryForPrompt = currentChatHistory.map(msg => {
+                    return `${msg.role === 'user' ? 'Player' : 'GM'}: ${msg.content}`;
+                }).join('\n');
+            }
+
+        const systemPrompt = `You are the AI Game Master for a dark and cynical RPG. YOUR AGENDA: 1. Make the player's story compelling. 2. Make the world feel real. 3. Play to find out. YOUR PRINCIPLES: Always "Fail Forward", Build on player actions, Use Conditions against them, Maintain fictional integrity, NEVER reference mechanics in narrative.
+
+AVAILABLE MECHANICS ONLY: Stats (FORCE, FINESSE, INFLUENCE, WITS, RESOLVE), Equipment (add/remove items), Conditions/Tags (add/remove status effects), XP (gain/spend), Talents (character abilities). DO NOT reference: rations, HP, mana, stamina, or any resource tracking not in the character data.
+
+MANDATORY STATE UPDATE RULES:
+1. XP: Grant "xp_gain": 1 ONLY when: 1) Player succeeds at a risky/dangerous action, 2) Player succeeds despite taking a complication/cost, 3) Player achieves something significant to the story. Simple/safe successes grant NO XP.
+2. CONDITIONS: When narrative mentions condition (Bruised, Wounded, etc.), MUST include "tags_add": ["Condition"]
+3. EQUIPMENT REMOVAL: When equipment is lost, broken, stolen, or dropped, MUST include "equipment_remove": ["Exact Item Name"]
+4. EQUIPMENT ADD: When gaining items, use "equipment_add": [{"name": "Item", "properties": ["prop1"]}]
+5. CURRENCY: Add money as equipment with "currency" property
+
+INTERLUDE TRIGGERS: Set "transition_to_interlude": true when: 1. Natural story break (conflict resolved), 2. Forced respite (2+ harmful conditions), 3. World event (clock filled). Do NOT if: mid-combat, being pursued, urgent situation, < 3 turns since last interlude.
+
+EXAMPLES:
+Equipment stolen: {"narrative": "The thief steals your sword.", "state_update": {"xp_gain": 1, "equipment_remove": ["Heavy Blade"], "tags_add": ["Disarmed"]}}
+Equipment broken: {"narrative": "Your dagger snaps.", "state_update": {"xp_gain": 1, "equipment_remove": ["Matched Daggers"], "equipment_add": [{"name": "Broken Dagger", "properties": ["broken"]}]}}
+Condition added: {"narrative": "You take a hit and are bruised.", "state_update": {"xp_gain": 1, "tags_add": ["Bruised"]}}
+Simple success: {"narrative": "You successfully hide in the shadows.", "state_update": {}}
+
+Respond ONLY with valid JSON. Do NOT wrap in quotes or code blocks. Output raw JSON: {"narrative": "...", "state_update": {...}}`;
+
+            const userQuery = `CONTEXT: 1. CHAT HISTORY: ${chatHistoryForPrompt} 2. CHARACTER: ${JSON.stringify(currentCharacterData)} 3. GAME STATE: Phase=${currentGameState?.phase || 'chapter'}, Turns=${currentGameState?.turns_since_interlude || 0} 4. ACTION: "${playerInput}" 5. ESCALATION: d6=${escalationRoll}, ${escalationData}`;
+            
+            const apiKey = "AIzaSyCvTDAmgByYSyxrwinqqcHNKZaYJ9_hV8M";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    temperature: 0.8,
+                    maxOutputTokens: 2048,
+                }
+            };
+            
+            async function fetchWithRetry(url, options, retries = 3, delay = 2000) {
+                try {
+                    const response = await fetch(url, options);
+                    if (!response.ok) {
+                        const errorBody = await response.text();
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                } catch (error) {
+                    if (retries > 0) {
+                        await new Promise(res => setTimeout(res, delay));
+                        return fetchWithRetry(url, options, retries - 1, delay * 2);
+                    } else {
+                        throw new Error(`Failed to fetch from Gemini after retries: ${error.message}`);
+                    }
+                }
+            }
+
+            const result = await fetchWithRetry(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const candidate = result.candidates?.[0];
+            if (candidate && candidate.content?.parts?.[0]?.text) {
+                return candidate.content.parts[0].text;
+            } else {
+                throw new Error("Invalid or empty response from Gemini API.");
+            }
+        }
+
+        async function initializeGame() {
+            console.log("🎮 [INIT] Starting game initialization...");
+            authStatusEl = document.getElementById('auth-status');
+            narrativeLogEl = document.getElementById('narrative-log');
+            playerInputEl = document.getElementById('player-input');
+            characterSheetWrapperEl = document.getElementById('character-sheet-wrapper');
+            characterSheetHeaderEl = document.getElementById('character-sheet-header');
+            characterSheetContentEl = document.getElementById('character-sheet-content');
+            characterSheetDataEl = document.getElementById('character-sheet-data');
+            characterSheetLoadingEl = document.getElementById('character-sheet-loading');
+            loadingOverlayEl = document.getElementById('loading-overlay');
+            errorModalEl = document.getElementById('error-modal');
+            errorMessageEl = document.getElementById('error-message');
+            errorTitleEl = document.getElementById('error-title');
+            mainGameUiEl = document.getElementById('main-game-ui');
+            charCreationUiEl = document.getElementById('character-creation-ui');
+            callingOptionsEl = document.getElementById('calling-options');
+            burdenOptionsEl = document.getElementById('burden-options');
+            charNameEl = document.getElementById('character-name');
+            burdenDetailWrapperEl = document.getElementById('burden-detail-input-wrapper');
+            burdenDetailLabelEl = document.getElementById('burden-detail-label');
+            burdenDetailInputEl = document.getElementById('burden-detail-input');
+            loadingTextEl = document.getElementById('loading-text');
+            chapterPhaseUiEl = document.getElementById('chapter-phase-ui');
+            interludePhaseUiEl = document.getElementById('interlude-phase-ui');
+            worldClocksContainerEl = document.getElementById('world-clocks-container');
+            worldClocksLoadingEl = document.getElementById('world-clocks-loading');
+            
+            console.log("🎮 [INIT] All DOM elements loaded");
+            
+            document.getElementById('submit-action-btn').addEventListener('click', handlePlayerAction);
+            characterSheetHeaderEl.addEventListener('click', () => {
+                characterSheetWrapperEl.classList.toggle('accordion-closed');
+            });
+            playerInputEl.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handlePlayerAction();
+                }
+            });
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    if (document.activeElement === playerInputEl) {
+                        handlePlayerAction();
+                    }
+                }
+            });
+            document.getElementById('close-modal-btn').addEventListener('click', () => {
+                errorModalEl.style.display = 'none';
+            });
+            document.getElementById('create-character-btn').addEventListener('click', createCharacterAndStartGame);
+            document.getElementById('reset-game-btn').addEventListener('click', resetGame);
+            document.getElementById('interlude-train-btn').addEventListener('click', () => handleInterludeAction('seek_training'));
+            document.getElementById('interlude-asset-btn').addEventListener('click', () => handleInterludeAction('acquire_asset'));
+            document.getElementById('interlude-reflect-btn').addEventListener('click', () => handleInterludeAction('reflect'));
+            document.getElementById('interlude-end-btn').addEventListener('click', () => handleInterludeAction('end_interlude'));
+            
+            console.log("🎮 [INIT] Event listeners attached");
+            
+            try {
+                showLoadingOverlay();
+                loadingTextEl.textContent = "Connecting to Firebase...";
+                console.log("🔥 [FIREBASE] Parsing config...");
+                const firebaseConfig = JSON.parse(firebaseConfigStr);
+                console.log("🔥 [FIREBASE] Config parsed:", firebaseConfig);
+                
+                if (firebaseConfig.projectId === "YOUR_PROJECT_ID") {
+                    throw new Error("Firebase config is not set. Using placeholder.");
+                }
+                
+                console.log("🔥 [FIREBASE] Initializing app...");
+                const app = initializeApp(firebaseConfig);
+                console.log("🔥 [FIREBASE] App initialized");
+                
+                console.log("🔥 [FIREBASE] Getting Firestore instance...");
+                db = getFirestore(app);
+                console.log("🔥 [FIREBASE] Firestore ready");
+                
+                console.log("🔥 [FIREBASE] Getting Auth instance...");
+                auth = getAuth(app);
+                console.log("🔥 [FIREBASE] Auth ready");
+                
+                setLogLevel('error');
+
+                console.log("🔐 [AUTH] Setting up auth state listener...");
+                onAuthStateChanged(auth, (user) => {
+                    console.log("🔐 [AUTH] Auth state changed:", user ? `User ID: ${user.uid}` : "No user");
+                    if (user) {
+                        userId = user.uid;
+                        currentCharacterId = `char_${userId}`;
+                        authStatusEl.innerHTML = `<p class="text-sm font-medium text-gray-400">Auth Status: Signed In</p><p class="text-xs text-gray-500 font-mono">UID: ${userId.substring(0, 10)}...</p>`;
+                        console.log("🎮 [GAME] Loading game data for user:", userId);
+                        loadGameData();
+                    } else {
+                        userId = null;
+                        currentCharacterId = null;
+                        currentCharacterData = null;
+                        authStatusEl.innerHTML = `<p class="text-sm font-medium text-red-400">Auth Status: Signed Out</p>`;
+                        mainGameUiEl.style.display = 'none';
+                        charCreationUiEl.style.display = 'none';
+                        loadingOverlayEl.style.display = 'none';
+                        console.log("🔐 [AUTH] No user - showing signed out state");
+                    }
+                });
+
+                if (initialAuthToken) {
+                    loadingTextEl.textContent = "Authenticating...";
+                    console.log("🔐 [AUTH] Signing in with custom token...");
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    loadingTextEl.textContent = "Authenticating anonymously...";
+                    console.log("🔐 [AUTH] Signing in anonymously...");
+                    await signInAnonymously(auth);
+                    console.log("🔐 [AUTH] Anonymous sign-in successful!");
+                }
+            } catch (error) {
+                console.error("❌ [ERROR] Firebase Initialization Error:", error);
+                console.error("❌ [ERROR] Error stack:", error.stack);
+                if (error.message.includes("placeholder")) {
+                     showErrorModal("Setup Error", "This app is not connected to a Firebase project. Please check the environment configuration.");
+                } else {
+                     showErrorModal("Initialization Failed", `Could not connect to Firebase. Error: ${error.message}`);
+                }
+                loadingOverlayEl.style.display = 'none';
+            }
+        }
+
+        window.onload = initializeGame;
+    </script>
+</body>
+</html>
