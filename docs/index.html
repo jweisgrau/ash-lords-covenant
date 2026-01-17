@@ -519,8 +519,13 @@
                     return { needsRoll: true, stat: 'FORCE', tier: 2, type: 'combat' };
                 }
 
-                // Stealth/Finesse (pickpocket, steal, sneak, etc.)
-                if (/sneak|hide|stealth|creep|shadow|pickpocket|steal|pick.*(lock|pocket)|climb|dodge|evade|escape|slip|pilfer|filch|swipe|lift/.test(lower)) {
+                // Stealing/Pickpocketing - gives loot on success (check BEFORE general stealth)
+                if (/pickpocket|steal|pilfer|filch|swipe|lift|loot|rob|take.*(coin|gold|money|purse|wallet|pouch)/.test(lower)) {
+                    return { needsRoll: true, stat: 'FINESSE', tier: 1, type: 'steal' };
+                }
+
+                // General Stealth/Finesse - no automatic loot
+                if (/sneak|hide|stealth|creep|shadow|pick.*(lock)|climb|dodge|evade|escape|slip/.test(lower)) {
                     return { needsRoll: true, stat: 'FINESSE', tier: 1, type: 'stealth' };
                 }
 
@@ -669,7 +674,7 @@
                 if (rollResult.outcome === 'success') {
                     consequences.xp_gain = 1;
                     // Award coin for successful stealing/pickpocketing/looting
-                    if (actionType === 'stealth') {
+                    if (actionType === 'steal') {
                         const loot = Math.floor(Math.random() * 6) + 1; // 1d6 coin
                         consequences.currency_gain = loot;
                         consequences.description = `Success! Gained ${loot} coin.`;
@@ -678,8 +683,8 @@
                     }
                 } else if (rollResult.outcome === 'cost') {
                     consequences.xp_gain = 1;
-                    // Partial loot on cost for stealth (half, rounded down)
-                    if (actionType === 'stealth') {
+                    // Partial loot on cost for steal (half, rounded down)
+                    if (actionType === 'steal') {
                         const loot = Math.floor((Math.floor(Math.random() * 6) + 1) / 2); // 1d6/2
                         if (loot > 0) {
                             consequences.currency_gain = loot;
