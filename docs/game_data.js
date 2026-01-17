@@ -1,5 +1,8 @@
 // game_data.js
-// Version 0.9.4 - The Ash-Lord's Covenant (Pip System)
+// Version 2.2.0 - The Ash-Lord's Covenant (Oracle Table System)
+// - Expanded TIER_1_TWISTS: 5 themed tables × 20 entries = 100 total
+// - Added TIER_2_TWISTS_WITTY: 10 entries with grimdark humor
+// - Added QUEST_HOOKS: 12 engine-switch quests (epic → political)
 
 const INJURY_FLAVOR_TEXT = {
     // AI Reference for narrating Pips (Strain vs Injury)
@@ -315,21 +318,237 @@ const CONTENT_PACK_ASHLORDS = {
          LOCATIONS: ["Abbey", "Altar", "Alley", "Archive", "Armory", "Asylum", "Bastion", "Baths", "Bell-Tower", "Bone-Yard", "Breach", "Bridge", "Canal", "Catacomb", "Cathedral", "Cenotaph", "Chapel", "Charnel House", "Cistern", "Citadel", "Courthouse", "Court", "Cradle", "Crematorium", "Crossroad", "Crypt", "Dam", "Den", "Dock", "Drain", "Dungeon", "Embassy", "Exchange", "Fane", "Flophouse", "Forge", "Fort", "Foundry", "Gallows", "Gaol", "Kennel", "Lamp-Post", "Labyrinth", "Library", "Lighthouse", "Lock", "Manufactory", "Market", "Memorial", "Menagerie", "Mill", "Monument", "Morgue", "Museum", "Nursery", "Observatory", "Orphanage", "Ossuary", "Pen", "Pit", "Prison", "Processing", "Pump-Station", "Quarry", "Rack", "Refinery", "Reliquary", "Rookery", "Rook's", "Sanatorium", "Scriptorium", "Sepulcher", "Sewer-Canal", "Shaft", "Shambles", "Shrine", "Slaughterhouse", "Slum", "Spire", "Stable", "Stockade", "Stockyard", "Stone", "Sump", "Tannery", "Temple", "Tenement", "Terminus", "Theatre", "Tomb", "Tower", "Undercroft", "Veldt", "Viaduct", "Wall", "Warren", "Waste", "Well", "Wharf", "Workshop"]
     },
 
-    TIER_1_TWISTS: [
-        "Momentary hesitation costs you the initiative.",
-        "You attract unwanted attention from a nearby observer.",
-        "A piece of gear is strained or dropped (no damage, just awkward).",
-        "You waste a valuable resource (time, supplies, ammo).",
-        "You succeed, but receive bad information mixed with the good.",
-        "You make noise that echoes dangerously.",
-        "You offend a minor social protocol.",
-        "You end up in a precarious position (not yet dangerous, but poor leverage).",
-        "The environment shifts against you (lights dim, crowd presses in)."
+    // === TIER 1 MINOR TWISTS (5 themed tables × 20 entries = 100 total) ===
+    TIER_1_TWISTS: {
+        PHYSICAL_MENTAL: [
+            "Your muscles burn from the strain—you'll feel this tomorrow.",
+            "A sharp headache splits your focus for a moment.",
+            "Your hands tremble slightly after the exertion.",
+            "A persistent ache settles into your joints.",
+            "Sweat stings your eyes at the worst possible moment.",
+            "Your breathing comes harder than it should.",
+            "A muscle cramp threatens to lock up your leg.",
+            "Fatigue clouds your judgment for a crucial instant.",
+            "Your vision swims briefly from the effort.",
+            "An old wound flares with phantom pain.",
+            "Your stomach churns—when did you last eat properly?",
+            "A ringing in your ears drowns out subtle sounds.",
+            "Your grip strength wavers at a critical moment.",
+            "Dizziness forces you to steady yourself.",
+            "The cold seeps into your bones deeper than expected.",
+            "Heat exhaustion makes your thoughts sluggish.",
+            "A coughing fit interrupts your concentration.",
+            "Your back spasms from the awkward position.",
+            "Adrenaline crash leaves you momentarily weak.",
+            "Mental fog descends—too many problems at once."
+        ],
+        EQUIPMENT_RESOURCE: [
+            "Your grip slips—a tool or weapon clatters to the ground.",
+            "You burn through supplies faster than expected.",
+            "A strap snaps, leaving gear hanging loose.",
+            "Your blade catches on something—a nick in the edge.",
+            "Ammunition runs lower than you'd thought.",
+            "A pocket tears, scattering small items.",
+            "Your torch gutters, threatening to die.",
+            "Water skin springs a slow leak.",
+            "Rope fibers fray dangerously under strain.",
+            "Lock picks bend—still usable, but barely.",
+            "Chalk crumbles when you need it most.",
+            "Bandages run out, leaving wounds exposed.",
+            "Your map tears along a crucial fold.",
+            "Armor straps loosen, reducing protection.",
+            "A potion bottle cracks—contents compromised.",
+            "Your pack's weight shifts awkwardly.",
+            "Coins spill, drawing unwanted eyes.",
+            "The lantern oil is nearly gone.",
+            "Your disguise develops an obvious flaw.",
+            "The borrowed item shows signs of damage."
+        ],
+        SITUATIONAL_POSITIONAL: [
+            "You end up cornered with limited escape routes.",
+            "The environment shifts against you—lights dim, crowd presses in.",
+            "You lose the high ground to your opponent.",
+            "Your back is now exposed to a doorway or alley.",
+            "The floor beneath you creaks ominously.",
+            "A sudden gust extinguishes nearby light sources.",
+            "Rain begins, making surfaces treacherous.",
+            "The crowd surges, separating you from allies.",
+            "Shadows deepen around potential hiding spots.",
+            "A door slams shut behind you—locked or jammed.",
+            "The bridge sways more than you'd like.",
+            "Rubble shifts, narrowing your path.",
+            "The tide comes in faster than expected.",
+            "Smoke begins to fill the enclosed space.",
+            "A sudden silence falls—too quiet.",
+            "The ground turns muddy and treacherous.",
+            "Your intended exit is now blocked.",
+            "The ceiling groans with accumulated weight.",
+            "Ice forms where you need to step.",
+            "The mechanism you triggered hasn't finished yet."
+        ],
+        SOCIAL_FACTIONAL: [
+            "You catch a disapproving glare from someone who matters.",
+            "Word of this will spread—the question is how fast.",
+            "An Ash-Warden patrol takes notice of the commotion.",
+            "A Soot-Stained lookout marks you for future interest.",
+            "You've accidentally insulted local customs.",
+            "Someone recognizes you from somewhere awkward.",
+            "Your accent marks you as an outsider here.",
+            "A merchant doubles their price after watching you.",
+            "Children begin following you, pointing and whispering.",
+            "A beggar loudly announces your presence.",
+            "Someone mistakes you for someone dangerous.",
+            "The Iron-Forgers' guild takes note of your methods.",
+            "Whispering Flesh cultists seem unusually interested.",
+            "A local power broker was watching that exchange.",
+            "You've made an enemy of someone petty but connected.",
+            "Your name gets mentioned to the wrong person.",
+            "A favor is now expected in return.",
+            "Someone's taking notes on your activities.",
+            "The local gang marks your face for later.",
+            "A rumor about you begins circulating—inaccurate but troubling."
+        ],
+        GRIMDARK_FLAVOR: [
+            "A child watches you fail. They seem unsurprised.",
+            "Somewhere, a bell tolls. Probably unrelated. Probably.",
+            "A crow lands nearby, watching with unnerving intelligence.",
+            "The Blight-mark on a nearby wall pulses faintly.",
+            "You notice the corpse in the corner for the first time.",
+            "Someone weeps quietly in a nearby building.",
+            "The smell of ash grows stronger momentarily.",
+            "A distant scream cuts off abruptly.",
+            "Your reflection in a window looks... wrong.",
+            "The shadows seem to lean toward you.",
+            "A rat watches you, then deliberately turns away.",
+            "The air tastes like copper and regret.",
+            "Writing appears in the condensation: 'TOO LATE.'",
+            "A prayer charm snaps from your neck.",
+            "The sun dims behind permanent smog.",
+            "Someone laughs, though no one's smiling.",
+            "A dead bird falls from a ledge above.",
+            "The street preacher points directly at you.",
+            "Your breath mists, despite the warmth.",
+            "The Blight wind carries whispers of your name."
+        ]
+    },
+
+    // === TIER 2 MAJOR TWISTS WITH WITTY GRIMDARK (10 entries for d10) ===
+    TIER_2_TWISTS_WITTY: [
+        {
+            complication: "A new, superior foe arrives.",
+            twist: "...and they seem just as bored and annoyed by this as you are."
+        },
+        {
+            complication: "An ally is revealed to be working against you.",
+            twist: "...but they apologize, explaining they're getting a really good price for it."
+        },
+        {
+            complication: "You lose a crucial resource or gain a lasting mark.",
+            twist: "...and you also realize you've left something embarrassing behind at the scene."
+        },
+        {
+            complication: "An NPC you were protecting proves to be a terrible person.",
+            twist: "...and they mock you for believing they were anything else."
+        },
+        {
+            complication: "The situation becomes absurdly complicated.",
+            twist: "...and a bystander makes a sarcastic comment about your performance."
+        },
+        {
+            complication: "Your action draws the attention of a powerful faction.",
+            twist: "...specifically the department that handles 'problems' like you."
+        },
+        {
+            complication: "The Blight surges in response to your presence.",
+            twist: "...because of course it does. It always does around you."
+        },
+        {
+            complication: "Your escape route is suddenly blocked.",
+            twist: "...by someone who wants to sell you something. Urgently. At length."
+        },
+        {
+            complication: "A dark secret about the situation is revealed.",
+            twist: "...and it's somehow worse than the dark secret you were already expecting."
+        },
+        {
+            complication: "Time runs out faster than anticipated.",
+            twist: "...and somewhere, someone is definitely saying 'I told you so.'"
+        }
     ],
 
-    TIER_2_TWISTS: [
-        {complication: "New Enemy", twist: "Arrives now"}, 
-        {complication: "Betrayal", twist: "For money"}, 
-        {complication: "Blight Surge", twist: "Environment twists"}
+    // === QUEST HOOKS (Engine-Switch reveals: Epic → Political) ===
+    QUEST_HOOKS: [
+        {
+            epic_hook: "An ancient evil has awakened in the ruins below the city...",
+            political_truth: "...and a noble house is secretly worshiping it for power.",
+            faction: "Whispering Flesh",
+            tier: 2
+        },
+        {
+            epic_hook: "A village on the outskirts is being terrorized by a monster...",
+            political_truth: "...that was created by a rival guild to drive down land prices.",
+            faction: "Iron-Forgers",
+            tier: 1
+        },
+        {
+            epic_hook: "A magical plague is sweeping the slums...",
+            political_truth: "...which was engineered by the city guard to justify a 'cleanup' operation.",
+            faction: "Ash-Wardens",
+            tier: 2
+        },
+        {
+            epic_hook: "The 'Dark Lord's' army is gathering in the wastes...",
+            political_truth: "...but it's just a mercenary company hired by the merchants' guild to destabilize competitors.",
+            faction: "Iron-Forgers",
+            tier: 1
+        },
+        {
+            epic_hook: "Children are disappearing from the orphanages...",
+            political_truth: "...sold to the Iron-Forgers as 'apprentices' for dangerous factory work.",
+            faction: "Soot-Stained",
+            tier: 1
+        },
+        {
+            epic_hook: "A prophet preaches the end of days in the market square...",
+            political_truth: "...deliberately spreading panic to cover a massive heist by the Soot-Stained.",
+            faction: "Soot-Stained",
+            tier: 1
+        },
+        {
+            epic_hook: "The old temple has begun bleeding actual blood...",
+            political_truth: "...a Whispering Flesh ritual to create a new flesh-construct from the faithful.",
+            faction: "Whispering Flesh",
+            tier: 2
+        },
+        {
+            epic_hook: "A hero from the last war has returned from the dead...",
+            political_truth: "...a desperate propaganda move by the Ash-Wardens using a lookalike and forged documents.",
+            faction: "Ash-Wardens",
+            tier: 1
+        },
+        {
+            epic_hook: "Strange lights appear over the industrial district each night...",
+            political_truth: "...illegal Aether-experiments by the Iron-Forgers, venting toxic byproducts into the poor quarters.",
+            faction: "Iron-Forgers",
+            tier: 1
+        },
+        {
+            epic_hook: "The sewers have become impassable—something hunts down there...",
+            political_truth: "...failed Blight experiments dumped by the Ash-Wardens, who are now paying bounties to cover it up.",
+            faction: "Ash-Wardens",
+            tier: 2
+        },
+        {
+            epic_hook: "A noble's daughter has been kidnapped by 'bandits'...",
+            political_truth: "...she staged it herself to escape an arranged marriage, and the 'bandits' are Soot-Stained allies.",
+            faction: "Soot-Stained",
+            tier: 1
+        },
+        {
+            epic_hook: "Ghosts are appearing throughout the old quarter...",
+            political_truth: "...hallucinations caused by contaminated water, poisoned by Iron-Forger runoff.",
+            faction: "Iron-Forgers",
+            tier: 1
+        }
     ]
 };

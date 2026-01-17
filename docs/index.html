@@ -60,7 +60,7 @@
 
     <div id="loading-overlay" class="flex fixed top-0 left-0 w-screen h-screen bg-black/80 z-[199] justify-center items-center" style="flex-direction: column;">
         <div class="spinner mb-4"></div>
-        <span id="loading-text" class="ml-4 text-lg text-gray-300">Booting v0.9.5 (Hard Cutover)...</span>
+        <span id="loading-text" class="ml-4 text-lg text-gray-300">Booting v2.1.0 (Adventure/Downtime)...</span>
         <div id="boot-log"></div>
         <button id="force-start-btn" onclick="window.forceUI()">⚠️ FORCE UI</button>
     </div>
@@ -81,7 +81,7 @@
         <header class="mb-4 p-4 bg-gray-800 rounded-lg border border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div>
                 <h1 class="text-2xl font-bold text-white">Ash-Lord's Covenant</h1>
-                <p class="text-sm text-gray-400">Digital RPG Prototype (Build v2.0.0 - Client-Side Mechanics)</p>
+                <p class="text-sm text-gray-400">Digital RPG Prototype (Build v2.2.0 - Oracle Tables)</p>
             </div>
             <div class="flex items-center space-x-2">
                 <button onclick="window.exportSave()" class="px-3 py-2 bg-gray-700 text-xs text-gray-300 rounded-lg hover:bg-emerald-700 hover:text-white transition">
@@ -216,13 +216,32 @@
                         </div>
                         
                         <div id="interlude-phase-ui" class="hidden">
-                            <p class="text-lg text-gray-300 mb-4">You have a moment for an Interlude. What is your priority?</p>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <button id="interlude-train-btn" class="interlude-button">Seek Training (1 XP)</button>
-                                <button id="interlude-asset-btn" class="interlude-button">Acquire an Asset (1 XP)</button>
-                                <button id="interlude-reflect-btn" class="interlude-button">Reflect & Integrate (1 XP)</button>
-                                <button id="interlude-end-btn" class="interlude-button end-interlude">End Interlude</button>
+                            <div class="mb-4 p-3 bg-gray-900 rounded-lg border border-emerald-700">
+                                <h3 class="text-lg font-bold text-emerald-400 mb-2">⏳ Downtime Phase</h3>
+                                <p class="text-sm text-gray-400">The world moves on while you rest. Faction clocks advance. Choose how to spend your time wisely.</p>
                             </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <button id="interlude-train-btn" class="interlude-button flex flex-col items-start text-left p-3">
+                                    <span class="font-bold text-white">Seek Training (1 XP)</span>
+                                    <span class="text-xs text-gray-400 mt-1">Study under a mentor. Gain insight or skill.</span>
+                                </button>
+                                <button id="interlude-asset-btn" class="interlude-button flex flex-col items-start text-left p-3">
+                                    <span class="font-bold text-white">Acquire an Asset (1 XP)</span>
+                                    <span class="text-xs text-gray-400 mt-1">Find equipment, allies, or information.</span>
+                                </button>
+                                <button id="interlude-reflect-btn" class="interlude-button flex flex-col items-start text-left p-3">
+                                    <span class="font-bold text-white">Reflect & Integrate (1 XP)</span>
+                                    <span class="text-xs text-gray-400 mt-1">Process experiences. Potentially gain a Tag.</span>
+                                </button>
+                                <button id="interlude-heal-btn" class="interlude-button flex flex-col items-start text-left p-3">
+                                    <span class="font-bold text-white">Rest & Recover (3 Coin)</span>
+                                    <span class="text-xs text-gray-400 mt-1">Heal one Pip of damage. Requires coin.</span>
+                                </button>
+                            </div>
+                            <button id="interlude-end-btn" class="w-full mt-4 px-4 py-3 bg-red-900 text-white rounded-lg font-bold hover:bg-red-800 transition border border-red-700">
+                                Return to Adventure →
+                            </button>
+                            <p class="text-xs text-gray-500 text-center mt-2">Warning: Ending downtime advances faction clocks!</p>
                         </div>
                     </div>
                 </div>
@@ -240,12 +259,13 @@
         const BACKUP_KEY = "ashlords_game_v1_backup";
 
         const createFreshState = () => ({
-            version: "1.0.0",
+            version: "2.1.0",
             userId: `local-${crypto.randomUUID()}`,
             character: null,
             gameState: {
-                phase: "character_creation",
+                phase: "character_creation",  // character_creation, adventure, downtime
                 turn_count: 0,
+                adventure_turn_count: 0,      // Turns since last downtime
                 saga_log: "The story begins...",
                 current_location: "Unknown"
             },
@@ -255,6 +275,10 @@
                 destiny: { current: 0, segments: 8 },
                 front: { current: 0, segments: 8, name: "The Threat Looms" }
             },
+            // Hidden progress clocks (not shown to player directly)
+            progressClocks: [],
+            // Tags - narrative facts about the character
+            tags: [],
             questState: { current_quest: null },
             campaign: null
         });
@@ -484,33 +508,30 @@
 
         const MechanicsEngine = {
             // Parse player intent from text input
+            // Priority: Check for ACTION VERBS first (anywhere in text), then fall back to narrative
             parseIntent(input) {
                 const lower = input.toLowerCase().trim();
 
-                // No roll needed - basic actions
-                if (/^(walk|leave|go|move|exit|enter|look around|wait|rest|sleep)/.test(lower) ||
-                    /^(look at|examine|observe|watch)/.test(lower) && !/search|find|hidden/.test(lower)) {
-                    return { needsRoll: false, type: 'narrative' };
-                }
+                // === PRIORITY 1: Check for action verbs ANYWHERE in the input ===
 
-                // Combat - always Tier 2
+                // Combat - always Tier 2 (check first as it's highest stakes)
                 if (/attack|fight|strike|hit|kill|stab|slash|punch|kick|shoot|throw.*(at|toward)|battle|duel|assault/.test(lower)) {
                     return { needsRoll: true, stat: 'FORCE', tier: 2, type: 'combat' };
                 }
 
-                // Stealth/Finesse
-                if (/sneak|hide|stealth|creep|shadow|pickpocket|steal|pick.*(lock|pocket)|climb|dodge|evade|escape|slip/.test(lower)) {
+                // Stealth/Finesse (pickpocket, steal, sneak, etc.)
+                if (/sneak|hide|stealth|creep|shadow|pickpocket|steal|pick.*(lock|pocket)|climb|dodge|evade|escape|slip|pilfer|filch|swipe|lift/.test(lower)) {
                     return { needsRoll: true, stat: 'FINESSE', tier: 1, type: 'stealth' };
                 }
 
                 // Social/Influence - hostile = Tier 2
-                if (/persuade|convince|negotiate|bribe|charm|seduce|intimidate|threaten|lie|deceive|bluff/.test(lower)) {
-                    const isHostile = /threaten|intimidate|hostile|angry|suspicious/.test(lower);
+                if (/persuade|convince|negotiate|bribe|charm|seduce|intimidate|threaten|lie|deceive|bluff|manipulate|coerce/.test(lower)) {
+                    const isHostile = /threaten|intimidate|hostile|angry|suspicious|coerce/.test(lower);
                     return { needsRoll: true, stat: 'INFLUENCE', tier: isHostile ? 2 : 1, type: 'social' };
                 }
 
                 // Investigation/Wits
-                if (/search|investigate|find|discover|figure|solve|deduce|analyze|study|research|recall|remember/.test(lower)) {
+                if (/search|investigate|find|discover|figure|solve|deduce|analyze|study|research|recall|remember|examine.*(closely|carefully)|inspect/.test(lower)) {
                     return { needsRoll: true, stat: 'WITS', tier: 1, type: 'investigate' };
                 }
 
@@ -519,9 +540,21 @@
                     return { needsRoll: true, stat: 'RESOLVE', tier: 1, type: 'endurance' };
                 }
 
-                // Ask/talk (no pressure) - no roll
+                // === PRIORITY 2: No action verbs found - check for narrative/dialogue ===
+
+                // Simple observation (no hidden search intent)
+                if (/^(look at|examine|observe|watch|look around)/.test(lower) && !/search|find|hidden|closely|carefully/.test(lower)) {
+                    return { needsRoll: false, type: 'narrative' };
+                }
+
+                // Simple dialogue (no persuasion intent)
                 if (/^(ask|talk|speak|say|tell|greet|chat)/.test(lower) && !/persuade|convince|lie|threaten/.test(lower)) {
                     return { needsRoll: false, type: 'dialogue' };
+                }
+
+                // Pure movement/waiting (ONLY if no other action verbs)
+                if (/^(walk|leave|go|move|exit|enter|wait|rest|sleep)\b/.test(lower)) {
+                    return { needsRoll: false, type: 'narrative' };
                 }
 
                 // Default: ambiguous - will ask AI to classify or default to narrative
@@ -624,6 +657,91 @@
                 });
             },
 
+            // Escalation Oracle (1d6) - determines complication severity on Cost
+            rollEscalationOracle() {
+                const d6 = Math.floor(Math.random() * 6) + 1;
+                let result;
+
+                if (d6 <= 4) {
+                    // 1-4: Minor Twist (Tier 1 complication)
+                    result = {
+                        type: 'minor_twist',
+                        description: 'Minor complication',
+                        advanceThreat: false
+                    };
+                } else if (d6 === 5) {
+                    // 5: Minor Twist + Advance Threat Clock
+                    result = {
+                        type: 'minor_threat',
+                        description: 'Minor complication + threat advances',
+                        advanceThreat: true
+                    };
+                } else {
+                    // 6: Major Oracle Twist (Tier 2 complication)
+                    result = {
+                        type: 'major_twist',
+                        description: 'Major complication!',
+                        advanceThreat: false
+                    };
+                }
+
+                return { d6, ...result };
+            },
+
+            // Enhanced consequence calculation with Escalation Oracle + Oracle Tables
+            getConsequences(rollResult, actionType) {
+                const consequences = {
+                    xp_gain: 0,
+                    currency_gain: 0,
+                    add_pips: null,
+                    escalation: null,
+                    twist: null,  // Oracle-generated twist for AI narrative
+                    description: ''
+                };
+
+                if (rollResult.outcome === 'success') {
+                    consequences.xp_gain = 1;
+                    consequences.description = 'Success!';
+                } else if (rollResult.outcome === 'cost') {
+                    consequences.xp_gain = 1;
+
+                    // Roll Escalation Oracle to determine complication severity
+                    const escalation = this.rollEscalationOracle();
+                    consequences.escalation = escalation;
+
+                    if (escalation.type === 'major_twist') {
+                        // d6 = 6: Roll from Tier 2 Major Twist table
+                        const majorTwist = OracleSystem.rollMajorTwist();
+                        consequences.twist = majorTwist;
+                        consequences.add_pips = { stat: rollResult.stat, amount: 1 };
+                        consequences.description = `Success with major complication (Escalation: ${escalation.d6})`;
+                    } else {
+                        // d6 = 1-5: Roll from Tier 1 Minor Twist table
+                        const minorTwist = OracleSystem.rollMinorTwist();
+                        consequences.twist = minorTwist;
+
+                        if (rollResult.tier === 2 || actionType === 'combat') {
+                            // Perilous actions always risk injury on cost
+                            consequences.add_pips = { stat: rollResult.stat, amount: 1 };
+                            consequences.description = `Success with injury (Escalation: ${escalation.d6})`;
+                        } else {
+                            consequences.description = `Success with complication (Escalation: ${escalation.d6})`;
+                        }
+                    }
+                } else { // miss
+                    const severity = (rollResult.tier === 2 || actionType === 'combat') ? 2 : 1;
+                    consequences.add_pips = { stat: rollResult.stat, amount: severity };
+
+                    // Get injury flavor text from Oracle
+                    const flavor = OracleSystem.getInjuryFlavor(rollResult.stat, severity);
+                    consequences.description = severity >= 2
+                        ? `Failure with serious injury: ${flavor}`
+                        : `Failure with strain: ${flavor}`;
+                }
+
+                return consequences;
+            },
+
             // Format roll result for display and AI context
             formatRollResult(rollResult) {
                 if (!rollResult) return '';
@@ -631,6 +749,216 @@
                 const tierLabel = tier === 2 ? 'Perilous' : 'Challenging';
                 const pipText = pips > 0 ? ` - ${pips}(Pips)` : '';
                 return `Action: ${stat} (Tier ${tier} - ${tierLabel}). Roll: d10(${d10}) + ${statMod}(${stat})${pipText} = ${total}. Result: ${outcome.toUpperCase()}`;
+            }
+        };
+
+        // ===== ORACLE SYSTEM (Deterministic Complication Generation) =====
+
+        const OracleSystem = {
+            // Roll from Tier 1 Minor Twist tables (returns category and description)
+            rollMinorTwist() {
+                const twists = CONTENT_PACK_ASHLORDS.TIER_1_TWISTS;
+                const categories = Object.keys(twists);
+                const category = categories[Math.floor(Math.random() * categories.length)];
+                const table = twists[category];
+                const entry = table[Math.floor(Math.random() * table.length)];
+                return {
+                    category,
+                    description: entry,
+                    type: 'minor'
+                };
+            },
+
+            // Roll from Tier 2 Major Twist table (witty grimdark)
+            rollMajorTwist() {
+                const table = CONTENT_PACK_ASHLORDS.TIER_2_TWISTS_WITTY;
+                const entry = table[Math.floor(Math.random() * table.length)];
+                return {
+                    complication: entry.complication,
+                    twist: entry.twist,
+                    description: `${entry.complication} ${entry.twist}`,
+                    type: 'major'
+                };
+            },
+
+            // Roll Core Oracle (Action + Theme combination)
+            rollCoreOracle() {
+                const actions = CONTENT_PACK_ASHLORDS.ORACLES.ACTIONS;
+                const themes = CONTENT_PACK_ASHLORDS.ORACLES.THEMES;
+                return {
+                    action: actions[Math.floor(Math.random() * actions.length)],
+                    theme: themes[Math.floor(Math.random() * themes.length)]
+                };
+            },
+
+            // Roll a location from the oracle
+            rollLocation() {
+                const locations = CONTENT_PACK_ASHLORDS.ORACLES.LOCATIONS;
+                return locations[Math.floor(Math.random() * locations.length)];
+            },
+
+            // Get a quest hook with engine-switch reveal
+            rollQuestHook() {
+                const hooks = CONTENT_PACK_ASHLORDS.QUEST_HOOKS;
+                return hooks[Math.floor(Math.random() * hooks.length)];
+            },
+
+            // Get injury flavor text based on stat and severity
+            getInjuryFlavor(stat, severity) {
+                const flavor = INJURY_FLAVOR_TEXT[stat];
+                if (!flavor) return severity >= 2 ? "Serious wound" : "Minor strain";
+                return severity >= 2 ? flavor.injury : flavor.strain;
+            },
+
+            // Format twist for display
+            formatTwist(twist) {
+                if (!twist) return '';
+                if (twist.type === 'major') {
+                    return `MAJOR COMPLICATION: ${twist.description}`;
+                }
+                return `Complication (${twist.category.replace(/_/g, ' ')}): ${twist.description}`;
+            }
+        };
+
+        // ===== WORLD TURN & PHASE MANAGEMENT =====
+
+        const WorldTurn = {
+            // Execute World Turn during Downtime
+            // Advances faction clocks and triggers Grim Portents
+            async execute() {
+                const state = gameState.getState();
+                const worldClocks = state.worldClocks?.clocks || [];
+                const updates = [];
+                const portents = [];
+
+                // Advance each faction clock by 1
+                for (const clock of worldClocks) {
+                    const newCurrent = Math.min(clock.segments, (clock.current || 0) + 1);
+
+                    // Check if clock just filled
+                    if (newCurrent >= clock.segments && clock.current < clock.segments) {
+                        portents.push({
+                            faction: clock.name,
+                            event: `The ${clock.name} have achieved their goal: ${clock.goal || 'Advance Agenda'}!`
+                        });
+                    }
+
+                    updates.push({
+                        ...clock,
+                        current: newCurrent
+                    });
+                }
+
+                // Update world clocks
+                await gameState.transaction(async (state) => ({
+                    worldClocks: { clocks: updates }
+                }));
+
+                // Return portents for narrative
+                return portents;
+            },
+
+            // Check if downtime should trigger (every 5 adventure turns or after major event)
+            shouldTriggerDowntime(state) {
+                const turnsSinceDowntime = state.gameState?.adventure_turn_count || 0;
+
+                // Check for injury threshold (any stat at 2 pips)
+                const hasSerious = Object.values(state.character?.pips || {}).some(p => p >= 2);
+
+                // Trigger downtime after 5 turns OR if seriously injured
+                return turnsSinceDowntime >= 5 || hasSerious;
+            },
+
+            // Generate World Turn narrative for AI
+            async generateWorldTurnNarrative(portents) {
+                if (portents.length === 0) {
+                    return "The factions continue their machinations in the shadows...";
+                }
+
+                return portents.map(p => p.event).join('\n\n');
+            }
+        };
+
+        // ===== TAG SYSTEM =====
+
+        const TagSystem = {
+            // Add a tag to the character
+            async addTag(tag) {
+                await gameState.transaction(async (state) => {
+                    const tags = [...(state.tags || [])];
+                    // Avoid duplicates
+                    if (!tags.find(t => t.name === tag.name)) {
+                        tags.push({
+                            name: tag.name,
+                            type: tag.type || 'story',  // 'story', 'reputation', 'relationship', 'secret'
+                            description: tag.description || '',
+                            acquired_turn: state.gameState?.turn_count || 0
+                        });
+                    }
+                    return { tags };
+                });
+                showToast(`New Tag: ${tag.name}`);
+            },
+
+            // Remove a tag
+            async removeTag(tagName) {
+                await gameState.transaction(async (state) => {
+                    const tags = (state.tags || []).filter(t => t.name !== tagName);
+                    return { tags };
+                });
+            },
+
+            // Get tags for AI context
+            getTagsContext(state) {
+                const tags = state.tags || [];
+                if (tags.length === 0) return "None yet.";
+                return tags.map(t => `• ${t.name} (${t.type}): ${t.description}`).join('\n');
+            }
+        };
+
+        // ===== PROGRESS CLOCK SYSTEM (Hidden from player) =====
+
+        const ProgressClockSystem = {
+            // Create a new hidden progress clock
+            async createClock(name, segments = 6, type = 'threat') {
+                await gameState.transaction(async (state) => {
+                    const clocks = [...(state.progressClocks || [])];
+                    clocks.push({
+                        name,
+                        segments,
+                        current: 0,
+                        type,  // 'threat', 'opportunity', 'countdown'
+                        created_turn: state.gameState?.turn_count || 0
+                    });
+                    return { progressClocks: clocks };
+                });
+            },
+
+            // Advance a progress clock
+            async advanceClock(name, amount = 1) {
+                let triggered = false;
+                await gameState.transaction(async (state) => {
+                    const clocks = (state.progressClocks || []).map(c => {
+                        if (c.name === name) {
+                            const newCurrent = Math.min(c.segments, (c.current || 0) + amount);
+                            if (newCurrent >= c.segments) {
+                                triggered = true;
+                            }
+                            return { ...c, current: newCurrent };
+                        }
+                        return c;
+                    });
+                    return { progressClocks: clocks };
+                });
+                return triggered;
+            },
+
+            // Remove a completed clock
+            async removeClock(name) {
+                await gameState.transaction(async (state) => {
+                    const clocks = (state.progressClocks || []).filter(c => c.name !== name);
+                    return { progressClocks: clocks };
+                });
             }
         };
 
@@ -649,7 +977,7 @@
         }
 
         async function init() {
-            logBoot("🚀 INIT SEQUENCE v2.0.0 (Client-Side Mechanics + Gemini 3 Flash)");
+            logBoot("🚀 INIT SEQUENCE v2.2.0 (Oracle Tables + Intent Fix)");
 
             setTimeout(() => {
                 const btn = document.getElementById('force-start-btn');
@@ -724,7 +1052,10 @@
             
             const btnReflect = safeBind('interlude-reflect-btn');
             if (btnReflect) btnReflect.addEventListener('click', () => handleInterludeAction('reflect'));
-            
+
+            const btnHeal = safeBind('interlude-heal-btn');
+            if (btnHeal) btnHeal.addEventListener('click', () => handleInterludeAction('heal'));
+
             const btnEnd = safeBind('interlude-end-btn');
             if (btnEnd) btnEnd.addEventListener('click', () => handleInterludeAction('end_interlude'));
 
@@ -804,7 +1135,7 @@
             // Game state (phase changes)
             gameState.subscribe('gameState', (state) => {
                 if (state) {
-                    if (state.phase === 'interlude') {
+                    if (state.phase === 'interlude' || state.phase === 'downtime') {
                         ui.chapterUI.style.display = 'none';
                         ui.interludeUI.style.display = 'block';
                     } else {
@@ -813,6 +1144,26 @@
                     }
                 }
             });
+
+            // Tags - refresh character sheet when tags change
+            gameState.subscribe('tags', (tags) => {
+                const character = gameState.getState().character;
+                if (character) {
+                    displayCharacter(character);
+                }
+            });
+        }
+
+        // Function to manually trigger downtime (can be called by player or code)
+        async function triggerDowntime() {
+            await gameState.transaction(async (state) => ({
+                gameState: {
+                    ...state.gameState,
+                    phase: 'downtime'
+                }
+            }));
+            showToast('Entering Downtime Phase...');
+            await addMessageToChat('model', `**Downtime begins.**\n\nThe immediate danger has passed, and you find a moment to catch your breath. The world continues to turn—factions plot, threats loom—but for now, you have time to rest, reflect, or prepare.\n\nChoose your downtime actions wisely. When you return to adventure, the faction clocks will advance.`);
         }
 
         function renderOptions() {
@@ -912,21 +1263,38 @@
                 const safeProperties = (i.properties || []).filter(p => p);
                 const badges = safeProperties.map(p => {
                     if (typeof p !== 'string') return '';
-                    const type = p.toLowerCase().includes('heavy') ? 'heavy' : 
+                    const type = p.toLowerCase().includes('heavy') ? 'heavy' :
                                  p.toLowerCase().includes('silver') || p.toLowerCase().includes('gold') || p.toLowerCase().includes('precious') ? 'precious' :
                                  p.toLowerCase().includes('consumable') ? 'consumable' :
                                  p.toLowerCase().includes('fragile') || p.toLowerCase().includes('shabby') ? 'fragile' : '';
                     return `<span class="equip-tag ${type}">${p}</span>`;
-                }).join(' '); 
-                
+                }).join(' ');
+
                 const safeName = (i.name || 'Unknown Item').replace(/'/g, "&apos;");
-                const loreContent = (i.lore || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n'); 
-                
+                const loreContent = (i.lore || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n');
+
                 return `<li class="text-sm text-gray-300 py-2 border-b border-gray-800 cursor-pointer hover:text-emerald-400 flex justify-between items-center" onclick="updateDescription('${safeName}', '', 'item', '${loreContent}')">
                     <span>${i.name}</span>
                     <div class="text-right">${badges}</div>
                 </li>`;
             }).join('');
+
+            // Build Tags HTML
+            const currentState = gameState.getState();
+            const tags = currentState.tags || [];
+            const tagsHtml = tags.length > 0
+                ? tags.map(t => {
+                    const typeColors = {
+                        'story': 'bg-gray-600',
+                        'reputation': 'bg-amber-800',
+                        'relationship': 'bg-blue-800',
+                        'secret': 'bg-purple-800'
+                    };
+                    const colorClass = typeColors[t.type] || 'bg-gray-600';
+                    const safeDesc = (t.description || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    return `<span class="inline-block px-2 py-1 ${colorClass} text-xs text-white rounded cursor-pointer hover:opacity-80 mr-1 mb-1" onclick="updateDescription('${escapeStr(t.name)}', '${safeDesc}', 'tag')">${t.name}</span>`;
+                }).join('')
+                : '<span class="text-gray-500 text-xs italic">No tags yet. Earn them through play.</span>';
             
             // UI UPDATE (v0.9.5): Removed the Conditions container div
             sheet.innerHTML = `
@@ -956,8 +1324,12 @@
                         <h4 class="text-xs uppercase font-semibold text-gray-500 mb-2 tracking-wider">Equipment</h4>
                         <ul class="space-y-0">${equipHtml || '<span class="text-gray-500 text-xs">None</span>'}</ul>
                     </div>
+                    <div>
+                        <h4 class="text-xs uppercase font-semibold text-gray-500 mb-2 tracking-wider">Tags</h4>
+                        <div class="flex flex-wrap">${tagsHtml}</div>
+                    </div>
                     <div id="description-display" class="text-sm text-left text-gray-400 min-h-[3.5em] p-3 bg-gray-900 rounded-r-lg flex flex-col justify-center mt-2 border-t-2 border-gray-800">
-                        <span class="italic opacity-50">Select any attribute, talent, or item above to view details.</span>
+                        <span class="italic opacity-50">Select any attribute, talent, item, or tag above to view details.</span>
                     </div>
                 </div>`;
         }
@@ -1093,18 +1465,45 @@
                     rollResult = MechanicsEngine.rollDice(intent.stat, intent.tier, character);
                     console.log("Roll result:", rollResult);
 
-                    // Calculate consequences
+                    // Calculate consequences (with Escalation Oracle for costs)
                     consequences = MechanicsEngine.getConsequences(rollResult, intent.type);
                     console.log("Consequences:", consequences);
 
                     // Apply consequences to game state
                     await MechanicsEngine.applyConsequences(consequences);
 
+                    // If Escalation Oracle says advance threat, do it
+                    if (consequences.escalation?.advanceThreat) {
+                        await gameState.transaction(async (state) => {
+                            const front = state.destinyFrontClocks?.front || {};
+                            return {
+                                destinyFrontClocks: {
+                                    ...state.destinyFrontClocks,
+                                    front: {
+                                        ...front,
+                                        current: Math.min(front.segments || 8, (front.current || 0) + 1)
+                                    }
+                                }
+                            };
+                        });
+                        showToast('The Threat advances...');
+                    }
+
                     // Build mechanics context for AI
                     mechanicsContext = MechanicsEngine.formatRollResult(rollResult);
                     mechanicsContext += `\nOutcome: ${consequences.description}`;
                     if (consequences.add_pips) {
                         mechanicsContext += `\nPlayer takes ${consequences.add_pips.amount} pip(s) of ${consequences.add_pips.stat} damage.`;
+                    }
+                    if (consequences.escalation) {
+                        mechanicsContext += `\nEscalation Oracle (d6=${consequences.escalation.d6}): ${consequences.escalation.description}`;
+                    }
+                    // Add Oracle-generated twist for AI to narrate
+                    if (consequences.twist) {
+                        mechanicsContext += `\n\n*** COMPLICATION TO NARRATE ***\n"${consequences.twist.description}"`;
+                        if (consequences.twist.type === 'major') {
+                            mechanicsContext += `\n(This is a MAJOR complication - make it dramatic and consequential!)`;
+                        }
                     }
                 }
 
@@ -1121,13 +1520,22 @@
 
                 await addMessageToChat('model', fullMessage);
 
-                // 5. Increment turn count
+                // 5. Increment turn counts
                 await gameState.transaction(async (state) => ({
                     gameState: {
                         ...state.gameState,
-                        turn_count: (state.gameState?.turn_count || 0) + 1
+                        turn_count: (state.gameState?.turn_count || 0) + 1,
+                        adventure_turn_count: (state.gameState?.adventure_turn_count || 0) + 1
                     }
                 }));
+
+                // 6. Check for automatic downtime trigger
+                const newState = gameState.getState();
+                if (WorldTurn.shouldTriggerDowntime(newState)) {
+                    console.log("Downtime trigger conditions met!");
+                    // Don't auto-transition yet, let the next AI response suggest it
+                    // The AI will be aware of the adventure_turn_count and suggest downtime
+                }
 
             } catch (e) {
                 console.error("Action Error:", e);
@@ -1161,6 +1569,24 @@
                 .map(([stat, count]) => `${stat}: ${count} Pips`)
                 .join(', ') || "None";
 
+            // Get tags context
+            const tagsContext = TagSystem.getTagsContext(state);
+
+            // Check quest availability and roll quest hook if needed
+            const turnCount = state.gameState?.turn_count || 0;
+            const hasQuest = state.questState?.current_quest != null;
+            const shouldOfferQuest = turnCount >= 3 && !hasQuest;
+            const questHook = shouldOfferQuest ? OracleSystem.rollQuestHook() : null;
+
+            // Check downtime suggestion
+            const adventureTurns = state.gameState?.adventure_turn_count || 0;
+            const shouldSuggestDowntime = adventureTurns >= 5;
+
+            // Get faction clock status for context
+            const factionStatus = (state.worldClocks?.clocks || [])
+                .map(c => `${c.name}: ${c.current}/${c.segments}`)
+                .join(', ') || "Unknown";
+
             const systemPrompt = `You are the AI GM for "The Ash-Lord's Covenant", a grimdark political fantasy RPG.
 
 *** YOUR ROLE ***
@@ -1174,25 +1600,56 @@ Stats: FOR ${character.stats.FORCE}, FIN ${character.stats.FINESSE}, INF ${chara
 Injuries: ${pipContext}
 Equipment: ${(character.equipment||[]).map(e=>e.name).join(', ')}
 Coin: ${character.currency}
+XP: ${character.xp || 0}
 
-*** LOCATION ***
-${state.gameState?.current_location || "Unknown"}
+*** CHARACTER TAGS (Story facts about the character) ***
+${tagsContext}
+
+*** GAME STATE ***
+Turn: ${turnCount} | Adventure Turns Since Rest: ${adventureTurns}
+Location: ${state.gameState?.current_location || "Unknown"}
+Active Quest: ${hasQuest ? state.questState.current_quest.title : "None"}
+
+*** FACTION CLOCK STATUS ***
+${factionStatus}
 
 *** RECENT STORY ***
 ${conversationContext}
 
 *** WORLD FACTIONS (Use ONLY these) ***
-- The Ash-Wardens (enforcers)
-- The Soot-Stained (criminals)
-- The Iron-Forgers (industrialists)
-- Whispering Flesh (cultists)
+- The Ash-Wardens: Corrupt enforcers of a tyrannical regime
+- The Soot-Stained: Criminal underground, desperate survivors
+- The Iron-Forgers: Ruthless industrialists exploiting workers
+- Whispering Flesh: Flesh-warping cultists with dark secrets
+
+*** PACING GUIDANCE ***
+${questHook ? `
+QUEST HOOK (use this exact structure):
+- Present to player: "${questHook.epic_hook}"
+- Hidden truth (reveal later as they investigate): "${questHook.political_truth}"
+- Faction involved: ${questHook.faction}
+- Tier: ${questHook.tier}
+Work this quest opportunity naturally into your narrative through an NPC, rumor, or environmental discovery.
+` : ''}
+${shouldSuggestDowntime ? `DOWNTIME HINT: The player has been active for ${adventureTurns} turns. If appropriate, suggest a natural pause point (finding shelter, reaching a destination, completing an objective) where they could rest.` : ''}
 
 *** WRITING STYLE ***
 - Grimdark, morally ambiguous, consequences matter
 - 2-4 paragraphs of vivid prose
 - Show don't tell
 - End with a hook or new situation
-- If mechanics are provided, weave them naturally into the narrative`;
+- If mechanics are provided, weave them naturally into the narrative
+- Reference the character's Tags when relevant to create callbacks
+- NEVER mention game mechanics explicitly (no "XP", "pips", "dice")
+- Describe injuries as wounds, exhaustion, strain - not as "pips"
+
+*** COMPLICATION GUIDANCE ***
+If a "COMPLICATION TO NARRATE" is provided in the mechanical result:
+- Weave it NATURALLY into your narrative - it's pre-written "witty grimdark" text
+- Honor the tone and specifics of the complication
+- Do NOT invent additional complications - the oracle has spoken
+- For MAJOR complications, make them dramatic and consequential
+- The complication may reference factions, environmental changes, or character setbacks`;
 
             // Build the user prompt with mechanics context
             let userPrompt = `PLAYER ACTION: "${playerAction}"`;
@@ -1213,7 +1670,7 @@ ${conversationContext}
                 generationConfig: {
                     temperature: 0.9,
                     topP: 0.95,
-                    maxOutputTokens: 1024
+                    maxOutputTokens: 8192
                 }
             };
 
@@ -1244,7 +1701,18 @@ ${conversationContext}
                     }
 
                     const data = await response.json();
-                    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                    // Log full response structure to diagnose truncation
+                    console.log("Full API response:", JSON.stringify(data, null, 2));
+                    const candidate = data.candidates?.[0];
+                    const finishReason = candidate?.finishReason;
+                    console.log("API finishReason:", finishReason);
+                    console.log("Token usage:", data.usageMetadata);
+                    if (finishReason && finishReason !== 'STOP') {
+                        console.warn("Response may be truncated. Reason:", finishReason);
+                    }
+
+                    const text = candidate?.content?.parts?.[0]?.text;
 
                     if (!text) {
                         console.error("API response:", data);
@@ -1431,51 +1899,127 @@ ${conversationContext}
         }
 
         async function handleInterludeAction(actionType) {
-            const character = gameState.getState().character;
-            const cost = 1;
+            const state = gameState.getState();
+            const character = state.character;
 
-            if ((character.xp || 0) < cost) {
-                return window.showError("Insufficient XP", "You need more XP.");
+            // Different costs for different actions
+            const actionConfig = {
+                seek_training: { costType: 'xp', cost: 1, label: 'Seek Training' },
+                acquire_asset: { costType: 'xp', cost: 1, label: 'Acquire an Asset' },
+                reflect: { costType: 'xp', cost: 1, label: 'Reflect & Integrate' },
+                heal: { costType: 'coin', cost: 3, label: 'Rest & Recover' },
+                end_interlude: { costType: 'none', cost: 0, label: 'Return to Adventure' }
+            };
+
+            const config = actionConfig[actionType];
+            if (!config) return;
+
+            // Check if player can afford the action
+            if (config.costType === 'xp' && (character.xp || 0) < config.cost) {
+                return window.showError("Insufficient XP", `You need ${config.cost} XP for this action.`);
+            }
+            if (config.costType === 'coin' && (character.currency || 0) < config.cost) {
+                return window.showError("Insufficient Coin", `You need ${config.cost} coin for this action.`);
             }
 
-            if (!confirm(`Spend ${cost} XP to perform this action?`)) {
+            // For healing, check if there's damage to heal
+            if (actionType === 'heal') {
+                const hasPips = Object.values(character.pips || {}).some(p => p > 0);
+                if (!hasPips) {
+                    return window.showError("No Damage", "You have no injuries to heal.");
+                }
+            }
+
+            // Confirm action
+            let confirmMsg = `${config.label}`;
+            if (config.cost > 0) {
+                confirmMsg += ` (Cost: ${config.cost} ${config.costType.toUpperCase()})`;
+            }
+            if (actionType === 'end_interlude') {
+                confirmMsg += "\n\nThis will advance all faction clocks by 1 segment!";
+            }
+            if (!confirm(confirmMsg + "\n\nProceed?")) {
                 return;
             }
 
             showLoading();
 
             try {
-                // Deduct XP
-                await gameState.transaction(async (state) => ({
-                    character: {
-                        ...state.character,
-                        xp: state.character.xp - cost
+                // Deduct cost
+                if (config.costType === 'xp') {
+                    await gameState.transaction(async (s) => ({
+                        character: { ...s.character, xp: s.character.xp - config.cost }
+                    }));
+                    showToast(`-${config.cost} XP`);
+                } else if (config.costType === 'coin') {
+                    await gameState.transaction(async (s) => ({
+                        character: { ...s.character, currency: s.character.currency - config.cost }
+                    }));
+                    showToast(`-${config.cost} Coin`);
+                }
+
+                // Handle specific actions
+                if (actionType === 'heal') {
+                    // Find the first stat with pips and heal 1
+                    const pipsEntry = Object.entries(character.pips || {}).find(([_, v]) => v > 0);
+                    if (pipsEntry) {
+                        const [stat, currentPips] = pipsEntry;
+                        await gameState.transaction(async (s) => ({
+                            character: {
+                                ...s.character,
+                                pips: { ...s.character.pips, [stat]: currentPips - 1 }
+                            }
+                        }));
+                        showToast(`${stat} healed: -1 pip`);
+                        await addMessageToChat('model', `You rest and tend to your wounds. Your ${stat} injury begins to mend, the pain slowly fading as you recover.`);
                     }
-                }));
 
-                // Call AI with interlude action
-                const prompt = `[INTERLUDE ACTION] Player chose: ${actionType}. Narrate the result.`;
-                const aiResponse = await callAIGM(prompt);
+                } else if (actionType === 'end_interlude') {
+                    // Execute World Turn - advance all faction clocks
+                    const portents = await WorldTurn.execute();
+                    showToast('Faction clocks advanced!');
 
-                if (aiResponse.narrative) {
-                    await addMessageToChat('model', aiResponse.narrative);
-                }
+                    // Generate narrative about world events
+                    const worldNarrative = await WorldTurn.generateWorldTurnNarrative(portents);
 
-                if (aiResponse.state_update) {
-                    await processStateUpdate(aiResponse.state_update);
-                }
-
-                // End interlude if requested
-                if (actionType === 'end_interlude') {
-                    await gameState.transaction(async (state) => ({
+                    // Transition back to adventure phase
+                    await gameState.transaction(async (s) => ({
                         gameState: {
-                            ...state.gameState,
-                            phase: 'adventure'
+                            ...s.gameState,
+                            phase: 'adventure',
+                            adventure_turn_count: 0  // Reset adventure turn counter
                         }
                     }));
+
+                    // Add world turn narrative
+                    if (portents.length > 0) {
+                        await addMessageToChat('model', `**The World Moves On...**\n\n${worldNarrative}\n\nYou step back into the fray, knowing the world has not waited for you.`);
+                    } else {
+                        await addMessageToChat('model', `The factions continue their machinations while you rested. Fresh and alert, you return to face whatever comes next.`);
+                    }
+
+                } else {
+                    // For training, asset, and reflect - call AI for narrative
+                    const prompt = `[DOWNTIME: ${actionType.toUpperCase()}] The player is spending downtime to ${config.label.toLowerCase()}. Write 2-3 paragraphs describing what happens. Be specific about what they learn, find, or realize. If this is "reflect", suggest a potential Tag they might gain based on recent events.`;
+                    const narrative = await callAINarrative(prompt, null);
+                    await addMessageToChat('model', narrative);
+
+                    // For reflect action, potentially gain a tag (based on turn count)
+                    if (actionType === 'reflect' && (state.gameState?.turn_count || 0) >= 5) {
+                        // Simple tag generation based on calling
+                        const tagOptions = [
+                            { name: 'Battle-Scarred', type: 'story', description: 'You bear the marks of conflict' },
+                            { name: 'Marked by the Ash-Wardens', type: 'reputation', description: 'The enforcers know your face' },
+                            { name: 'Debt Owed', type: 'relationship', description: 'Someone helped you; they expect repayment' },
+                            { name: 'Whispers Follow', type: 'reputation', description: 'People talk about your deeds' }
+                        ];
+                        const randomTag = tagOptions[Math.floor(Math.random() * tagOptions.length)];
+                        await TagSystem.addTag(randomTag);
+                    }
                 }
 
             } catch(e) {
+                console.error("Interlude Error:", e);
                 window.showError("Interlude Error", e.message);
             } finally {
                 hideLoading();
