@@ -81,7 +81,7 @@
         <header class="mb-4 p-4 bg-gray-800 rounded-lg border border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div>
                 <h1 class="text-2xl font-bold text-white">Ash-Lord's Covenant</h1>
-                <p class="text-sm text-gray-400">Digital RPG Prototype (Build v1.0.0 - Gemini 3 Pro)</p>
+                <p class="text-sm text-gray-400">Digital RPG Prototype (Build v2.0.0 - Client-Side Mechanics)</p>
             </div>
             <div class="flex items-center space-x-2">
                 <button onclick="window.exportSave()" class="px-3 py-2 bg-gray-700 text-xs text-gray-300 rounded-lg hover:bg-emerald-700 hover:text-white transition">
@@ -480,6 +480,160 @@
 
         const gameState = new GameStateManager();
 
+        // ===== MECHANICS ENGINE (Client-Side) =====
+
+        const MechanicsEngine = {
+            // Parse player intent from text input
+            parseIntent(input) {
+                const lower = input.toLowerCase().trim();
+
+                // No roll needed - basic actions
+                if (/^(walk|leave|go|move|exit|enter|look around|wait|rest|sleep)/.test(lower) ||
+                    /^(look at|examine|observe|watch)/.test(lower) && !/search|find|hidden/.test(lower)) {
+                    return { needsRoll: false, type: 'narrative' };
+                }
+
+                // Combat - always Tier 2
+                if (/attack|fight|strike|hit|kill|stab|slash|punch|kick|shoot|throw.*(at|toward)|battle|duel|assault/.test(lower)) {
+                    return { needsRoll: true, stat: 'FORCE', tier: 2, type: 'combat' };
+                }
+
+                // Stealth/Finesse
+                if (/sneak|hide|stealth|creep|shadow|pickpocket|steal|pick.*(lock|pocket)|climb|dodge|evade|escape|slip/.test(lower)) {
+                    return { needsRoll: true, stat: 'FINESSE', tier: 1, type: 'stealth' };
+                }
+
+                // Social/Influence - hostile = Tier 2
+                if (/persuade|convince|negotiate|bribe|charm|seduce|intimidate|threaten|lie|deceive|bluff/.test(lower)) {
+                    const isHostile = /threaten|intimidate|hostile|angry|suspicious/.test(lower);
+                    return { needsRoll: true, stat: 'INFLUENCE', tier: isHostile ? 2 : 1, type: 'social' };
+                }
+
+                // Investigation/Wits
+                if (/search|investigate|find|discover|figure|solve|deduce|analyze|study|research|recall|remember/.test(lower)) {
+                    return { needsRoll: true, stat: 'WITS', tier: 1, type: 'investigate' };
+                }
+
+                // Endurance/Resolve
+                if (/endure|resist|withstand|brave|courage|face.*(fear|horror)|push through|keep going/.test(lower)) {
+                    return { needsRoll: true, stat: 'RESOLVE', tier: 1, type: 'endurance' };
+                }
+
+                // Ask/talk (no pressure) - no roll
+                if (/^(ask|talk|speak|say|tell|greet|chat)/.test(lower) && !/persuade|convince|lie|threaten/.test(lower)) {
+                    return { needsRoll: false, type: 'dialogue' };
+                }
+
+                // Default: ambiguous - will ask AI to classify or default to narrative
+                return { needsRoll: false, type: 'narrative', ambiguous: true };
+            },
+
+            // Roll dice and calculate outcome
+            rollDice(stat, tier, character) {
+                const d10 = Math.floor(Math.random() * 10) + 1;
+                const statMod = character.stats[stat] || 0;
+                const pips = character.pips?.[stat] || 0;
+                const total = d10 + statMod - pips;
+
+                let outcome;
+                if (tier === 1) {
+                    // Tier 1: 6+ Success, 4-5 Cost, 1-3 Miss
+                    if (total >= 6) outcome = 'success';
+                    else if (total >= 4) outcome = 'cost';
+                    else outcome = 'miss';
+                } else {
+                    // Tier 2: 7+ Success, 5-6 Cost, 1-4 Miss
+                    if (total >= 7) outcome = 'success';
+                    else if (total >= 5) outcome = 'cost';
+                    else outcome = 'miss';
+                }
+
+                return { d10, statMod, pips, total, outcome, stat, tier };
+            },
+
+            // Determine consequences based on outcome
+            getConsequences(rollResult, actionType) {
+                const consequences = {
+                    xp_gain: 0,
+                    currency_gain: 0,
+                    add_pips: null,
+                    description: ''
+                };
+
+                if (rollResult.outcome === 'success') {
+                    consequences.xp_gain = 1;
+                    consequences.description = 'Success!';
+                } else if (rollResult.outcome === 'cost') {
+                    consequences.xp_gain = 1;
+                    // Tier 1 cost = 1 pip strain, Tier 2 cost = could be worse
+                    if (rollResult.tier === 2 || actionType === 'combat') {
+                        consequences.add_pips = { stat: rollResult.stat, amount: 1 };
+                        consequences.description = 'Success with injury';
+                    } else {
+                        consequences.description = 'Success with complication';
+                    }
+                } else { // miss
+                    if (rollResult.tier === 2 || actionType === 'combat') {
+                        consequences.add_pips = { stat: rollResult.stat, amount: 2 };
+                        consequences.description = 'Failure with serious injury';
+                    } else {
+                        consequences.add_pips = { stat: rollResult.stat, amount: 1 };
+                        consequences.description = 'Failure with strain';
+                    }
+                }
+
+                return consequences;
+            },
+
+            // Apply consequences to game state
+            async applyConsequences(consequences) {
+                await gameState.transaction(async (state) => {
+                    const updates = {};
+                    const character = state.character;
+
+                    if (consequences.xp_gain > 0) {
+                        updates.character = {
+                            ...character,
+                            xp: (character.xp || 0) + consequences.xp_gain
+                        };
+                        showToast(`+${consequences.xp_gain} XP`);
+                    }
+
+                    if (consequences.currency_gain !== 0) {
+                        const newCurrency = Math.max(0, (character.currency || 0) + consequences.currency_gain);
+                        updates.character = {
+                            ...(updates.character || character),
+                            currency: newCurrency
+                        };
+                        showToast(`${consequences.currency_gain > 0 ? '+' : ''}${consequences.currency_gain} Coin`);
+                    }
+
+                    if (consequences.add_pips) {
+                        const currentPips = { ...(character.pips || {}) };
+                        const stat = consequences.add_pips.stat;
+                        const amt = consequences.add_pips.amount;
+                        currentPips[stat] = Math.min(2, (currentPips[stat] || 0) + amt);
+                        updates.character = {
+                            ...(updates.character || character),
+                            pips: currentPips
+                        };
+                        showToast(`${stat} damage: +${amt} pip${amt > 1 ? 's' : ''}`);
+                    }
+
+                    return updates;
+                });
+            },
+
+            // Format roll result for display and AI context
+            formatRollResult(rollResult) {
+                if (!rollResult) return '';
+                const { d10, stat, statMod, pips, total, outcome, tier } = rollResult;
+                const tierLabel = tier === 2 ? 'Perilous' : 'Challenging';
+                const pipText = pips > 0 ? ` - ${pips}(Pips)` : '';
+                return `Action: ${stat} (Tier ${tier} - ${tierLabel}). Roll: d10(${d10}) + ${statMod}(${stat})${pipText} = ${total}. Result: ${outcome.toUpperCase()}`;
+            }
+        };
+
         // ===== GAME CODE =====
         // Note: CONTENT_PACK_ASHLORDS is loaded from game_data.js script tag
 
@@ -495,7 +649,7 @@
         }
 
         async function init() {
-            logBoot("🚀 INIT SEQUENCE v1.0.0 (localStorage + Gemini 3 Pro)");
+            logBoot("🚀 INIT SEQUENCE v2.0.0 (Client-Side Mechanics + Gemini 3 Flash)");
 
             setTimeout(() => {
                 const btn = document.getElementById('force-start-btn');
@@ -922,32 +1076,52 @@
                 // Add user message
                 await addMessageToChat('user', text);
 
-                // Call AI (now returns parsed JSON directly)
-                const aiResponse = await callAIGM(text);
+                const state = gameState.getState();
+                const character = state.character;
 
-                // Add AI narrative
-                if (aiResponse.narrative) {
-                    await addMessageToChat('model', aiResponse.narrative);
+                // 1. Parse player intent (client-side)
+                const intent = MechanicsEngine.parseIntent(text);
+                console.log("Parsed intent:", intent);
+
+                let rollResult = null;
+                let consequences = null;
+                let mechanicsContext = null;
+
+                // 2. If action needs a roll, handle mechanics client-side
+                if (intent.needsRoll && intent.stat) {
+                    // Roll dice
+                    rollResult = MechanicsEngine.rollDice(intent.stat, intent.tier, character);
+                    console.log("Roll result:", rollResult);
+
+                    // Calculate consequences
+                    consequences = MechanicsEngine.getConsequences(rollResult, intent.type);
+                    console.log("Consequences:", consequences);
+
+                    // Apply consequences to game state
+                    await MechanicsEngine.applyConsequences(consequences);
+
+                    // Build mechanics context for AI
+                    mechanicsContext = MechanicsEngine.formatRollResult(rollResult);
+                    mechanicsContext += `\nOutcome: ${consequences.description}`;
+                    if (consequences.add_pips) {
+                        mechanicsContext += `\nPlayer takes ${consequences.add_pips.amount} pip(s) of ${consequences.add_pips.stat} damage.`;
+                    }
                 }
 
-                // Process state updates
-                if (aiResponse.state_update) {
-                    console.log("State update from AI:", JSON.stringify(aiResponse.state_update, null, 2));
-                    await processStateUpdate(aiResponse.state_update);
+                // 3. Call AI for narrative only (much simpler prompt)
+                const narrative = await callAINarrative(text, mechanicsContext);
+
+                // 4. Build and display the full message
+                let fullMessage = narrative;
+                if (rollResult) {
+                    // Append mechanics in styled block
+                    const mechanicsDisplay = MechanicsEngine.formatRollResult(rollResult);
+                    fullMessage += `\n\n<mechanics>${mechanicsDisplay}</mechanics>`;
                 }
 
-                // Update location
-                if (aiResponse.location_update) {
-                    await gameState.transaction(async (state) => ({
-                        gameState: {
-                            ...state.gameState,
-                            current_location: aiResponse.location_update
-                        }
-                    }));
-                    showToast(`Location: ${aiResponse.location_update}`);
-                }
+                await addMessageToChat('model', fullMessage);
 
-                // Increment turn count
+                // 5. Increment turn count
                 await gameState.transaction(async (state) => ({
                     gameState: {
                         ...state.gameState,
@@ -966,15 +1140,13 @@
             }
         }
 
-        async function callAIGM(playerInput) {
-            // ⚠️ REPLACE THIS URL WITH YOUR CLOUDFLARE WORKER URL AFTER DEPLOYMENT
+        // ===== NARRATIVE AI (Simplified - mechanics handled client-side) =====
+        async function callAINarrative(playerAction, mechanicsContext) {
             const PROXY_URL = 'https://ash-lords-rpg-proxy.jweisgrau.workers.dev';
 
             const state = gameState.getState();
             const character = state.character;
             const chatHistory = state.chatHistory || [];
-
-            // Use last 10 messages for AI context (optimized)
             const recentMessages = chatHistory.slice(-10);
 
             // Build conversation context
@@ -982,171 +1154,70 @@
                 .map(m => `${m.role.toUpperCase()}: ${m.content}`)
                 .join('\n\n');
 
-            // Calculate pip penalties
+            // Build character context
             const pipsData = character.pips || {};
-            let pipContext = "";
-            let mathContext = "";
+            let pipContext = Object.entries(pipsData)
+                .filter(([_, count]) => count > 0)
+                .map(([stat, count]) => `${stat}: ${count} Pips`)
+                .join(', ') || "None";
 
-            Object.entries(pipsData).forEach(([stat, count]) => {
-                if (count > 0) {
-                    mathContext += `[SYSTEM NOTE]: ${stat} has ${count} Pips (Strain/Injury). Penalty: -${count} to Roll.\n`;
-                    pipContext += `${stat}: ${count} Pips (Penalty -${count}). `;
-                }
-            });
+            const systemPrompt = `You are the AI GM for "The Ash-Lord's Covenant", a grimdark political fantasy RPG.
 
-            // Virtual d10 roll
-            const virtualD10 = Math.floor(Math.random() * 10) + 1;
+*** YOUR ROLE ***
+Write ONLY narrative/story text. All game mechanics (dice rolls, damage, XP) are handled by the game code.
+You receive the mechanical outcome and must narrate what happens based on it.
 
-            const heroContext = `*** HERO CONTEXT ***
-NAME: ${character.name}
-CALLING: ${character.playbook?.calling} / BURDEN: ${character.playbook?.burden}
-STATS: FORCE: ${character.stats.FORCE}, FINESSE: ${character.stats.FINESSE}, INFLUENCE: ${character.stats.INFLUENCE}, WITS: ${character.stats.WITS}, RESOLVE: ${character.stats.RESOLVE}
-PIPS (DAMAGE): ${pipContext || "None"}
-TALENTS: ${(character.talents||[]).map(t=>t.name).join(', ')}
-EQUIPMENT: ${(character.equipment||[]).map(e=>e.name).join(', ')}
-CURRENT COIN: ${character.currency}`;
+*** CHARACTER ***
+Name: ${character.name}
+Calling: ${character.playbook?.calling} / Burden: ${character.playbook?.burden}
+Stats: FOR ${character.stats.FORCE}, FIN ${character.stats.FINESSE}, INF ${character.stats.INFLUENCE}, WIT ${character.stats.WITS}, RES ${character.stats.RESOLVE}
+Injuries: ${pipContext}
+Equipment: ${(character.equipment||[]).map(e=>e.name).join(', ')}
+Coin: ${character.currency}
 
-            const systemPrompt = `*** IDENTITY ***
-You are the AI GM for "The Ash-Lord's Covenant". Grimdark political fantasy.
+*** LOCATION ***
+${state.gameState?.current_location || "Unknown"}
 
-${heroContext}
-
-*** LOCATION CONTEXT ***
-CURRENT LOCATION: ${state.gameState?.current_location || "Unknown"}
-
-*** RECENT CONVERSATION ***
+*** RECENT STORY ***
 ${conversationContext}
 
-*** MECHANICS (d10 + STAT - PIPS) ***
-** VIRTUAL D10 ROLL: [ ${virtualD10} ] **
-${mathContext}
+*** WORLD FACTIONS (Use ONLY these) ***
+- The Ash-Wardens (enforcers)
+- The Soot-Stained (criminals)
+- The Iron-Forgers (industrialists)
+- Whispering Flesh (cultists)
 
-*** CRITICAL RULES ***
-1. DAMAGE SYSTEM (PIPS):
-   - Strain (1 Pip): Minor harm, clears with rest/payment
-   - Injury (2 Pips): Serious harm, requires 3+ coin or special item
-   - **MAX 2 PIPS PER STAT** - If already at 2 Pips and would take more, character is INCAPACITATED
-   - **ALWAYS mention pip changes in narrative**
+*** WRITING STYLE ***
+- Grimdark, morally ambiguous, consequences matter
+- 2-4 paragraphs of vivid prose
+- Show don't tell
+- End with a hook or new situation
+- If mechanics are provided, weave them naturally into the narrative`;
 
-2. PIP PENALTIES:
-   - Roll formula: d10 + STAT - PIPS
-   - Example: FORCE +2 with 1 Pip = d10(${virtualD10}) + 2 - 1 = total
-   - **ONLY subtract pips that are LISTED ABOVE in "PIPS (DAMAGE)"**
-   - **If "PIPS (DAMAGE): None" then subtract ZERO - no penalties exist**
-   - **NEVER invent or assume injuries that aren't listed**
+            // Build the user prompt with mechanics context
+            let userPrompt = `PLAYER ACTION: "${playerAction}"`;
 
-3. WHEN TO ROLL:
-   - **NO ROLL needed for:**
-     * Walking, leaving, entering places
-     * Simple conversations with no stakes
-     * Looking around, observing
-     * Picking up items, basic movement
-   - **ROLL only when there is RISK or OPPOSITION:**
-     * Someone actively resists or threatens
-     * Failure would have meaningful consequences
-     * The action is dangerous or contested
+            if (mechanicsContext) {
+                userPrompt += `\n\n*** MECHANICAL RESULT (narrate this outcome) ***\n${mechanicsContext}`;
+            }
 
-4. TIER ENFORCEMENT:
-   - Tier 1 (Challenging): 6+ Success, 4-5 Cost, 1-3 Miss
-     * Use for: Tense social situations, tricky tasks, moderate risk
-     * Cost: Minor complication OR 1 Pip Strain
-   - Tier 2 (Perilous): 7+ Success, 5-6 Cost, 1-4 Miss
-     * Use for: Combat, life-threatening situations, hostile confrontations
-     * Cost: Serious complication OR 2 Pips Injury
-   - **Combat is always Tier 2**
-   - **Pressing someone who is hostile/suspicious = Tier 2 (not Tier 1)**
-
-5. CURRENCY MECHANICS:
-   - Current: ${character.currency} coin
-   - **When player spends/gives coin: ONLY use "currency_gain": -X (negative number)**
-   - **Do NOT use remove_pips when player gives/spends coin on non-healing things**
-   - Examples:
-     * Bribe guard (2 coin) → "currency_gain": -2 (NO remove_pips)
-     * Tip barkeep (1 coin) → "currency_gain": -1 (NO remove_pips)
-     * Buy item (3 coin) → "currency_gain": -3 (NO remove_pips)
-     * Pay for healing (3 coin) → "currency_gain": -3 AND "remove_pips": {"stat": "FORCE", "amount": 1}
-
-6. HEALING MECHANICS:
-   - Pips NEVER clear automatically
-   - **ONLY use remove_pips when ALL of these are true:**
-     1. Player EXPLICITLY asks to be healed (e.g., "I seek a healer", "I rest to recover")
-     2. Player pays 3+ coin OR uses a healing item OR takes a full rest scene
-   - **NEVER use remove_pips for:**
-     * Giving tips, bribes, or gifts
-     * Buying non-healing items
-     * Successful rolls
-     * "Being grateful" or "feeling better"
-   - **When in doubt, DO NOT heal - leave remove_pips empty**
-
-7. WORLD FACTIONS (Use ONLY these names):
-   - The Ash-Wardens (enforcers, order at any cost)
-   - The Soot-Stained (criminals, black market control)
-   - The Iron-Forgers (industrialists, tech monopoly)
-   - Whispering Flesh (cultists, accelerate the Blight)
-   - **Do NOT invent new factions** - only reference these four
-
-8. QUEST/CHAPTER SYSTEM:
-   - Game is structured as CHAPTERS (quests) and INTERLUDES (rest periods)
-   - **Start the FIRST QUEST when player leaves the tavern**
-   - Use quest_start in state_update to begin a quest
-   - Quests have chapters with objectives - track progress
-   - After completing a quest chapter, offer an INTERLUDE (rest period)
-   - During interludes, player can train, acquire assets, or reflect
-
-9. CONSEQUENCES ALWAYS APPLY:
-   - Never give "free success" - apply cost on 4-6
-   - Grimdark = choices have weight
-
-*** OUTPUT FORMAT (JSON ONLY) ***
-You MUST respond with valid JSON in this exact structure:
-{
-  "narrative": "Story text... <mechanics>Action: [Stat] (Tier X). Roll: d10(${virtualD10}) + Stat(X) - Pips(X) = Total. Result: [Success/Cost/Miss]</mechanics>",
-  "location_update": "New Location Name (optional)",
-  "state_update": {
-    "xp_gain": 0,
-    "currency_gain": 0,
-    "add_pips": {"stat": "FORCE", "amount": 1},
-    "remove_pips": {"stat": "FORCE", "amount": 1},
-    "equipment_add": [],
-    "item_modify": [],
-    "clocks_advance": [],
-    "quest_start": {"title": "Quest Title", "chapter": 1, "objective": "What to do"},
-    "quest_progress": 1,
-    "trigger_interlude": false
-  }
-}
-
-**IMPORTANT:**
-- stat must be one of: FORCE, FINESSE, INFLUENCE, WITS, RESOLVE
-- amount for pips must be 1 or 2 only
-- currency_gain can be negative for payments (use ONLY this for spending money)
-- remove_pips should ONLY be used when player is being healed, NOT when just giving/spending coin
-- If player gives coin as tip/bribe/gift: use currency_gain: -X, leave remove_pips empty
-- **In mechanics text: ONLY subtract pips if listed in PIPS (DAMAGE) above - if "None", pips penalty is 0**`;
-
-            // Build Gemini payload
             const payload = {
                 contents: [
-                    {
-                        role: 'user',
-                        parts: [{ text: systemPrompt }]
-                    },
+                    { role: 'user', parts: [{ text: systemPrompt }] },
                     ...recentMessages.map(m => ({
                         role: m.role === 'model' ? 'model' : 'user',
                         parts: [{ text: m.content }]
                     })),
-                    {
-                        role: 'user',
-                        parts: [{ text: playerInput }]
-                    }
+                    { role: 'user', parts: [{ text: userPrompt }] }
                 ],
                 generationConfig: {
                     temperature: 0.9,
-                    topP: 0.95
+                    topP: 0.95,
+                    maxOutputTokens: 1024
                 }
             };
 
-            // Retry logic with exponential backoff
+            // API call with retry
             let attempts = 0;
             const maxAttempts = 3;
 
@@ -1156,13 +1227,12 @@ You MUST respond with valid JSON in this exact structure:
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            model: "gemini-3-pro-preview",
+                            model: "gemini-3-flash-preview",
                             payload: payload
                         })
                     });
 
                     if (response.status === 429 || response.status === 503) {
-                        console.warn(`API ${response.status}. Retrying (${attempts + 1}/${maxAttempts})...`);
                         attempts++;
                         await new Promise(r => setTimeout(r, 2000 * attempts));
                         continue;
@@ -1174,33 +1244,14 @@ You MUST respond with valid JSON in this exact structure:
                     }
 
                     const data = await response.json();
-
-                    // Log full response for debugging
-                    console.log("Gemini API response:", JSON.stringify(data, null, 2));
-
-                    // Extract JSON from Gemini response
                     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
                     if (!text) {
-                        console.error("Full API response:", data);
-                        throw new Error("Gemini did not return text. Check console for full response.");
+                        console.error("API response:", data);
+                        throw new Error("No text in response");
                     }
 
-                    // Parse JSON from Gemini response
-                    let parsed;
-                    try {
-                        parsed = JSON.parse(text);
-                    } catch (e) {
-                        // Fallback: try to extract JSON from text
-                        const start = text.indexOf('{');
-                        const end = text.lastIndexOf('}');
-                        if (start !== -1 && end !== -1) {
-                            parsed = JSON.parse(text.substring(start, end + 1));
-                        } else {
-                            throw new Error("Could not parse JSON from Gemini response: " + text);
-                        }
-                    }
-
-                    return parsed;
+                    return text;
 
                 } catch (e) {
                     if (attempts === maxAttempts - 1) throw e;
