@@ -1098,7 +1098,6 @@ You MUST respond with valid JSON in this exact structure:
                     }
                 ],
                 generationConfig: {
-                    responseMimeType: "application/json",
                     temperature: 0.9,
                     topP: 0.95
                 }
@@ -1143,7 +1142,7 @@ You MUST respond with valid JSON in this exact structure:
                         throw new Error("Gemini did not return text. Check console for full response.");
                     }
 
-                    // Parse JSON (Gemini should return clean JSON with responseMimeType)
+                    // Parse JSON from Gemini response
                     let parsed;
                     try {
                         parsed = JSON.parse(text);
