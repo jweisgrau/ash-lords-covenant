@@ -5,7 +5,7 @@ export default {
   async fetch(request, env) {
     // CORS headers for GitHub Pages
     const corsHeaders = {
-      'Access-Control-Allow-Origin': '*', // ⚠️ Change to your GitHub Pages URL after deployment
+      'Access-Control-Allow-Origin': 'https://jweisgrau.github.io', // Restricted to your GitHub Pages
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
     };
