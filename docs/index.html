@@ -1038,14 +1038,21 @@ ${mathContext}
      * Cost: Serious complication OR 2 Pips Injury
    - **Combat is always Tier 2** - Apply injury on Cost/Miss
 
-4. CURRENCY:
+4. CURRENCY MECHANICS:
    - Current: ${character.currency} coin
-   - **If player pays, use negative currency_gain** (e.g., pay 2 coin = "currency_gain": -2)
-   - Items: 1-3 coin, Bribes: 2-5 coin, Healing: 3+ coin
+   - **When player spends/gives coin: ONLY use "currency_gain": -X (negative number)**
+   - **Do NOT use remove_pips when player gives/spends coin on non-healing things**
+   - Examples:
+     * Bribe guard (2 coin) → "currency_gain": -2 (NO remove_pips)
+     * Tip barkeep (1 coin) → "currency_gain": -1 (NO remove_pips)
+     * Buy item (3 coin) → "currency_gain": -3 (NO remove_pips)
+     * Pay for healing (3 coin) → "currency_gain": -3 AND "remove_pips": {"stat": "FORCE", "amount": 1}
 
-5. NO PASSIVE HEALING:
+5. HEALING MECHANICS:
    - Pips NEVER clear automatically
-   - Must pay coin OR narrative rest scene OR use item
+   - **Only use remove_pips when player is ACTIVELY BEING HEALED**
+   - Healing requires: 3+ coin payment OR narrative rest scene OR use healing item
+   - **NEVER heal pips just because player gave money to someone**
 
 6. CONSEQUENCES ALWAYS APPLY:
    - Never give "free success" - apply cost on 4-6
@@ -1070,7 +1077,9 @@ You MUST respond with valid JSON in this exact structure:
 **IMPORTANT:**
 - stat must be one of: FORCE, FINESSE, INFLUENCE, WITS, RESOLVE
 - amount for pips must be 1 or 2 only
-- currency_gain can be negative for payments`;
+- currency_gain can be negative for payments (use ONLY this for spending money)
+- remove_pips should ONLY be used when player is being healed, NOT when just giving/spending coin
+- If player gives coin as tip/bribe/gift: use currency_gain: -X, leave remove_pips empty`;
 
             // Build Gemini payload
             const payload = {
