@@ -584,39 +584,6 @@
                 return { d10, statMod, pips, total, outcome, stat, tier };
             },
 
-            // Determine consequences based on outcome
-            getConsequences(rollResult, actionType) {
-                const consequences = {
-                    xp_gain: 0,
-                    currency_gain: 0,
-                    add_pips: null,
-                    description: ''
-                };
-
-                if (rollResult.outcome === 'success') {
-                    consequences.xp_gain = 1;
-                    consequences.description = 'Success!';
-                } else if (rollResult.outcome === 'cost') {
-                    consequences.xp_gain = 1;
-                    // Tier 1 cost = 1 pip strain, Tier 2 cost = could be worse
-                    if (rollResult.tier === 2 || actionType === 'combat') {
-                        consequences.add_pips = { stat: rollResult.stat, amount: 1 };
-                        consequences.description = 'Success with injury';
-                    } else {
-                        consequences.description = 'Success with complication';
-                    }
-                } else { // miss
-                    if (rollResult.tier === 2 || actionType === 'combat') {
-                        consequences.add_pips = { stat: rollResult.stat, amount: 2 };
-                        consequences.description = 'Failure with serious injury';
-                    } else {
-                        consequences.add_pips = { stat: rollResult.stat, amount: 1 };
-                        consequences.description = 'Failure with strain';
-                    }
-                }
-
-                return consequences;
-            },
 
             // Apply consequences to game state
             async applyConsequences(consequences) {
@@ -701,9 +668,23 @@
 
                 if (rollResult.outcome === 'success') {
                     consequences.xp_gain = 1;
-                    consequences.description = 'Success!';
+                    // Award coin for successful stealing/pickpocketing/looting
+                    if (actionType === 'stealth') {
+                        const loot = Math.floor(Math.random() * 6) + 1; // 1d6 coin
+                        consequences.currency_gain = loot;
+                        consequences.description = `Success! Gained ${loot} coin.`;
+                    } else {
+                        consequences.description = 'Success!';
+                    }
                 } else if (rollResult.outcome === 'cost') {
                     consequences.xp_gain = 1;
+                    // Partial loot on cost for stealth (half, rounded down)
+                    if (actionType === 'stealth') {
+                        const loot = Math.floor((Math.floor(Math.random() * 6) + 1) / 2); // 1d6/2
+                        if (loot > 0) {
+                            consequences.currency_gain = loot;
+                        }
+                    }
 
                     // Roll Escalation Oracle to determine complication severity
                     const escalation = this.rollEscalationOracle();
