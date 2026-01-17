@@ -1081,7 +1081,15 @@ ${mathContext}
    - Whispering Flesh (cultists, accelerate the Blight)
    - **Do NOT invent new factions** - only reference these four
 
-8. CONSEQUENCES ALWAYS APPLY:
+8. QUEST/CHAPTER SYSTEM:
+   - Game is structured as CHAPTERS (quests) and INTERLUDES (rest periods)
+   - **Start the FIRST QUEST when player leaves the tavern**
+   - Use quest_start in state_update to begin a quest
+   - Quests have chapters with objectives - track progress
+   - After completing a quest chapter, offer an INTERLUDE (rest period)
+   - During interludes, player can train, acquire assets, or reflect
+
+9. CONSEQUENCES ALWAYS APPLY:
    - Never give "free success" - apply cost on 4-6
    - Grimdark = choices have weight
 
@@ -1097,7 +1105,10 @@ You MUST respond with valid JSON in this exact structure:
     "remove_pips": {"stat": "FORCE", "amount": 1},
     "equipment_add": [],
     "item_modify": [],
-    "clocks_advance": []
+    "clocks_advance": [],
+    "quest_start": {"title": "Quest Title", "chapter": 1, "objective": "What to do"},
+    "quest_progress": 1,
+    "trigger_interlude": false
   }
 }
 
@@ -1232,12 +1243,15 @@ You MUST respond with valid JSON in this exact structure:
                     showToast(`${stat} damage: +${amt} pip${amt > 1 ? 's' : ''}`);
                 }
 
-                if (update.remove_pips) {
+                if (update.remove_pips && update.remove_pips.stat && update.remove_pips.amount > 0) {
                     const stat = update.remove_pips.stat;
-                    const amt = update.remove_pips.amount || 1;
-                    currentPips[stat] = Math.max(0, (currentPips[stat] || 0) - amt);
-                    pipChanged = true;
-                    showToast(`${stat} healed: -${amt} pip${amt > 1 ? 's' : ''}`);
+                    const amt = update.remove_pips.amount;
+                    const currentPipValue = currentPips[stat] || 0;
+                    if (currentPipValue > 0) {
+                        currentPips[stat] = Math.max(0, currentPipValue - amt);
+                        pipChanged = true;
+                        showToast(`${stat} healed: -${amt} pip${amt > 1 ? 's' : ''}`);
+                    }
                 }
 
                 if (pipChanged) {
@@ -1300,6 +1314,39 @@ You MUST respond with valid JSON in this exact structure:
                     });
 
                     updates.worldClocks = { clocks };
+                }
+
+                // Quest start
+                if (update.quest_start && update.quest_start.title) {
+                    updates.questState = {
+                        current_quest: {
+                            title: update.quest_start.title,
+                            chapter: update.quest_start.chapter || 1,
+                            objective: update.quest_start.objective || "",
+                            progress: 0,
+                            max_progress: update.quest_start.max_progress || 3,
+                            xp_earned: 0
+                        }
+                    };
+                    showToast(`Quest Started: ${update.quest_start.title}`);
+                }
+
+                // Quest progress
+                if (update.quest_progress && state.questState?.current_quest) {
+                    const quest = { ...state.questState.current_quest };
+                    quest.progress = Math.min(quest.max_progress, (quest.progress || 0) + update.quest_progress);
+                    quest.xp_earned = (quest.xp_earned || 0) + 1;
+                    updates.questState = { current_quest: quest };
+                    showToast(`Quest progress: ${quest.progress}/${quest.max_progress}`);
+                }
+
+                // Trigger interlude
+                if (update.trigger_interlude === true) {
+                    updates.gameState = {
+                        ...state.gameState,
+                        phase: 'interlude'
+                    };
+                    showToast('Interlude begins - time to rest');
                 }
 
                 return updates;
