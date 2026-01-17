@@ -932,6 +932,7 @@
 
                 // Process state updates
                 if (aiResponse.state_update) {
+                    console.log("State update from AI:", JSON.stringify(aiResponse.state_update, null, 2));
                     await processStateUpdate(aiResponse.state_update);
                 }
 
@@ -1222,13 +1223,17 @@ You MUST respond with valid JSON in this exact structure:
                 }
 
                 // Currency gain/loss
-                if (update.currency_gain) {
-                    const newCurrency = Math.max(0, (character.currency || 0) + update.currency_gain);
-                    updates.character = {
-                        ...(updates.character || character),
-                        currency: newCurrency
-                    };
-                    showToast(`${update.currency_gain > 0 ? '+' : ''}${update.currency_gain} Coin`);
+                if (update.currency_gain !== undefined && update.currency_gain !== 0 && update.currency_gain !== null) {
+                    const amount = Number(update.currency_gain);
+                    if (!isNaN(amount) && amount !== 0) {
+                        const newCurrency = Math.max(0, (character.currency || 0) + amount);
+                        updates.character = {
+                            ...(updates.character || character),
+                            currency: newCurrency
+                        };
+                        showToast(`${amount > 0 ? '+' : ''}${amount} Coin`);
+                        console.log(`Currency update: ${character.currency} + ${amount} = ${newCurrency}`);
+                    }
                 }
 
                 // Pips
