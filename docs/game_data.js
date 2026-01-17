@@ -30,46 +30,65 @@ const CONTENT_PACK_ASHLORDS = {
     },
 
     // --- CALLINGS ---
+    // Equipment with type: "armor" has pips for damage absorption (stat-specific)
+    // Equipment with type: "weapon" is narrative flavor (no mechanical bonus - buy tools from shop for bonuses)
     callings: [
         {
-            id: "sellsword", 
-            name: "The Sellsword", 
-            description: "Violence is your trade. You don't fight for honor; you fight for the payout.", 
-            stats: { FORCE: 2, FINESSE: 0, INFLUENCE: -1, WITS: 0, RESOLVE: 0 }, 
-            talents: [{ id: "mercenary_code", name: "Mercenary's Code", description: "Combat rolls count as Tier 1 (Challenging) instead of Tier 2 when you are being paid for the specific objective." }], 
-            equipment: [{ name: "Heavy Blade", properties: ["melee", "heavy"] }, { name: "Boiled Leather", properties: ["armor", "medium"] }]
+            id: "sellsword",
+            name: "The Sellsword",
+            description: "Violence is your trade. You don't fight for honor; you fight for the payout.",
+            stats: { FORCE: 2, FINESSE: 0, INFLUENCE: -1, WITS: 0, RESOLVE: 0 },
+            talents: [{ id: "mercenary_code", name: "Mercenary's Code", description: "Combat rolls count as Tier 1 (Challenging) instead of Tier 2 when you are being paid for the specific objective." }],
+            equipment: [
+                { name: "Heavy Blade", type: "weapon", properties: ["melee", "heavy"], desc: "A brutal weapon for brutal work." },
+                { name: "Boiled Leather", type: "armor", stat: "FORCE", pips: 2, max_pips: 2, properties: ["armor", "medium"], desc: "Hardened leather that turns aside blows." }
+            ]
         },
         {
-            id: "cutthroat", 
-            name: "The Cutthroat", 
-            description: "You fight dirty. Shadows are your armor, and surprise is your only virtue.", 
-            stats: { FORCE: -1, FINESSE: 2, INFLUENCE: 0, WITS: 0, RESOLVE: 0 }, 
-            talents: [{ id: "shadow_walk", name: "Shadow Walk", description: "Hostile actions taken from hiding or shadows always count as Tier 1 (Challenging)." }], 
-            equipment: [{ name: "Matched Daggers", properties: ["melee", "light"] }, { name: "Dark Garb", properties: ["armor", "light"] }]
+            id: "cutthroat",
+            name: "The Cutthroat",
+            description: "You fight dirty. Shadows are your armor, and surprise is your only virtue.",
+            stats: { FORCE: -1, FINESSE: 2, INFLUENCE: 0, WITS: 0, RESOLVE: 0 },
+            talents: [{ id: "shadow_walk", name: "Shadow Walk", description: "Hostile actions taken from hiding or shadows always count as Tier 1 (Challenging)." }],
+            equipment: [
+                { name: "Matched Daggers", type: "weapon", properties: ["melee", "light"], desc: "Quick blades for quick kills." },
+                { name: "Dark Garb", type: "armor", stat: "FINESSE", pips: 2, max_pips: 2, properties: ["armor", "light"], desc: "Dark cloth that cushions falls and hides bloodstains." }
+            ]
         },
         {
-            id: "disgraced", 
-            name: "The Disgraced", 
-            description: "You lost your title, but not your upbringing. You know how the high-born think.", 
-            stats: { FORCE: 0, FINESSE: 0, INFLUENCE: 2, WITS: 0, RESOLVE: -1 }, 
-            talents: [{ id: "highborn", name: "Highborn", description: "Social rolls against NPCs of high rank or status always count as Tier 1 (Challenging)." }], 
-            equipment: [{ name: "Ornate Rapier", properties: ["melee", "light"] }, { name: "Faded Finery", properties: ["armor", "shabby"] }]
+            id: "disgraced",
+            name: "The Disgraced",
+            description: "You lost your title, but not your upbringing. You know how the high-born think.",
+            stats: { FORCE: 0, FINESSE: 0, INFLUENCE: 2, WITS: 0, RESOLVE: -1 },
+            talents: [{ id: "highborn", name: "Highborn", description: "Social rolls against NPCs of high rank or status always count as Tier 1 (Challenging)." }],
+            equipment: [
+                { name: "Ornate Rapier", type: "weapon", properties: ["melee", "light"], desc: "A gentleman's weapon, for what that's worth." },
+                { name: "Faded Finery", type: "armor", stat: "INFLUENCE", pips: 1, max_pips: 2, properties: ["armor", "shabby"], desc: "Once-fine clothes that still carry an air of nobility." }
+            ]
         },
         {
-            id: "hexenjager", 
-            name: "The Hexenjager", 
-            description: "You hunt the things that go bump in the night. You have the tools and the knowledge.", 
-            stats: { FORCE: 0, FINESSE: 0, INFLUENCE: -1, WITS: 0, RESOLVE: 2 }, 
-            talents: [{ id: "slayers_knowledge", name: "Slayer's Knowledge", description: "Rolls to track, identify, or harm Beasts and Blighted Monstrosities always count as Tier 1 (Challenging)." }], 
-            equipment: [{ name: "Silvered Sword", properties: ["melee", "silver"] }, { name: "Crossbow", properties: ["ranged", "heavy"] }, { name: "Coat", properties: ["armor", "light"] }]
+            id: "hexenjager",
+            name: "The Hexenjager",
+            description: "You hunt the things that go bump in the night. You have the tools and the knowledge.",
+            stats: { FORCE: 0, FINESSE: 0, INFLUENCE: -1, WITS: 0, RESOLVE: 2 },
+            talents: [{ id: "slayers_knowledge", name: "Slayer's Knowledge", description: "Rolls to track, identify, or harm Beasts and Blighted Monstrosities always count as Tier 1 (Challenging)." }],
+            equipment: [
+                { name: "Silvered Sword", type: "weapon", properties: ["melee", "silver"], desc: "Silver-plated blade for hunting monsters." },
+                { name: "Crossbow", type: "weapon", properties: ["ranged", "heavy"], desc: "A reliable weapon for striking from a distance." },
+                { name: "Hunter's Coat", type: "armor", stat: "RESOLVE", pips: 2, max_pips: 2, properties: ["armor", "light"], desc: "Warded leather that steadies the nerves against horror." }
+            ]
         },
         {
-            id: "arcanist", 
-            name: "The Arcanist", 
-            description: "A scholar-engineer of the supernatural. You use devices to handle what others fear.", 
-            stats: { FORCE: -1, FINESSE: 0, INFLUENCE: 0, WITS: 2, RESOLVE: 0 }, 
-            talents: [{ id: "artifact_attunement", name: "Artifact Attunement", description: "Rolls to use, disable, or resist magical devices/traps always count as Tier 1 (Challenging). You can identify properties safely." }], 
-            equipment: [{ name: "Aether-Spectrometer", properties: ["tool", "fragile"] }, { name: "Warding Chalk", properties: ["consumable"] }, { name: "Reinforced Apron", properties: ["armor", "light"] }]
+            id: "arcanist",
+            name: "The Arcanist",
+            description: "A scholar-engineer of the supernatural. You use devices to handle what others fear.",
+            stats: { FORCE: -1, FINESSE: 0, INFLUENCE: 0, WITS: 2, RESOLVE: 0 },
+            talents: [{ id: "artifact_attunement", name: "Artifact Attunement", description: "Rolls to use, disable, or resist magical devices/traps always count as Tier 1 (Challenging). You can identify properties safely." }],
+            equipment: [
+                { name: "Aether-Spectrometer", type: "tool", stat: "WITS", bonus: 1, properties: ["tool", "fragile"], desc: "+1 WITS. Detects magical emanations and measures aetheric disturbances." },
+                { name: "Warding Chalk", type: "consumable", properties: ["consumable"], desc: "Draw protective circles. Limited uses." },
+                { name: "Reinforced Apron", type: "armor", stat: "WITS", pips: 1, max_pips: 2, properties: ["armor", "light"], desc: "Treated leather that resists magical backlash." }
+            ]
         }
     ],
 

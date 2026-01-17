@@ -1540,6 +1540,30 @@
                 }).join('')
                 : '<span class="text-gray-500 text-xs italic">No tags yet. Earn them through play.</span>';
             
+            // Check if character has a blight-related burden
+            const burdenId = data.playbook?.burdenId;
+            const hasBlight = burdenId === 'blight_marked' || burdenId === 'vessel';
+            const blightStage = data.blight || 0;
+            const blightMax = 5;
+
+            // Build Blight tracker HTML if applicable
+            const blightHtml = hasBlight ? `
+                <div class="mt-2 p-2 bg-purple-900/30 border border-purple-700 rounded">
+                    <div class="flex justify-between items-center">
+                        <h4 class="text-xs uppercase font-semibold text-purple-400 tracking-wider">Blight Corruption</h4>
+                        <span class="text-xs text-purple-300">${blightStage}/${blightMax}</span>
+                    </div>
+                    <div class="flex gap-1 mt-2">
+                        ${Array.from({length: blightMax}, (_, i) => `
+                            <div class="w-6 h-6 rounded border-2 ${i < blightStage ? 'bg-purple-600 border-purple-400' : 'bg-gray-800 border-purple-900'} flex items-center justify-center">
+                                ${i < blightStage ? '<span class="text-xs text-purple-200">&#x2620;</span>' : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                    <p class="text-xs text-purple-300/70 mt-2 italic">${blightStage >= 4 ? 'The corruption spreads...' : blightStage >= 2 ? 'It whispers to you.' : 'The Blight stirs within.'}</p>
+                </div>
+            ` : '';
+
             // UI UPDATE (v0.9.5): Removed the Conditions container div
             sheet.innerHTML = `
                 <div class="space-y-4">
@@ -1560,6 +1584,7 @@
                         </div>
                     </div>
                     <div class="grid grid-cols-5 gap-2 select-none">${statsHtml}</div>
+                    ${blightHtml}
                     <div>
                         <h4 class="text-xs uppercase font-semibold text-gray-500 mb-2 tracking-wider">Talents</h4>
                         <div class="grid grid-cols-2 gap-2">${talentsHtml || '<p class="text-sm text-gray-500 italic col-span-2">No talents.</p>'}</div>
@@ -1616,14 +1641,15 @@
 
                 const newCharacter = {
                     name: charName,
-                    playbook: { calling: calling.name, burden: burden.name },
+                    playbook: { calling: calling.name, burden: burden.name, callingId: callingId, burdenId: burdenId },
                     stats: combinedStats,
                     pips: {},
                     talents: [...(calling.talents || []), ...(burden.talents || [])],
                     equipment: [...(calling.equipment || []), ...(burden.equipment || [])],
                     xp: 0,
                     xp_locked: 0,
-                    currency: 0
+                    currency: 0,
+                    blight: 0  // Blight tracker for blight-related burdens
                 };
 
                 // Get front name from calling
@@ -1677,6 +1703,55 @@
             } finally {
                 hideLoading();
             }
+        }
+
+        // Parse AI response for structured commands (currency_gain, equipment_add, etc.)
+        function parseAIStructuredResponse(text) {
+            let cleanNarrative = text;
+            const stateUpdates = {};
+
+            // Pattern to match currency_gain: X (with various formats)
+            const currencyMatch = text.match(/currency_gain:\s*(\d+)/i);
+            if (currencyMatch) {
+                stateUpdates.currency_gain = parseInt(currencyMatch[1], 10);
+                cleanNarrative = cleanNarrative.replace(/currency_gain:\s*\d+/gi, '').trim();
+            }
+
+            // Pattern to match equipment_add: [{...}] or equipment_add: [{ ... }]
+            const equipmentMatch = text.match(/equipment_add:\s*(\[[\s\S]*?\](?=\s*(?:currency_gain|equipment_add|$|[.!?]\s*[A-Z])|\s*$))/i);
+            if (equipmentMatch) {
+                try {
+                    // Try to parse as JSON
+                    let jsonStr = equipmentMatch[1];
+                    // Fix common AI formatting issues
+                    jsonStr = jsonStr
+                        .replace(/'/g, '"')  // Replace single quotes with double quotes
+                        .replace(/(\w+):/g, '"$1":')  // Quote unquoted keys
+                        .replace(/""/g, '"')  // Fix double-doubled quotes
+                        .replace(/,\s*}/g, '}')  // Remove trailing commas
+                        .replace(/,\s*]/g, ']');  // Remove trailing commas in arrays
+
+                    const items = JSON.parse(jsonStr);
+                    if (Array.isArray(items) && items.length > 0) {
+                        stateUpdates.equipment_add = items;
+                    }
+                } catch (e) {
+                    console.warn("Failed to parse equipment_add JSON:", e, equipmentMatch[1]);
+                }
+                // Remove the equipment_add from narrative regardless of parse success
+                cleanNarrative = cleanNarrative.replace(/equipment_add:\s*\[[\s\S]*?\](?=\s*(?:currency_gain|equipment_add|$|[.!?]\s*[A-Z])|\s*$)/gi, '').trim();
+            }
+
+            // Clean up extra whitespace and trailing punctuation issues
+            cleanNarrative = cleanNarrative
+                .replace(/\s+/g, ' ')
+                .replace(/\s+([.!?,])/g, '$1')
+                .trim();
+
+            return {
+                cleanNarrative,
+                stateUpdates: Object.keys(stateUpdates).length > 0 ? stateUpdates : null
+            };
         }
 
         async function handlePlayerAction() {
@@ -1754,8 +1829,16 @@
                 // 3. Call AI for narrative only (much simpler prompt)
                 const narrative = await callAINarrative(text, mechanicsContext);
 
-                // 4. Build and display the full message
-                let fullMessage = narrative;
+                // 4. Parse AI response for structured commands and clean narrative
+                const { cleanNarrative, stateUpdates } = parseAIStructuredResponse(narrative);
+
+                // 5. Process any state updates from AI (currency_gain, equipment_add, etc.)
+                if (stateUpdates) {
+                    await processStateUpdate(stateUpdates);
+                }
+
+                // 6. Build and display the full message
+                let fullMessage = cleanNarrative;
                 if (rollResult) {
                     // Append mechanics in styled block
                     const mechanicsDisplay = MechanicsEngine.formatRollResult(rollResult);
