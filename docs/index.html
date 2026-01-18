@@ -60,7 +60,7 @@
 
     <div id="loading-overlay" class="flex fixed top-0 left-0 w-screen h-screen bg-black/80 z-[199] justify-center items-center" style="flex-direction: column;">
         <div class="spinner mb-4"></div>
-        <span id="loading-text" class="ml-4 text-lg text-gray-300">Booting v2.3.0 (Equipment & Inventory)...</span>
+        <span id="loading-text" class="ml-4 text-lg text-gray-300">Booting v2.4.0 (Talent System)...</span>
         <div id="boot-log"></div>
         <button id="force-start-btn" onclick="window.forceUI()">⚠️ FORCE UI</button>
     </div>
@@ -81,7 +81,7 @@
         <header class="mb-4 p-4 bg-gray-800 rounded-lg border border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div>
                 <h1 class="text-2xl font-bold text-white">Ash-Lord's Covenant</h1>
-                <p class="text-sm text-gray-400">Digital RPG Prototype (Build v2.3.0 - Equipment & Inventory System)</p>
+                <p class="text-sm text-gray-400">Digital RPG Prototype (Build v2.4.0 - Talent System)</p>
             </div>
             <div class="flex items-center space-x-2">
                 <button onclick="window.exportSave()" class="px-3 py-2 bg-gray-700 text-xs text-gray-300 rounded-lg hover:bg-emerald-700 hover:text-white transition">
@@ -702,6 +702,236 @@
             }
         };
 
+        // ===== TALENT SYSTEM (Calling & Burden Abilities) =====
+
+        const TalentSystem = {
+            // Currently active/ready talent (for calling talents awaiting action)
+            _activeTalent: null,
+
+            // Talent configurations with types and costs
+            TALENT_CONFIG: {
+                // Calling talents (passive bonuses - ready before action)
+                mercenary_code: {
+                    type: 'calling',
+                    effect: 'tier_reduction',
+                    condition: 'combat_paid',
+                    description: 'Combat rolls → Tier 1 when being paid for objective'
+                },
+                shadow_walk: {
+                    type: 'calling',
+                    effect: 'tier_reduction',
+                    condition: 'stealth_ambush',
+                    description: 'Hostile actions from hiding → Tier 1'
+                },
+                highborn: {
+                    type: 'calling',
+                    effect: 'tier_reduction',
+                    condition: 'social_highrank',
+                    description: 'Social rolls vs nobles/officials → Tier 1'
+                },
+                slayers_knowledge: {
+                    type: 'calling',
+                    effect: 'tier_reduction',
+                    condition: 'vs_monsters',
+                    description: 'Actions vs Beasts/Blighted → Tier 1'
+                },
+                artifact_attunement: {
+                    type: 'calling',
+                    effect: 'tier_reduction',
+                    condition: 'magical_devices',
+                    description: 'Magical device interactions → Tier 1'
+                },
+
+                // Burden talents (active abilities with costs)
+                call_deep: {
+                    type: 'burden',
+                    effect: 'summon_creature',
+                    cost: '+1 Blight',
+                    costType: 'blight',
+                    costAmount: 1,
+                    description: 'Summon a Blighted Creature to fight for you'
+                },
+                chain_breaker: {
+                    type: 'burden',
+                    effect: 'break_binding',
+                    cost: '+2 RESOLVE Pips',
+                    costType: 'pips',
+                    costStat: 'RESOLVE',
+                    costAmount: 2,
+                    description: 'Instantly shatter any physical or magical binding'
+                },
+                symbiotic_surge: {
+                    type: 'burden',
+                    effect: 'auto_success',
+                    affectedStats: ['FORCE', 'RESOLVE'],
+                    cost: '+1 Blight',
+                    costType: 'blight',
+                    costAmount: 1,
+                    description: 'Auto-succeed on FORCE/RESOLVE with Critical Success'
+                },
+                mastermind: {
+                    type: 'burden',
+                    effect: 'flashback',
+                    cost: '+2 WITS Pips',
+                    costType: 'pips',
+                    costStat: 'WITS',
+                    costAmount: 2,
+                    description: 'Flashback: You prepared for this exact situation'
+                },
+                adrenaline_spike: {
+                    type: 'burden',
+                    effect: 'ignore_damage',
+                    cost: '+2 FORCE Pips',
+                    costType: 'pips',
+                    costStat: 'FORCE',
+                    costAmount: 2,
+                    description: 'Ignore ALL Damage and Conditions for one scene'
+                }
+            },
+
+            // Get talent configuration
+            getTalentConfig(talentId) {
+                return this.TALENT_CONFIG[talentId] || null;
+            },
+
+            // Get currently active talent
+            getActiveTalent() {
+                return this._activeTalent;
+            },
+
+            // Activate a talent
+            async activate(talentId) {
+                const config = this.getTalentConfig(talentId);
+                if (!config) {
+                    console.warn('Unknown talent:', talentId);
+                    return;
+                }
+
+                const character = gameState.getState().character;
+                if (!character) return;
+
+                if (config.type === 'calling') {
+                    // Calling talents: toggle ready state for next action
+                    if (this._activeTalent === talentId) {
+                        this._activeTalent = null;
+                        showToast('Talent deactivated');
+                    } else {
+                        this._activeTalent = talentId;
+                        showToast(`${this._getTalentName(talentId)} READY - next qualifying action → Tier 1`);
+                    }
+                    // Refresh character display to show active state
+                    displayCharacter(character);
+
+                } else if (config.type === 'burden') {
+                    // Burden talents: apply cost and effect immediately
+                    const confirmed = confirm(
+                        `Activate ${this._getTalentName(talentId)}?\n\n` +
+                        `Effect: ${config.description}\n` +
+                        `Cost: ${config.cost}\n\n` +
+                        `This cost will be applied immediately.`
+                    );
+
+                    if (!confirmed) return;
+
+                    // Apply cost
+                    await this._applyCost(config);
+
+                    // Set as active for AI context
+                    this._activeTalent = talentId;
+
+                    // Add context message for AI
+                    const contextMsg = `[TALENT ACTIVATED: ${this._getTalentName(talentId)}] - ${config.description}. The cost (${config.cost}) has been paid. Narrate the effect dramatically.`;
+                    await addMessageToChat('user', contextMsg);
+
+                    // Clear active talent after sending (burden talents are one-shot)
+                    this._activeTalent = null;
+
+                    // Refresh display
+                    displayCharacter(gameState.getState().character);
+                }
+            },
+
+            // Apply cost for burden talents
+            async _applyCost(config) {
+                if (config.costType === 'blight') {
+                    await this.addBlight(config.costAmount);
+                } else if (config.costType === 'pips') {
+                    await gameState.transaction(async (state) => {
+                        const pips = { ...(state.character.pips || {}) };
+                        pips[config.costStat] = Math.min(2, (pips[config.costStat] || 0) + config.costAmount);
+                        return {
+                            character: {
+                                ...state.character,
+                                pips
+                            }
+                        };
+                    });
+                    showToast(`+${config.costAmount} ${config.costStat} pips (${config.cost})`);
+                }
+            },
+
+            // Get talent name from character data
+            _getTalentName(talentId) {
+                const character = gameState.getState().character;
+                const talent = (character?.talents || []).find(t => t.id === talentId);
+                return talent?.name || talentId;
+            },
+
+            // Add blight to character
+            async addBlight(amount = 1) {
+                await gameState.transaction(async (state) => {
+                    const currentBlight = state.character.blight || 0;
+                    const newBlight = Math.min(5, currentBlight + amount);
+                    return {
+                        character: {
+                            ...state.character,
+                            blight: newBlight
+                        }
+                    };
+                });
+                showToast(`+${amount} Blight corruption`);
+
+                // Check for blight death
+                const newState = gameState.getState();
+                if (newState.character.blight >= 5) {
+                    await addMessageToChat('model', '**THE BLIGHT CONSUMES YOU.**\n\nThe corruption has spread too far. Your body twists, your mind fragments. What remains is no longer you, but something hungry and hollow. Your story ends here... or perhaps begins anew as a creature of the Blight.');
+                }
+            },
+
+            // Check if a calling talent should apply tier reduction
+            shouldReduceTier(actionType, context) {
+                if (!this._activeTalent) return false;
+
+                const config = this.getTalentConfig(this._activeTalent);
+                if (!config || config.type !== 'calling') return false;
+
+                // For now, trust the player readied the right talent
+                // The AI context will include which talent is active
+                return true;
+            },
+
+            // Consume the active talent (after action resolves)
+            consumeActiveTalent() {
+                const was = this._activeTalent;
+                this._activeTalent = null;
+                return was;
+            },
+
+            // Get context string for AI prompt
+            getActiveContext() {
+                if (!this._activeTalent) return '';
+
+                const config = this.getTalentConfig(this._activeTalent);
+                const name = this._getTalentName(this._activeTalent);
+
+                if (config?.type === 'calling') {
+                    return `\n*** TALENT ACTIVE: ${name} ***\nThe player has readied their calling talent. If their action qualifies (${config.description}), the roll is Tier 1 instead of Tier 2.`;
+                }
+
+                return '';
+            }
+        };
+
         // ===== MECHANICS ENGINE (Client-Side) =====
 
         const MechanicsEngine = {
@@ -1188,7 +1418,7 @@
         }
 
         async function init() {
-            logBoot("🚀 INIT SEQUENCE v2.3.0 (Equipment & Inventory System)");
+            logBoot("🚀 INIT SEQUENCE v2.4.0 (Talent System)");
 
             setTimeout(() => {
                 const btn = document.getElementById('force-start-btn');
@@ -1478,8 +1708,45 @@
             
             const escapeStr = (str) => str.replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, ' ');
 
-            const talentsHtml = (data.talents||[]).map(t=> {
-                return `<div class="talent-block p-2 border border-gray-700 rounded text-center hover:border-emerald-500" onclick="updateDescription('${escapeStr(t.name)}', '${escapeStr(t.description)}', 'talent')"><span class="text-sm text-gray-300">${t.name}</span></div>`
+            // Build talents with activation buttons
+            const activeTalent = TalentSystem.getActiveTalent();
+            const talentsHtml = (data.talents||[]).map(t => {
+                const talentConfig = TalentSystem.getTalentConfig(t.id);
+                const isActive = activeTalent === t.id;
+                const isCalling = talentConfig?.type === 'calling';
+                const isBurden = talentConfig?.type === 'burden';
+
+                // Different styling for calling vs burden talents
+                const borderColor = isActive ? 'border-yellow-500 bg-yellow-900/20' :
+                                   isCalling ? 'border-emerald-700 hover:border-emerald-500' :
+                                   isBurden ? 'border-red-700 hover:border-red-500' :
+                                   'border-gray-700 hover:border-gray-500';
+                const labelColor = isCalling ? 'text-emerald-400' : isBurden ? 'text-red-400' : 'text-gray-400';
+                const typeLabel = isCalling ? 'CALLING' : isBurden ? 'BURDEN' : '';
+
+                // Cost display for burden talents
+                const costText = talentConfig?.cost ?
+                    `<span class="text-xs text-red-300">${talentConfig.cost}</span>` : '';
+
+                // Button text
+                const btnText = isActive ? 'READY' : isCalling ? 'Ready' : 'Activate';
+                const btnClass = isActive ? 'bg-yellow-600 text-black' :
+                                isCalling ? 'bg-emerald-800 hover:bg-emerald-700 text-emerald-200' :
+                                'bg-red-800 hover:bg-red-700 text-red-200';
+
+                return `
+                    <div class="talent-block p-2 border ${borderColor} rounded flex flex-col gap-1"
+                         onclick="updateDescription('${escapeStr(t.name)}', '${escapeStr(t.description)}', 'talent')">
+                        <div class="flex justify-between items-start">
+                            <span class="text-sm text-gray-300 font-medium">${t.name}</span>
+                            <span class="text-xs ${labelColor}">${typeLabel}</span>
+                        </div>
+                        ${costText}
+                        <button onclick="event.stopPropagation(); TalentSystem.activate('${t.id}')"
+                                class="mt-1 px-2 py-1 text-xs rounded ${btnClass} transition">
+                            ${btnText}
+                        </button>
+                    </div>`;
             }).join('');
             
             const equipHtml = (data.equipment || []).map(i => {
@@ -1540,29 +1807,32 @@
                 }).join('')
                 : '<span class="text-gray-500 text-xs italic">No tags yet. Earn them through play.</span>';
             
-            // Check if character has a blight-related burden
-            const burdenId = data.playbook?.burdenId;
-            const hasBlight = burdenId === 'blight_marked' || burdenId === 'vessel';
+            // Blight tracker - visible for ALL characters (anyone can be infected)
             const blightStage = data.blight || 0;
             const blightMax = 5;
+            const blightFlavor = blightStage === 0 ? 'Uncorrupted.' :
+                                 blightStage === 1 ? 'A faint taint lingers.' :
+                                 blightStage === 2 ? 'It whispers to you.' :
+                                 blightStage === 3 ? 'The corruption grows.' :
+                                 blightStage === 4 ? 'Nearly consumed...' :
+                                 'Lost to the Blight.';
 
-            // Build Blight tracker HTML if applicable
-            const blightHtml = hasBlight ? `
-                <div class="mt-2 p-2 bg-purple-900/30 border border-purple-700 rounded">
+            const blightHtml = `
+                <div class="mt-2 p-2 ${blightStage > 0 ? 'bg-purple-900/30 border-purple-700' : 'bg-gray-900/30 border-gray-700'} border rounded">
                     <div class="flex justify-between items-center">
-                        <h4 class="text-xs uppercase font-semibold text-purple-400 tracking-wider">Blight Corruption</h4>
-                        <span class="text-xs text-purple-300">${blightStage}/${blightMax}</span>
+                        <h4 class="text-xs uppercase font-semibold ${blightStage > 0 ? 'text-purple-400' : 'text-gray-500'} tracking-wider">Blight</h4>
+                        <span class="text-xs ${blightStage > 0 ? 'text-purple-300' : 'text-gray-500'}">${blightStage}/${blightMax}</span>
                     </div>
                     <div class="flex gap-1 mt-2">
                         ${Array.from({length: blightMax}, (_, i) => `
-                            <div class="w-6 h-6 rounded border-2 ${i < blightStage ? 'bg-purple-600 border-purple-400' : 'bg-gray-800 border-purple-900'} flex items-center justify-center">
+                            <div class="w-6 h-6 rounded border-2 ${i < blightStage ? 'bg-purple-600 border-purple-400' : 'bg-gray-800 border-gray-700'} flex items-center justify-center">
                                 ${i < blightStage ? '<span class="text-xs text-purple-200">&#x2620;</span>' : ''}
                             </div>
                         `).join('')}
                     </div>
-                    <p class="text-xs text-purple-300/70 mt-2 italic">${blightStage >= 4 ? 'The corruption spreads...' : blightStage >= 2 ? 'It whispers to you.' : 'The Blight stirs within.'}</p>
+                    <p class="text-xs ${blightStage > 0 ? 'text-purple-300/70' : 'text-gray-500'} mt-1 italic">${blightFlavor}</p>
                 </div>
-            ` : '';
+            `;
 
             // UI UPDATE (v0.9.5): Removed the Conditions container div
             sheet.innerHTML = `
@@ -1717,8 +1987,15 @@
                 cleanNarrative = cleanNarrative.replace(/currency_gain:\s*\d+/gi, '').trim();
             }
 
+            // Pattern to match blight_gain: X (for Blight corruption from AI)
+            const blightMatch = text.match(/blight_gain:\s*(\d+)/i);
+            if (blightMatch) {
+                stateUpdates.blight_gain = parseInt(blightMatch[1], 10);
+                cleanNarrative = cleanNarrative.replace(/blight_gain:\s*\d+/gi, '').trim();
+            }
+
             // Pattern to match equipment_add: [{...}] or equipment_add: [{ ... }]
-            const equipmentMatch = text.match(/equipment_add:\s*(\[[\s\S]*?\](?=\s*(?:currency_gain|equipment_add|$|[.!?]\s*[A-Z])|\s*$))/i);
+            const equipmentMatch = text.match(/equipment_add:\s*(\[[\s\S]*?\](?=\s*(?:currency_gain|equipment_add|blight_gain|$|[.!?]\s*[A-Z])|\s*$))/i);
             if (equipmentMatch) {
                 try {
                     // Try to parse as JSON
@@ -1739,7 +2016,7 @@
                     console.warn("Failed to parse equipment_add JSON:", e, equipmentMatch[1]);
                 }
                 // Remove the equipment_add from narrative regardless of parse success
-                cleanNarrative = cleanNarrative.replace(/equipment_add:\s*\[[\s\S]*?\](?=\s*(?:currency_gain|equipment_add|$|[.!?]\s*[A-Z])|\s*$)/gi, '').trim();
+                cleanNarrative = cleanNarrative.replace(/equipment_add:\s*\[[\s\S]*?\](?=\s*(?:currency_gain|equipment_add|blight_gain|$|[.!?]\s*[A-Z])|\s*$)/gi, '').trim();
             }
 
             // Clean up extra whitespace and trailing punctuation issues
@@ -1780,8 +2057,18 @@
 
                 // 2. If action needs a roll, handle mechanics client-side
                 if (intent.needsRoll && intent.stat) {
+                    // Check if calling talent reduces tier
+                    let effectiveTier = intent.tier;
+                    let talentApplied = null;
+                    if (effectiveTier === 2 && TalentSystem.shouldReduceTier(intent.type)) {
+                        effectiveTier = 1;
+                        talentApplied = TalentSystem.consumeActiveTalent();
+                        showToast('Calling talent applied: Tier 2 → Tier 1');
+                    }
+
                     // Roll dice
-                    rollResult = MechanicsEngine.rollDice(intent.stat, intent.tier, character);
+                    rollResult = MechanicsEngine.rollDice(intent.stat, effectiveTier, character);
+                    rollResult.talentApplied = talentApplied; // Track for AI context
                     console.log("Roll result:", rollResult);
 
                     // Calculate consequences (with Escalation Oracle for costs)
@@ -1988,13 +2275,21 @@ For MISS: No loot is obtained. Narrate the failure and consequences.
 
 You can also add interesting narrative items with: equipment_add: [{name: "Item Name", type: "loot", tags: ["tag1"], desc: "Description"}]
 
+*** BLIGHT GUIDANCE ***
+The Blight is a supernatural corruption that can infect anyone. When narratively appropriate:
+- Exposure to Blighted creatures, cursed artifacts, or corrupted places can cause infection
+- Use "blight_gain: X" (usually 1) when the character is exposed to significant corruption
+- Blight exposure should be dramatic and consequential - not casual
+- The Blight whispers, tempts, and transforms those it touches
+
 *** COMPLICATION GUIDANCE ***
 If a "COMPLICATION TO NARRATE" is provided in the mechanical result:
 - Weave it NATURALLY into your narrative - it's pre-written "witty grimdark" text
 - Honor the tone and specifics of the complication
 - Do NOT invent additional complications - the oracle has spoken
 - For MAJOR complications, make them dramatic and consequential
-- The complication may reference factions, environmental changes, or character setbacks`;
+- The complication may reference factions, environmental changes, or character setbacks
+${TalentSystem.getActiveContext()}`;
 
             // Build the user prompt with mechanics context
             let userPrompt = `PLAYER ACTION: "${playerAction}"`;
@@ -2139,8 +2434,12 @@ If a "COMPLICATION TO NARRATE" is provided in the mechanical result:
                     const currentEquipment = character.equipment || [];
                     const newItems = update.equipment_add.map(item => ({
                         name: item.name || "Unknown Item",
-                        properties: item.properties || [],
-                        lore: item.lore || ""
+                        type: item.type || "loot",
+                        properties: item.properties || item.tags || [],
+                        lore: item.lore || item.desc || "",
+                        ...(item.stat ? { stat: item.stat } : {}),
+                        ...(item.pips !== undefined ? { pips: item.pips, max_pips: item.max_pips || 2 } : {}),
+                        ...(item.bonus !== undefined ? { bonus: item.bonus } : {})
                     }));
 
                     updates.character = {
@@ -2149,6 +2448,24 @@ If a "COMPLICATION TO NARRATE" is provided in the mechanical result:
                     };
 
                     newItems.forEach(item => showToast(`+1 Item: ${item.name}`));
+                }
+
+                // Blight gain (corruption from the Blight)
+                if (update.blight_gain && update.blight_gain > 0) {
+                    const currentBlight = character.blight || 0;
+                    const newBlight = Math.min(5, currentBlight + update.blight_gain);
+                    updates.character = {
+                        ...(updates.character || character),
+                        blight: newBlight
+                    };
+                    showToast(`+${update.blight_gain} Blight corruption`);
+
+                    // Check for blight death
+                    if (newBlight >= 5) {
+                        setTimeout(() => {
+                            addMessageToChat('model', '**THE BLIGHT CONSUMES YOU.**\n\nThe corruption has spread too far. Your body twists, your mind fragments. What remains is no longer you, but something hungry and hollow.');
+                        }, 500);
+                    }
                 }
 
                 // Equipment modify

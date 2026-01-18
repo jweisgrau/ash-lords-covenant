@@ -1,5 +1,5 @@
 // game_data.js
-// Version 2.3.0 - The Ash-Lord's Covenant (Equipment & Inventory System)
+// Version 2.4.0 - The Ash-Lord's Covenant (Equipment & Inventory System)
 // - Expanded TIER_1_TWISTS: 5 themed tables × 20 entries = 100 total
 // - Added TIER_2_TWISTS_WITTY: 10 entries with grimdark humor
 // - Added QUEST_HOOKS: 12 engine-switch quests (epic → political)
