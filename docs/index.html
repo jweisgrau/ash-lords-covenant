@@ -60,7 +60,7 @@
 
     <div id="loading-overlay" class="flex fixed top-0 left-0 w-screen h-screen bg-black/80 z-[199] justify-center items-center" style="flex-direction: column;" role="status" aria-live="polite">
         <div class="spinner mb-4" aria-hidden="true"></div>
-        <span id="loading-text" class="ml-4 text-lg text-gray-300">Booting v2.4.0 (Talent System)...</span>
+        <span id="loading-text" class="ml-4 text-lg text-gray-300">Booting v2.5.0 (Stability & Security)...</span>
         <div id="boot-log"></div>
         <button id="force-start-btn" onclick="window.forceUI()" aria-label="Force start the user interface">⚠️ FORCE UI</button>
     </div>
@@ -1498,7 +1498,7 @@
         }
 
         async function init() {
-            logBoot("🚀 INIT SEQUENCE v2.4.0 (Talent System)");
+            logBoot("🚀 INIT SEQUENCE v2.5.0 (Stability & Security)");
 
             setTimeout(() => {
                 const btn = document.getElementById('force-start-btn');
