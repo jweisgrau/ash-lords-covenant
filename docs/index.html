@@ -58,14 +58,14 @@
 </head>
 <body class="antialiased">
 
-    <div id="loading-overlay" class="flex fixed top-0 left-0 w-screen h-screen bg-black/80 z-[199] justify-center items-center" style="flex-direction: column;">
-        <div class="spinner mb-4"></div>
+    <div id="loading-overlay" class="flex fixed top-0 left-0 w-screen h-screen bg-black/80 z-[199] justify-center items-center" style="flex-direction: column;" role="status" aria-live="polite">
+        <div class="spinner mb-4" aria-hidden="true"></div>
         <span id="loading-text" class="ml-4 text-lg text-gray-300">Booting v2.4.0 (Talent System)...</span>
         <div id="boot-log"></div>
-        <button id="force-start-btn" onclick="window.forceUI()">⚠️ FORCE UI</button>
+        <button id="force-start-btn" onclick="window.forceUI()" aria-label="Force start the user interface">⚠️ FORCE UI</button>
     </div>
 
-    <div id="error-modal" class="fixed top-0 left-0 w-full h-full bg-black/80 z-[200] flex justify-center items-center hidden">
+    <div id="error-modal" class="fixed top-0 left-0 w-full h-full bg-black/80 z-[200] flex justify-center items-center hidden" role="dialog" aria-modal="true" aria-labelledby="error-title">
         <div class="modal-content bg-gray-800 border border-gray-700 p-6 rounded-lg max-w-lg w-full">
             <h2 id="error-title" class="text-xl font-bold text-red-400 mb-4">Error</h2>
             <p id="error-message" class="text-gray-300 mb-6 whitespace-pre-wrap font-mono text-sm">Something went wrong.</p>
@@ -103,7 +103,7 @@
                 
                 <div class="mb-4">
                     <label for="character-name" class="block text-sm font-medium text-gray-300 mb-1">What is your name?</label>
-                    <input type="text" id="character-name" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <input type="text" id="character-name" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500" maxlength="50" required aria-required="true">
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -203,12 +203,13 @@
 
                     <div id="interaction-panel" class="mt-4 bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4">
                         <div id="chapter-phase-ui">
-                            <textarea id="player-input" 
-                                      class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500" 
-                                      rows="3" 
-                                      placeholder="Describe your character's action..."></textarea>
+                            <textarea id="player-input"
+                                      class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                      rows="3"
+                                      placeholder="Describe your character's action..."
+                                      aria-label="Enter your character's action"></textarea>
                             
-                            <button id="submit-action-btn" class="w-full mt-3 px-4 py-3 bg-emerald-700 text-white rounded-lg font-bold hover:bg-emerald-800 shadow-md">
+                            <button id="submit-action-btn" class="w-full mt-3 px-4 py-3 bg-emerald-700 text-white rounded-lg font-bold hover:bg-emerald-800 shadow-md" aria-label="Submit your action to the Game Master">
                                 Submit Action
                             </button>
                             
@@ -245,6 +246,10 @@
                                     <span class="font-bold text-blue-400">Repair Armor (Free)</span>
                                     <span class="text-xs text-gray-400 mt-1">Restore all armor to full protection.</span>
                                 </button>
+                                <button id="interlude-cleanse-btn" class="interlude-button flex flex-col items-start text-left p-3 border-purple-700">
+                                    <span class="font-bold text-purple-400">Cleanse Blight (5 Coin)</span>
+                                    <span class="text-xs text-gray-400 mt-1">Seek a hedge witch to remove 1 Blight.</span>
+                                </button>
                             </div>
                             <button id="interlude-end-btn" class="w-full mt-4 px-4 py-3 bg-red-900 text-white rounded-lg font-bold hover:bg-red-800 transition border border-red-700">
                                 Return to Adventure →
@@ -253,9 +258,9 @@
                         </div>
 
                         <!-- XP Shop Modal -->
-                        <div id="xp-shop-modal" class="fixed top-0 left-0 w-full h-full bg-black/80 z-[200] flex justify-center items-center hidden">
+                        <div id="xp-shop-modal" class="fixed top-0 left-0 w-full h-full bg-black/80 z-[200] flex justify-center items-center hidden" role="dialog" aria-modal="true" aria-labelledby="shop-title">
                             <div class="modal-content bg-gray-800 border border-amber-700 p-6 rounded-lg max-w-lg w-full">
-                                <h2 class="text-xl font-bold text-amber-400 mb-4">⚔️ Equipment Shop</h2>
+                                <h2 id="shop-title" class="text-xl font-bold text-amber-400 mb-4">⚔️ Equipment Shop</h2>
                                 <p class="text-gray-400 text-sm mb-4">Spend 5 XP to purchase specialized gear. Choose wisely - only 3 items available per visit.</p>
                                 <div id="xp-shop-items" class="space-y-3 mb-4">
                                     <!-- Items will be populated by JavaScript -->
@@ -304,6 +309,32 @@
             questState: { current_quest: null },
             campaign: null
         });
+
+        // ===== HTML SANITIZATION UTILITIES =====
+
+        function escapeHtml(text) {
+            if (typeof text !== 'string') return text;
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Sanitize AI content while preserving safe markdown-like formatting
+        function sanitizeContent(content) {
+            if (typeof content !== 'string') return content;
+
+            // First escape all HTML
+            let safe = escapeHtml(content);
+
+            // Re-enable safe markdown: **bold** and *italic*
+            safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            safe = safe.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+
+            // Convert newlines to <br> for display
+            safe = safe.replace(/\n/g, '<br>');
+
+            return safe;
+        }
 
         class StateValidator {
             static validate(updates, currentState) {
@@ -823,12 +854,25 @@
                     displayCharacter(character);
 
                 } else if (config.type === 'burden') {
+                    // Check if pip cost would have any effect
+                    let costWarning = '';
+                    if (config.costType === 'pips') {
+                        const currentPips = character.pips?.[config.costStat] || 0;
+                        const effectiveCost = Math.min(config.costAmount, 2 - currentPips);
+                        if (effectiveCost <= 0) {
+                            costWarning = `\n\n⚠️ WARNING: You already have max pips in ${config.costStat}!\nThe pip cost will have no effect.`;
+                        } else if (effectiveCost < config.costAmount) {
+                            costWarning = `\n\n⚠️ Note: You have ${currentPips} ${config.costStat} pips.\nOnly ${effectiveCost} pip(s) will be added (max 2).`;
+                        }
+                    }
+
                     // Burden talents: apply cost and effect immediately
                     const confirmed = confirm(
                         `Activate ${this._getTalentName(talentId)}?\n\n` +
                         `Effect: ${config.description}\n` +
-                        `Cost: ${config.cost}\n\n` +
-                        `This cost will be applied immediately.`
+                        `Cost: ${config.cost}` +
+                        costWarning +
+                        `\n\nThis cost will be applied immediately.`
                     );
 
                     if (!confirmed) return;
@@ -898,16 +942,52 @@
                 }
             },
 
-            // Check if a calling talent should apply tier reduction
+            // Remove blight from character (via cleansing rituals, etc.)
+            async removeBlight(amount = 1) {
+                const character = gameState.getState().character;
+                if (!character || (character.blight || 0) <= 0) {
+                    return false; // No blight to remove
+                }
+
+                await gameState.transaction(async (state) => {
+                    const currentBlight = state.character.blight || 0;
+                    const newBlight = Math.max(0, currentBlight - amount);
+                    return {
+                        character: {
+                            ...state.character,
+                            blight: newBlight
+                        }
+                    };
+                });
+                showToast(`-${amount} Blight cleansed`);
+                return true;
+            },
+
+            /**
+             * Check if a calling talent should apply tier reduction.
+             * Shows a confirmation prompt to ensure player accountability for talent conditions.
+             *
+             * DESIGN NOTE: Talent conditions (e.g., "when defending an innocent") are narrative
+             * and context-dependent. Rather than complex parsing, we trust the player to honestly
+             * confirm when conditions are met. The AI narrative context reinforces this.
+             */
             shouldReduceTier(actionType, context) {
                 if (!this._activeTalent) return false;
 
                 const config = this.getTalentConfig(this._activeTalent);
                 if (!config || config.type !== 'calling') return false;
 
-                // For now, trust the player readied the right talent
-                // The AI context will include which talent is active
-                return true;
+                const talentName = this._getTalentName(this._activeTalent);
+
+                // Prompt player to confirm their action meets the talent condition
+                const confirmed = confirm(
+                    `Apply ${talentName}?\n\n` +
+                    `Condition: ${config.description}\n\n` +
+                    `Does your current action meet this condition?\n` +
+                    `(This will reduce the action from Tier 2 to Tier 1)`
+                );
+
+                return confirmed;
             },
 
             // Consume the active talent (after action resolves)
@@ -1503,6 +1583,9 @@
             const btnRepair = safeBind('interlude-repair-btn');
             if (btnRepair) btnRepair.addEventListener('click', () => handleInterludeAction('repair_armor'));
 
+            const btnCleanse = safeBind('interlude-cleanse-btn');
+            if (btnCleanse) btnCleanse.addEventListener('click', () => handleInterludeAction('cleanse_blight'));
+
             const btnShopClose = safeBind('xp-shop-close-btn');
             if (btnShopClose) btnShopClose.addEventListener('click', () => {
                 const modal = document.getElementById('xp-shop-modal');
@@ -1786,7 +1869,12 @@
 
                 return `<li class="text-sm text-gray-300 py-2 border-b border-gray-800 cursor-pointer hover:text-emerald-400 flex justify-between items-center" onclick="updateDescription('${safeName}', '', 'item', '${loreContent}')">
                     <span class="flex items-center gap-2">${typeBadge}${i.name}</span>
-                    <div class="text-right">${specialBadge}</div>
+                    <div class="flex items-center gap-2">
+                        ${specialBadge}
+                        <button onclick="event.stopPropagation(); dropItem('${safeName}')"
+                                class="text-xs text-gray-500 hover:text-red-400 px-1 transition"
+                                title="Drop item">✕</button>
+                    </div>
                 </li>`;
             }).join('');
 
@@ -1847,10 +1935,11 @@
                                  <p class="text-xs text-gray-500">EXP</p>
                                  <p class="text-lg font-bold text-emerald-400">${data.xp || 0}</p>
                              </div>
+                             ${(data.currency || 0) > 0 ? `
                              <div>
                                  <p class="text-xs text-gray-500">COIN</p>
-                                 <p class="text-lg font-bold text-emerald-400">${data.currency || 0}</p>
-                             </div>
+                                 <p class="text-lg font-bold text-emerald-400">${data.currency}</p>
+                             </div>` : ''}
                         </div>
                     </div>
                     <div class="grid grid-cols-5 gap-2 select-none">${statsHtml}</div>
@@ -1879,11 +1968,28 @@
                 let content = `<strong class="text-emerald-400 block mb-1">${title}</strong>`;
                 if(description) content += `<p class="text-gray-400 text-sm mb-2">${description}</p>`;
                 if (lore) content += `<div class="mt-2 pt-2 border-t border-gray-700 font-mono text-xs text-red-300">${lore.replace(/\\n/g, '<br>')}</div>`;
-                
+
                 display.innerHTML = content;
                 display.classList.remove('active');
-                void display.offsetWidth; 
+                void display.offsetWidth;
                 display.classList.add('active');
+            }
+        };
+
+        // Drop/remove item from inventory
+        window.dropItem = async (itemName) => {
+            const confirmed = confirm(`Drop "${itemName}"?\n\nThis item will be permanently removed from your inventory.`);
+            if (!confirmed) return;
+
+            const success = await InventorySystem.removeItem(itemName);
+            if (success) {
+                // Refresh character display
+                const character = gameState.getState().character;
+                if (character) {
+                    displayCharacter(character);
+                }
+                // Add narrative note
+                await addMessageToChat('model', `You discard **${itemName}**, leaving it behind.`);
             }
         };
 
@@ -1906,7 +2012,9 @@
 
                 const combinedStats = { FORCE: 0, FINESSE: 0, INFLUENCE: 0, WITS: 0, RESOLVE: 0 };
                 for (const stat in combinedStats) {
-                    combinedStats[stat] = (calling.stats[stat] || 0) + (burden.stats[stat] || 0);
+                    // Combine calling and burden stats, then clamp to valid range (-1 to +5)
+                    const rawValue = (calling.stats[stat] || 0) + (burden.stats[stat] || 0);
+                    combinedStats[stat] = Math.max(-1, Math.min(5, rawValue));
                 }
 
                 const newCharacter = {
@@ -1975,6 +2083,51 @@
             }
         }
 
+        /**
+         * Extract balanced bracket content starting from a position
+         * Returns {content, endIndex} or null if no valid brackets found
+         */
+        function extractBalancedBrackets(text, startIndex) {
+            if (text[startIndex] !== '[') return null;
+
+            let depth = 0;
+            let inString = false;
+            let escapeNext = false;
+
+            for (let i = startIndex; i < text.length; i++) {
+                const char = text[i];
+
+                if (escapeNext) {
+                    escapeNext = false;
+                    continue;
+                }
+
+                if (char === '\\' && inString) {
+                    escapeNext = true;
+                    continue;
+                }
+
+                if (char === '"' || char === "'") {
+                    inString = !inString;
+                    continue;
+                }
+
+                if (inString) continue;
+
+                if (char === '[') depth++;
+                else if (char === ']') {
+                    depth--;
+                    if (depth === 0) {
+                        return {
+                            content: text.slice(startIndex, i + 1),
+                            endIndex: i + 1
+                        };
+                    }
+                }
+            }
+            return null; // Unbalanced brackets
+        }
+
         // Parse AI response for structured commands (currency_gain, equipment_add, etc.)
         function parseAIStructuredResponse(text) {
             let cleanNarrative = text;
@@ -1994,29 +2147,39 @@
                 cleanNarrative = cleanNarrative.replace(/blight_gain:\s*\d+/gi, '').trim();
             }
 
-            // Pattern to match equipment_add: [{...}] or equipment_add: [{ ... }]
-            const equipmentMatch = text.match(/equipment_add:\s*(\[[\s\S]*?\](?=\s*(?:currency_gain|equipment_add|blight_gain|$|[.!?]\s*[A-Z])|\s*$))/i);
-            if (equipmentMatch) {
-                try {
-                    // Try to parse as JSON
-                    let jsonStr = equipmentMatch[1];
-                    // Fix common AI formatting issues
-                    jsonStr = jsonStr
-                        .replace(/'/g, '"')  // Replace single quotes with double quotes
-                        .replace(/(\w+):/g, '"$1":')  // Quote unquoted keys
-                        .replace(/""/g, '"')  // Fix double-doubled quotes
-                        .replace(/,\s*}/g, '}')  // Remove trailing commas
-                        .replace(/,\s*]/g, ']');  // Remove trailing commas in arrays
+            // Find equipment_add with balanced bracket parsing
+            const equipmentKeyMatch = text.match(/equipment_add:\s*/i);
+            if (equipmentKeyMatch) {
+                const keyEnd = equipmentKeyMatch.index + equipmentKeyMatch[0].length;
+                const extracted = extractBalancedBrackets(text, keyEnd);
 
-                    const items = JSON.parse(jsonStr);
-                    if (Array.isArray(items) && items.length > 0) {
-                        stateUpdates.equipment_add = items;
+                if (extracted) {
+                    try {
+                        // Fix common AI formatting issues
+                        let jsonStr = extracted.content
+                            .replace(/'/g, '"')  // Replace single quotes with double quotes
+                            .replace(/([{,]\s*)(\w+)(\s*:)/g, '$1"$2"$3')  // Quote unquoted keys (more precise)
+                            .replace(/,\s*}/g, '}')  // Remove trailing commas
+                            .replace(/,\s*]/g, ']');  // Remove trailing commas in arrays
+
+                        const items = JSON.parse(jsonStr);
+                        if (Array.isArray(items) && items.length > 0) {
+                            stateUpdates.equipment_add = items;
+                        }
+                    } catch (e) {
+                        console.error("Failed to parse equipment_add JSON:", e, extracted.content);
+                        stateUpdates.equipmentParseError = true;
                     }
-                } catch (e) {
-                    console.warn("Failed to parse equipment_add JSON:", e, equipmentMatch[1]);
+                    // Remove the equipment_add from narrative
+                    cleanNarrative = cleanNarrative.slice(0, equipmentKeyMatch.index) +
+                                    cleanNarrative.slice(extracted.endIndex);
+                    cleanNarrative = cleanNarrative.trim();
+                } else {
+                    console.error("Unbalanced brackets in equipment_add");
+                    stateUpdates.equipmentParseError = true;
+                    // Remove the malformed equipment_add as best we can
+                    cleanNarrative = cleanNarrative.replace(/equipment_add:\s*\[[\s\S]*$/i, '').trim();
                 }
-                // Remove the equipment_add from narrative regardless of parse success
-                cleanNarrative = cleanNarrative.replace(/equipment_add:\s*\[[\s\S]*?\](?=\s*(?:currency_gain|equipment_add|blight_gain|$|[.!?]\s*[A-Z])|\s*$)/gi, '').trim();
             }
 
             // Clean up extra whitespace and trailing punctuation issues
@@ -2027,7 +2190,8 @@
 
             return {
                 cleanNarrative,
-                stateUpdates: Object.keys(stateUpdates).length > 0 ? stateUpdates : null
+                stateUpdates: Object.keys(stateUpdates).length > 0 ? stateUpdates : null,
+                parseErrors: stateUpdates.equipmentParseError ? ['Some items could not be added to inventory (parse error)'] : []
             };
         }
 
@@ -2060,10 +2224,19 @@
                     // Check if calling talent reduces tier
                     let effectiveTier = intent.tier;
                     let talentApplied = null;
+                    const hadTalentReady = TalentSystem.getActiveTalent() !== null;
+
                     if (effectiveTier === 2 && TalentSystem.shouldReduceTier(intent.type)) {
                         effectiveTier = 1;
                         talentApplied = TalentSystem.consumeActiveTalent();
                         showToast('Calling talent applied: Tier 2 → Tier 1');
+                    } else if (hadTalentReady && effectiveTier === 1) {
+                        // Talent was ready but action was already Tier 1
+                        // Get name before consuming, then consume the talent
+                        const talentId = TalentSystem.getActiveTalent();
+                        const talentName = TalentSystem._getTalentName(talentId);
+                        TalentSystem.consumeActiveTalent();
+                        showToast(`${talentName || 'Talent'} not needed (action already Tier 1)`);
                     }
 
                     // Roll dice
@@ -2117,18 +2290,29 @@
                 const narrative = await callAINarrative(text, mechanicsContext);
 
                 // 4. Parse AI response for structured commands and clean narrative
-                const { cleanNarrative, stateUpdates } = parseAIStructuredResponse(narrative);
+                const { cleanNarrative, stateUpdates, parseErrors } = parseAIStructuredResponse(narrative);
 
                 // 5. Process any state updates from AI (currency_gain, equipment_add, etc.)
                 if (stateUpdates) {
                     await processStateUpdate(stateUpdates);
                 }
 
+                // Notify user of any parse errors
+                if (parseErrors && parseErrors.length > 0) {
+                    parseErrors.forEach(err => showToast(err, 5000));
+                }
+
                 // 6. Build and display the full message
                 let fullMessage = cleanNarrative;
                 if (rollResult) {
                     // Append mechanics in styled block
-                    const mechanicsDisplay = MechanicsEngine.formatRollResult(rollResult);
+                    let mechanicsDisplay = MechanicsEngine.formatRollResult(rollResult);
+
+                    // Add oracle twist result if present
+                    if (consequences?.twist) {
+                        mechanicsDisplay += `\n[Oracle: ${consequences.twist.description}]`;
+                    }
+
                     fullMessage += `\n\n<mechanics>${mechanicsDisplay}</mechanics>`;
                 }
 
@@ -2524,10 +2708,39 @@ ${TalentSystem.getActiveContext()}`;
                 // Quest progress
                 if (update.quest_progress && state.questState?.current_quest) {
                     const quest = { ...state.questState.current_quest };
+                    const wasComplete = quest.progress >= quest.max_progress;
                     quest.progress = Math.min(quest.max_progress, (quest.progress || 0) + update.quest_progress);
                     quest.xp_earned = (quest.xp_earned || 0) + 1;
-                    updates.questState = { current_quest: quest };
-                    showToast(`Quest progress: ${quest.progress}/${quest.max_progress}`);
+
+                    // Check if quest just completed
+                    const nowComplete = quest.progress >= quest.max_progress;
+                    if (nowComplete && !wasComplete) {
+                        // Quest completed! Award bonus XP and clear quest
+                        const bonusXP = quest.max_progress || 3;
+                        updates.character = {
+                            ...state.character,
+                            xp: (state.character.xp || 0) + bonusXP
+                        };
+                        updates.questState = { current_quest: null };
+                        showToast(`✓ Quest Completed: ${quest.title}!`, 5000);
+                        showToast(`+${bonusXP} XP Quest Reward`, 5000);
+                    } else {
+                        updates.questState = { current_quest: quest };
+                        showToast(`Quest progress: ${quest.progress}/${quest.max_progress}`);
+                    }
+                }
+
+                // Quest completion (direct)
+                if (update.quest_complete && state.questState?.current_quest) {
+                    const quest = state.questState.current_quest;
+                    const bonusXP = quest.max_progress || 3;
+                    updates.character = {
+                        ...state.character,
+                        xp: (state.character.xp || 0) + bonusXP
+                    };
+                    updates.questState = { current_quest: null };
+                    showToast(`✓ Quest Completed: ${quest.title}!`, 5000);
+                    showToast(`+${bonusXP} XP Quest Reward`, 5000);
                 }
 
                 // Trigger interlude
@@ -2610,33 +2823,53 @@ ${TalentSystem.getActiveContext()}`;
             if (modal) modal.style.display = 'flex';
         }
 
+        // Track purchase state to prevent double-click race condition
+        let _purchaseInProgress = false;
+
         async function purchaseFromShop(index) {
+            // Prevent concurrent purchases
+            if (_purchaseInProgress) {
+                return;
+            }
+
             const items = window._shopItems || [];
             const item = items[index];
             if (!item) return;
 
-            const state = gameState.getState();
-            const character = state.character;
+            _purchaseInProgress = true;
 
-            if ((character.xp || 0) < item.cost_xp) {
-                return window.showError("Insufficient XP", `You need ${item.cost_xp} XP to purchase this item.`);
+            try {
+                // Atomic transaction: check and deduct XP together
+                let purchaseSuccess = false;
+                await gameState.transaction(async (s) => {
+                    const currentXp = s.character.xp || 0;
+                    if (currentXp < item.cost_xp) {
+                        throw new Error(`Insufficient XP. You have ${currentXp}, need ${item.cost_xp}.`);
+                    }
+                    purchaseSuccess = true;
+                    return {
+                        character: { ...s.character, xp: Math.max(0, currentXp - item.cost_xp) }
+                    };
+                });
+
+                if (!purchaseSuccess) return;
+
+                showToast(`-${item.cost_xp} XP`);
+
+                // Add item to inventory
+                await InventorySystem.addItem(item);
+
+                // Add narrative message
+                await addMessageToChat('model', `You spend ${item.cost_xp} XP at a skilled craftsman's workshop. After careful negotiation, you acquire **${item.name}** - ${item.desc.toLowerCase()}`);
+
+                // Close the shop and refresh it (in case they want to buy more)
+                const modal = document.getElementById('xp-shop-modal');
+                if (modal) modal.style.display = 'none';
+            } catch (e) {
+                window.showError("Purchase Failed", e.message);
+            } finally {
+                _purchaseInProgress = false;
             }
-
-            // Deduct XP
-            await gameState.transaction(async (s) => ({
-                character: { ...s.character, xp: s.character.xp - item.cost_xp }
-            }));
-            showToast(`-${item.cost_xp} XP`);
-
-            // Add item to inventory
-            await InventorySystem.addItem(item);
-
-            // Add narrative message
-            await addMessageToChat('model', `You spend ${item.cost_xp} XP at a skilled craftsman's workshop. After careful negotiation, you acquire **${item.name}** - ${item.desc.toLowerCase()}`);
-
-            // Close the shop and refresh it (in case they want to buy more)
-            const modal = document.getElementById('xp-shop-modal');
-            if (modal) modal.style.display = 'none';
         }
 
         async function handleInterludeAction(actionType) {
@@ -2650,6 +2883,7 @@ ${TalentSystem.getActiveContext()}`;
                 reflect: { costType: 'xp', cost: 1, label: 'Reflect & Integrate' },
                 heal: { costType: 'coin', cost: 3, label: 'Rest & Recover' },
                 repair_armor: { costType: 'none', cost: 0, label: 'Repair Armor' },
+                cleanse_blight: { costType: 'coin', cost: 5, label: 'Cleanse Blight' },
                 end_interlude: { costType: 'none', cost: 0, label: 'Return to Adventure' }
             };
 
@@ -2682,6 +2916,13 @@ ${TalentSystem.getActiveContext()}`;
                 }
             }
 
+            // For cleanse blight, check if there's blight to cleanse
+            if (actionType === 'cleanse_blight') {
+                if ((character.blight || 0) <= 0) {
+                    return window.showError("No Corruption", "You have no Blight corruption to cleanse.");
+                }
+            }
+
             // Confirm action
             let confirmMsg = `${config.label}`;
             if (config.cost > 0) {
@@ -2697,15 +2938,15 @@ ${TalentSystem.getActiveContext()}`;
             showLoading();
 
             try {
-                // Deduct cost
+                // Deduct cost (with safeguards against negative values)
                 if (config.costType === 'xp') {
                     await gameState.transaction(async (s) => ({
-                        character: { ...s.character, xp: s.character.xp - config.cost }
+                        character: { ...s.character, xp: Math.max(0, s.character.xp - config.cost) }
                     }));
                     showToast(`-${config.cost} XP`);
                 } else if (config.costType === 'coin') {
                     await gameState.transaction(async (s) => ({
-                        character: { ...s.character, currency: s.character.currency - config.cost }
+                        character: { ...s.character, currency: Math.max(0, s.character.currency - config.cost) }
                     }));
                     showToast(`-${config.cost} Coin`);
                 }
@@ -2730,6 +2971,11 @@ ${TalentSystem.getActiveContext()}`;
                     // Repair all armor during downtime
                     await InventorySystem.repairAllArmor();
                     await addMessageToChat('model', `You spend time carefully maintaining your equipment. Dented plates are hammered smooth, torn padding is replaced, and worn straps are reinforced. Your armor is restored to full protection.`);
+
+                } else if (actionType === 'cleanse_blight') {
+                    // Cleanse 1 point of Blight corruption
+                    await TalentSystem.removeBlight(1);
+                    await addMessageToChat('model', `You seek out a hedge witch who knows the old ways. Through bitter herbs, sacred smoke, and whispered prayers, she draws forth some of the corruption festering within you. The process is agonizing, but when dawn breaks, you feel lighter—cleaner. One mark of the Blight fades from your soul.`);
 
                 } else if (actionType === 'end_interlude') {
                     // Execute World Turn - advance all faction clocks
@@ -2864,13 +3110,33 @@ ${TalentSystem.getActiveContext()}`;
                     ? 'narrative-bubble-user'
                     : 'narrative-bubble-model';
 
-                // Parse mechanics blocks
                 let content = msg.content;
+
                 if (msg.role === 'model') {
+                    // Extract mechanics blocks before sanitization
+                    const mechanicsBlocks = [];
                     content = content.replace(
-                        /<mechanics>(.*?)<\/mechanics>/gi,
-                        '<div class="mechanics-text">$1</div>'
+                        /<mechanics>([\s\S]*?)<\/mechanics>/gi,
+                        (match, inner) => {
+                            const placeholder = `%%MECHANICS_${mechanicsBlocks.length}%%`;
+                            mechanicsBlocks.push(escapeHtml(inner));
+                            return placeholder;
+                        }
                     );
+
+                    // Sanitize the main content
+                    content = sanitizeContent(content);
+
+                    // Restore mechanics blocks with safe HTML wrapper
+                    mechanicsBlocks.forEach((block, i) => {
+                        content = content.replace(
+                            `%%MECHANICS_${i}%%`,
+                            `<div class="mechanics-text">${block}</div>`
+                        );
+                    });
+                } else {
+                    // User messages: fully sanitize
+                    content = sanitizeContent(content);
                 }
 
                 bubble.innerHTML = content;
@@ -2974,7 +3240,8 @@ ${TalentSystem.getActiveContext()}`;
             document.getElementById('quest-progress-text').textContent = `${data.progress || 0}/${data.max_progress || 1}`;
             document.getElementById('quest-xp-earned').textContent = `XP Earned: ${data.xp_earned || 0}`;
 
-            const progressPercent = ((data.progress || 0) / (data.max_progress || 1)) * 100;
+            const maxProgress = Math.max(1, data.max_progress || 1); // Prevent division by zero
+            const progressPercent = ((data.progress || 0) / maxProgress) * 100;
             document.getElementById('quest-progress-bar').style.width = `${progressPercent}%`;
         }
 
