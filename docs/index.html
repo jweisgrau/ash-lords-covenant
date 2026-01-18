@@ -152,27 +152,27 @@
                             </svg>
                         </div>
 
-                        <div id="unified-clocks-content" class="p-4 space-y-6">
-                            <div class="grid grid-cols-2 gap-2 border-b-spacers pb-8 mb-6"> 
+                        <div id="unified-clocks-content" class="p-4 space-y-4">
+                            <div class="grid grid-cols-2 gap-2 border-b-spacers pb-4 mb-4"> 
                                 <div class="flex flex-col items-center">
-                                    <h4 class="text-xs uppercase text-emerald-400 font-bold tracking-wider mb-2">DESTINY</h4>
-                                    <div class="clock transform scale-90">
+                                    <h4 class="text-xs uppercase text-emerald-400 font-bold tracking-wider mb-1">DESTINY</h4>
+                                    <div class="clock transform scale-75">
                                         <div class="clock-face" id="destiny-clock-face"></div>
                                     </div>
-                                    <p id="destiny-narrative" class="text-xs text-gray-400 text-center mt-2 font-mono leading-tight px-1">Your destiny awaits...</p>
+                                    <p id="destiny-narrative" class="text-xs text-gray-400 text-center mt-1 font-mono leading-tight px-1">Your destiny awaits...</p>
                                 </div>
                                 <div class="flex flex-col items-center pl-2">
-                                    <h4 class="text-xs uppercase text-red-400 font-bold tracking-wider mb-2">THE THREAT</h4>
-                                    <div class="clock transform scale-90">
-                                        <div class="clock-face" id="endgame-front-clock-face"></div> 
+                                    <h4 class="text-xs uppercase text-red-400 font-bold tracking-wider mb-1">THE THREAT</h4>
+                                    <div class="clock transform scale-75">
+                                        <div class="clock-face" id="endgame-front-clock-face"></div>
                                     </div>
-                                    <span id="endgame-front-name" class="text-xs text-gray-400 text-center mt-2 font-mono leading-tight">Unknown Threat</span>
+                                    <span id="endgame-front-name" class="text-xs text-gray-400 text-center mt-1 font-mono leading-tight">Unknown Threat</span>
                                 </div>
                             </div>
 
                             <div class="pt-2">
-                                <h4 class="text-xs uppercase text-gray-500 mb-3 text-center font-bold tracking-widest">FACTION ACTIVITY</h4>
-                                <div id="world-clocks-container" class="grid grid-cols-2 gap-4">
+                                <h4 class="text-xs uppercase text-gray-500 mb-2 text-center font-bold tracking-widest">FACTION ACTIVITY</h4>
+                                <div id="world-clocks-container" class="grid grid-cols-2 gap-2">
                                     <p id="world-clocks-loading" class="text-gray-400 italic col-span-2 text-center text-xs">Loading world state...</p>
                                 </div>
                             </div>
@@ -1818,16 +1818,19 @@
                                 'bg-red-800 hover:bg-red-700 text-red-200';
 
                 return `
-                    <div class="talent-block p-2 border ${borderColor} rounded flex flex-col gap-1"
+                    <div class="talent-block p-1.5 border ${borderColor} rounded flex items-center gap-2"
                          onclick="updateDescription('${escapeStr(t.name)}', '${escapeStr(t.description)}', 'talent')">
-                        <div class="flex justify-between items-start">
-                            <span class="text-sm text-gray-300 font-medium">${t.name}</span>
-                            <span class="text-xs ${labelColor}">${typeLabel}</span>
+                        <div class="flex-grow flex flex-col">
+                            <div class="flex items-center gap-1">
+                                <span class="text-sm text-gray-300 font-medium">${t.name}</span>
+                                <span class="text-xs ${labelColor}">${typeLabel}</span>
+                            </div>
+                            ${costText}
                         </div>
-                        ${costText}
                         <button onclick="event.stopPropagation(); TalentSystem.activate('${t.id}')"
-                                class="mt-1 px-2 py-1 text-xs rounded ${btnClass} transition">
-                            ${btnText}
+                                class="talent-activation-btn ${isActive ? 'active' : ''} ${isCalling ? 'calling' : ''}"
+                                title="${btnText}">
+                            🔥
                         </button>
                     </div>`;
             }).join('');
@@ -1842,13 +1845,17 @@
                     // Tool: show "+1 STAT" badge
                     specialBadge = `<span class="equip-tag text-emerald-400 border border-emerald-600 bg-emerald-900/30">+1 ${i.stat.substring(0,3)}</span>`;
                 } else if (i.type === 'armor' && i.stat) {
-                    // Armor: show pip meter
+                    // Armor: show pip meter with diamond shapes
                     const currentPips = i.pips || 0;
                     const maxPips = i.max_pips || 2;
-                    const pipDisplay = '●'.repeat(currentPips) + '○'.repeat(maxPips - currentPips);
-                    const pipColor = currentPips === maxPips ? 'text-blue-400' :
-                                    currentPips === 0 ? 'text-red-400' : 'text-yellow-400';
-                    specialBadge = `<span class="equip-tag ${pipColor} border border-gray-600">${pipDisplay}</span>`;
+                    // Color-code by armor type
+                    const armorColorClass = i.stat === 'FORCE' ? 'armor-pip-force' :
+                                           i.stat === 'FINESSE' ? 'armor-pip-finesse' :
+                                           i.stat === 'RESOLVE' ? 'armor-pip-resolve' : 'armor-pip-default';
+                    const pipDisplay = Array.from({length: maxPips}, (_, idx) =>
+                        `<span class="armor-pip ${idx < currentPips ? 'filled' : ''} ${armorColorClass}"></span>`
+                    ).join('');
+                    specialBadge = `<span class="equip-tag border border-gray-600 flex items-center gap-0.5">${pipDisplay}</span>`;
                 } else {
                     // Regular items: show property badges
                     const safeProperties = (i.properties || []).filter(p => p);
@@ -1906,19 +1913,17 @@
                                  'Lost to the Blight.';
 
             const blightHtml = `
-                <div class="mt-2 p-2 ${blightStage > 0 ? 'bg-purple-900/30 border-purple-700' : 'bg-gray-900/30 border-gray-700'} border rounded">
-                    <div class="flex justify-between items-center">
+                <div class="mt-2 p-1.5 ${blightStage > 0 ? 'bg-purple-900/30 border-purple-700' : 'bg-gray-900/30 border-gray-700'} border rounded">
+                    <div class="flex items-center gap-2">
                         <h4 class="text-xs uppercase font-semibold ${blightStage > 0 ? 'text-purple-400' : 'text-gray-500'} tracking-wider">Blight</h4>
+                        <div class="flex gap-0.5">
+                            ${Array.from({length: blightMax}, (_, i) => `
+                                <div class="w-3 h-3 rounded-full border ${i < blightStage ? 'bg-purple-600 border-purple-400' : 'bg-gray-800 border-gray-700'}"></div>
+                            `).join('')}
+                        </div>
                         <span class="text-xs ${blightStage > 0 ? 'text-purple-300' : 'text-gray-500'}">${blightStage}/${blightMax}</span>
+                        ${blightStage > 0 ? `<span class="text-xs text-purple-300/70 italic ml-auto">${blightFlavor}</span>` : ''}
                     </div>
-                    <div class="flex gap-1 mt-2">
-                        ${Array.from({length: blightMax}, (_, i) => `
-                            <div class="w-6 h-6 rounded border-2 ${i < blightStage ? 'bg-purple-600 border-purple-400' : 'bg-gray-800 border-gray-700'} flex items-center justify-center">
-                                ${i < blightStage ? '<span class="text-xs text-purple-200">&#x2620;</span>' : ''}
-                            </div>
-                        `).join('')}
-                    </div>
-                    <p class="text-xs ${blightStage > 0 ? 'text-purple-300/70' : 'text-gray-500'} mt-1 italic">${blightFlavor}</p>
                 </div>
             `;
 
@@ -1935,11 +1940,10 @@
                                  <p class="text-xs text-gray-500">EXP</p>
                                  <p class="text-lg font-bold text-emerald-400">${data.xp || 0}</p>
                              </div>
-                             ${(data.currency || 0) > 0 ? `
                              <div>
                                  <p class="text-xs text-gray-500">COIN</p>
-                                 <p class="text-lg font-bold text-emerald-400">${data.currency}</p>
-                             </div>` : ''}
+                                 <p class="text-lg font-bold ${(data.currency || 0) > 0 ? 'text-emerald-400' : 'text-gray-600'}">${data.currency || 0}</p>
+                             </div>
                         </div>
                     </div>
                     <div class="grid grid-cols-5 gap-2 select-none">${statsHtml}</div>
@@ -2436,6 +2440,7 @@ Work this quest opportunity naturally into your narrative through an NPC, rumor,
 ${shouldSuggestDowntime ? `DOWNTIME HINT: The player has been active for ${adventureTurns} turns. If appropriate, suggest a natural pause point (finding shelter, reaching a destination, completing an objective) where they could rest.` : ''}
 
 *** WRITING STYLE ***
+- ALWAYS write in second person perspective ("you", "your"). Never refer to the player character by name or in third person.
 - Grimdark, morally ambiguous, consequences matter
 - 2-4 paragraphs of vivid prose
 - Show don't tell
@@ -3165,7 +3170,7 @@ ${TalentSystem.getActiveContext()}`;
                         ${renderClockSegments(clock.current, clock.segments)}
                     </div>
                     <div class="clock-name">${clock.name}</div>
-                    <div class="text-xs text-gray-500 text-center mt-1">${clock.current}/${clock.segments}</div>
+                    <div style="font-size: 0.6rem;" class="text-gray-500 text-center">${clock.current}/${clock.segments}</div>
                 `;
                 container.appendChild(clockDiv);
             });
