@@ -60,7 +60,7 @@
 
     <div id="loading-overlay" class="flex fixed top-0 left-0 w-screen h-screen bg-black/80 z-[199] justify-center items-center" style="flex-direction: column;" role="status" aria-live="polite">
         <div class="spinner mb-4" aria-hidden="true"></div>
-        <span id="loading-text" class="ml-4 text-lg text-gray-300">Booting v2.5.0 (Stability & Security)...</span>
+        <span id="loading-text" class="ml-4 text-lg text-gray-300">Booting v2.6.1 (Playtesting Fixes)...</span>
         <div id="boot-log"></div>
         <button id="force-start-btn" onclick="window.forceUI()" aria-label="Force start the user interface">⚠️ FORCE UI</button>
     </div>
@@ -838,8 +838,17 @@
                     return;
                 }
 
-                const character = gameState.getState().character;
+                const state = gameState.getState();
+                const character = state.character;
                 if (!character) return;
+
+                // Check if talent already used this chapter
+                const talentsUsedThisChapter = state.talentsUsedThisChapter || [];
+                if (talentsUsedThisChapter.includes(talentId)) {
+                    showToast('Talent already used this chapter. Rest to reset.', 4000);
+                    console.warn(`⚠️ Talent ${talentId} already used this chapter`);
+                    return;
+                }
 
                 if (config.type === 'calling') {
                     // Calling talents: toggle ready state for next action
@@ -849,6 +858,15 @@
                     } else {
                         this._activeTalent = talentId;
                         showToast(`${this._getTalentName(talentId)} READY - next qualifying action → Tier 1`);
+
+                        // Mark talent as used this chapter
+                        await gameState.transaction(async (state) => {
+                            const used = [...(state.talentsUsedThisChapter || [])];
+                            if (!used.includes(talentId)) {
+                                used.push(talentId);
+                            }
+                            return { talentsUsedThisChapter: used };
+                        });
                     }
                     // Refresh character display to show active state
                     displayCharacter(character);
@@ -876,6 +894,15 @@
                     );
 
                     if (!confirmed) return;
+
+                    // Mark talent as used this chapter
+                    await gameState.transaction(async (state) => {
+                        const used = [...(state.talentsUsedThisChapter || [])];
+                        if (!used.includes(talentId)) {
+                            used.push(talentId);
+                        }
+                        return { talentsUsedThisChapter: used };
+                    });
 
                     // Apply cost
                     await this._applyCost(config);
@@ -1076,7 +1103,12 @@
 
             // Roll dice and calculate outcome
             rollDice(stat, tier, character) {
-                const d10 = Math.floor(Math.random() * 10) + 1;
+                const randomValue = Math.random();
+                const d10 = Math.floor(randomValue * 10) + 1;
+
+                // Debug logging to monitor for patterns
+                console.log(`🎲 Dice Roll Debug - Raw random: ${randomValue.toFixed(4)}, d10 result: ${d10}, stat: ${stat}, tier: ${tier}`);
+
                 const statMod = character.stats[stat] || 0;
                 const pips = character.pips?.[stat] || 0;
                 // Add tool bonus from equipment
@@ -1403,20 +1435,44 @@
         // ===== TAG SYSTEM =====
 
         const TagSystem = {
-            // Add a tag to the character
+            // Add a tag to the character (with strict rate limiting)
             async addTag(tag) {
-                await gameState.transaction(async (state) => {
-                    const tags = [...(state.tags || [])];
-                    // Avoid duplicates
-                    if (!tags.find(t => t.name === tag.name)) {
-                        tags.push({
-                            name: tag.name,
-                            type: tag.type || 'story',  // 'story', 'reputation', 'relationship', 'secret'
-                            description: tag.description || '',
-                            acquired_turn: state.gameState?.turn_count || 0
-                        });
+                const state = gameState.getState();
+                const tags = state.tags || [];
+                const turnCount = state.gameState?.turn_count || 0;
+
+                // Rate limiting: max 1 tag per 10 turns (tags are RARE)
+                if (tags.length > 0) {
+                    const lastTagTurn = Math.max(...tags.map(t => t.acquired_turn || 0));
+                    if (turnCount - lastTagTurn < 10) {
+                        console.warn(`⚠️ Tag rate limit: Must wait 10 turns between tags (${10 - (turnCount - lastTagTurn)} turns remaining)`);
+                        showToast('Tag rate limit: Only one tag per 10 turns', 3000);
+                        return;
                     }
-                    return { tags };
+                }
+
+                // Cap at 5 total tags (only for critical persistent narrative facts)
+                if (tags.length >= 5) {
+                    console.warn('⚠️ Tag cap reached: Maximum 5 tags');
+                    showToast('Tag limit reached: Remove old tags before adding new ones', 3000);
+                    return;
+                }
+
+                // Avoid duplicates
+                if (tags.find(t => t.name === tag.name)) {
+                    console.log(`Tag "${tag.name}" already exists, skipping`);
+                    return;
+                }
+
+                await gameState.transaction(async (state) => {
+                    const updatedTags = [...(state.tags || [])];
+                    updatedTags.push({
+                        name: tag.name,
+                        type: tag.type || 'story',  // 'story', 'reputation', 'relationship', 'secret'
+                        description: tag.description || '',
+                        acquired_turn: state.gameState?.turn_count || 0
+                    });
+                    return { tags: updatedTags };
                 });
                 showToast(`New Tag: ${tag.name}`);
             },
@@ -1498,7 +1554,7 @@
         }
 
         async function init() {
-            logBoot("🚀 INIT SEQUENCE v2.5.0 (Stability & Security)");
+            logBoot("🚀 INIT SEQUENCE v2.6.1 (Playtesting Fixes)");
 
             setTimeout(() => {
                 const btn = document.getElementById('force-start-btn');
@@ -2132,16 +2188,41 @@
             return null; // Unbalanced brackets
         }
 
+        // Validate that GM narrative uses second person (not third person)
+        function validateSecondPerson(narrative) {
+            // Check for third-person patterns that indicate incorrect perspective
+            const thirdPersonPatterns = [
+                /\b(he|she|they)\s+(walks?|runs?|fights?|speaks?|says?|does|is|has|goes|looks|feels|thinks)\b/i,
+                /\b(his|her|their)\s+(sword|weapon|hand|face|eyes|voice|heart|mind|body)\b/i,
+                /\bthe\s+(mercenary|slayer|scholar|invoker|warrior|fighter|mage|character)\s+(does|is|has|walks|fights|speaks)\b/i
+            ];
+
+            const violations = [];
+            for (const pattern of thirdPersonPatterns) {
+                const match = narrative.match(pattern);
+                if (match) {
+                    violations.push(match[0]);
+                }
+            }
+
+            if (violations.length > 0) {
+                console.warn('⚠️ Third-person detected in GM narrative:', violations.join(', '));
+                console.warn('Full narrative excerpt:', narrative.substring(0, 200) + '...');
+                return false;
+            }
+            return true;
+        }
+
         // Parse AI response for structured commands (currency_gain, equipment_add, etc.)
         function parseAIStructuredResponse(text) {
             let cleanNarrative = text;
             const stateUpdates = {};
 
-            // Pattern to match currency_gain: X (with various formats)
-            const currencyMatch = text.match(/currency_gain:\s*(\d+)/i);
+            // Pattern to match currency_gain: X (with various formats, including negative)
+            const currencyMatch = text.match(/currency_gain:\s*(-?\d+)/i);
             if (currencyMatch) {
                 stateUpdates.currency_gain = parseInt(currencyMatch[1], 10);
-                cleanNarrative = cleanNarrative.replace(/currency_gain:\s*\d+/gi, '').trim();
+                cleanNarrative = cleanNarrative.replace(/currency_gain:\s*-?\d+/gi, '').trim();
             }
 
             // Pattern to match blight_gain: X (for Blight corruption from AI)
@@ -2149,6 +2230,32 @@
             if (blightMatch) {
                 stateUpdates.blight_gain = parseInt(blightMatch[1], 10);
                 cleanNarrative = cleanNarrative.replace(/blight_gain:\s*\d+/gi, '').trim();
+            }
+
+            // Pattern to match tag_add: {name: "...", type: "...", description: "..."}
+            const tagAddMatch = text.match(/tag_add:\s*\{([^}]+)\}/i);
+            if (tagAddMatch) {
+                try {
+                    // Fix common AI formatting issues
+                    let jsonStr = `{${tagAddMatch[1]}}`
+                        .replace(/'/g, '"')  // Replace single quotes
+                        .replace(/([{,]\s*)(\w+)(\s*:)/g, '$1"$2"$3');  // Quote unquoted keys
+
+                    const tagData = JSON.parse(jsonStr);
+                    if (tagData.name && tagData.type && tagData.description) {
+                        stateUpdates.tag_add = tagData;
+                    }
+                } catch (e) {
+                    console.warn('Failed to parse tag_add:', e);
+                }
+                cleanNarrative = cleanNarrative.replace(/tag_add:\s*\{[^}]+\}/gi, '').trim();
+            }
+
+            // Pattern to match tag_remove: "Tag Name"
+            const tagRemoveMatch = text.match(/tag_remove:\s*"([^"]+)"/i);
+            if (tagRemoveMatch) {
+                stateUpdates.tag_remove = tagRemoveMatch[1];
+                cleanNarrative = cleanNarrative.replace(/tag_remove:\s*"[^"]+"/gi, '').trim();
             }
 
             // Find equipment_add with balanced bracket parsing
@@ -2293,6 +2400,9 @@
                 // 3. Call AI for narrative only (much simpler prompt)
                 const narrative = await callAINarrative(text, mechanicsContext);
 
+                // Validate second person perspective (log warnings only)
+                validateSecondPerson(narrative);
+
                 // 4. Parse AI response for structured commands and clean narrative
                 const { cleanNarrative, stateUpdates, parseErrors } = parseAIStructuredResponse(narrative);
 
@@ -2317,7 +2427,13 @@
                         mechanicsDisplay += `\n[Oracle: ${consequences.twist.description}]`;
                     }
 
-                    fullMessage += `\n\n<mechanics>${mechanicsDisplay}</mechanics>`;
+                    // Ensure mechanics block always exists and is properly wrapped
+                    if (!fullMessage.includes('<mechanics>')) {
+                        fullMessage += `\n\n<mechanics>${mechanicsDisplay}</mechanics>`;
+                    } else {
+                        // If <mechanics> tag somehow already exists, don't duplicate
+                        console.warn('⚠️ Mechanics tag already present in narrative - skipping duplicate');
+                    }
                 }
 
                 await addMessageToChat('model', fullMessage);
@@ -2434,7 +2550,6 @@ QUEST HOOK (use this exact structure):
 - Present to player: "${questHook.epic_hook}"
 - Hidden truth (reveal later as they investigate): "${questHook.political_truth}"
 - Faction involved: ${questHook.faction}
-- Tier: ${questHook.tier}
 Work this quest opportunity naturally into your narrative through an NPC, rumor, or environmental discovery.
 ` : ''}
 ${shouldSuggestDowntime ? `DOWNTIME HINT: The player has been active for ${adventureTurns} turns. If appropriate, suggest a natural pause point (finding shelter, reaching a destination, completing an objective) where they could rest.` : ''}
@@ -2470,6 +2585,15 @@ The Blight is a supernatural corruption that can infect anyone. When narratively
 - Use "blight_gain: X" (usually 1) when the character is exposed to significant corruption
 - Blight exposure should be dramatic and consequential - not casual
 - The Blight whispers, tempts, and transforms those it touches
+
+*** TAG SYSTEM (RARE - Use Sparingly) ***
+Tags represent CRITICAL persistent narrative facts that must survive beyond the context window. They are RARE.
+- Max 5 total tags, only 1 per 10 turns - use ONLY for crucial permanent story elements
+- Examples: Permanent wanted status, unbreakable vow, cursed condition, sworn enemy, major reputation
+- To add a tag for a critical story element: tag_add: {name: "Tag Name", type: "reputation|relationship|story|secret", description: "Brief description"}
+- To remove a resolved tag: tag_remove: "Tag Name"
+- DO NOT add tags for temporary conditions, current objectives, or things already in recent context
+- Tags are for breaking narrative continuity if forgotten - if it can be re-established through dialogue, don't tag it
 
 *** COMPLICATION GUIDANCE ***
 If a "COMPLICATION TO NARRATE" is provided in the mechanical result:
@@ -2759,6 +2883,16 @@ ${TalentSystem.getActiveContext()}`;
 
                 return updates;
             });
+
+            // Handle tag operations outside transaction (they have their own transactions)
+            if (update.tag_add) {
+                await TagSystem.addTag(update.tag_add);
+            }
+
+            if (update.tag_remove) {
+                await TagSystem.removeTag(update.tag_remove);
+                showToast(`Tag removed: ${update.tag_remove}`);
+            }
         }
         
         async function resetGame() {
@@ -2996,7 +3130,8 @@ ${TalentSystem.getActiveContext()}`;
                             ...s.gameState,
                             phase: 'adventure',
                             adventure_turn_count: 0  // Reset adventure turn counter
-                        }
+                        },
+                        talentsUsedThisChapter: []  // Reset talent usage for new chapter
                     }));
 
                     // Add world turn narrative
@@ -3010,20 +3145,13 @@ ${TalentSystem.getActiveContext()}`;
                     // For training, asset, and reflect - call AI for narrative
                     const prompt = `[DOWNTIME: ${actionType.toUpperCase()}] The player is spending downtime to ${config.label.toLowerCase()}. Write 2-3 paragraphs describing what happens. Be specific about what they learn, find, or realize. If this is "reflect", suggest a potential Tag they might gain based on recent events.`;
                     const narrative = await callAINarrative(prompt, null);
+
+                    // Validate second person perspective (log warnings only)
+                    validateSecondPerson(narrative);
+
                     await addMessageToChat('model', narrative);
 
-                    // For reflect action, potentially gain a tag (based on turn count)
-                    if (actionType === 'reflect' && (state.gameState?.turn_count || 0) >= 5) {
-                        // Simple tag generation based on calling
-                        const tagOptions = [
-                            { name: 'Battle-Scarred', type: 'story', description: 'You bear the marks of conflict' },
-                            { name: 'Marked by the Ash-Wardens', type: 'reputation', description: 'The enforcers know your face' },
-                            { name: 'Debt Owed', type: 'relationship', description: 'Someone helped you; they expect repayment' },
-                            { name: 'Whispers Follow', type: 'reputation', description: 'People talk about your deeds' }
-                        ];
-                        const randomTag = tagOptions[Math.floor(Math.random() * tagOptions.length)];
-                        await TagSystem.addTag(randomTag);
-                    }
+                    // Reflect action complete (tags now added via AI-driven tag_add responses)
                 }
 
             } catch(e) {
