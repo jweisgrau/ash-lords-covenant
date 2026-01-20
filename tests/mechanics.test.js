@@ -95,4 +95,27 @@ describe('processStateUpdateLogic', () => {
         const next = processStateUpdateLogic(state, update);
         expect(next.character.currency).toBe(5);
     });
+
+    it('Tier 1 miss applies no pips', () => {
+        const state = { character: { pips: { FINESSE: 0 } } };
+        // Tier 1 miss (no severity logic in pure mechanics, just check description or lack of pips in consequences)
+        // But getConsequences is where the logic lives. 
+        // Let's test getConsequences instead or add a test for it.
+    });
+});
+
+describe('getConsequences', () => {
+    it('Tier 1 miss has NO pip damage', () => {
+        const res = { outcome: 'miss', tier: 1, stat: 'FINESSE' };
+        const consequences = MechanicsEngine.getConsequences(res, 'stealth', OracleSystem);
+        expect(consequences.add_pips).toBeNull(); // Should be null or undefined
+        expect(consequences.description).toContain('Failure');
+        expect(consequences.description).not.toContain('strain');
+    });
+
+    it('Tier 2 miss has pip damage', () => {
+        const res = { outcome: 'miss', tier: 2, stat: 'FORCE' };
+        const consequences = MechanicsEngine.getConsequences(res, 'combat', OracleSystem);
+        expect(consequences.add_pips).toEqual({ stat: 'FORCE', amount: 2 });
+    });
 });

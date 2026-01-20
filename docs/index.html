@@ -85,7 +85,7 @@
         class="flex fixed top-0 left-0 w-screen h-screen bg-black/80 z-[199] justify-center items-center"
         style="flex-direction: column;" role="status" aria-live="polite">
         <div class="spinner mb-4" aria-hidden="true"></div>
-        <span id="loading-text" class="ml-4 text-lg text-gray-300">Booting v2.9.1 (Debug Fix)...</span>
+        <span id="loading-text" class="ml-4 text-lg text-gray-300">Booting v2.9.2 (Mechanics Fix)...</span>
         <div id="boot-log"></div>
         <button id="force-start-btn" onclick="window.forceUI()" aria-label="Force start the user interface">⚠️ FORCE
             UI</button>
@@ -112,7 +112,7 @@
             class="mb-4 p-4 bg-gray-800 rounded-lg border border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div>
                 <h1 class="text-2xl font-bold text-white">Ash-Lord's Covenant</h1>
-                <p class="text-sm text-gray-400">Digital RPG Prototype (Build v2.9.1 - Debug Fix)</p>
+                <p class="text-sm text-gray-400">Digital RPG Prototype (Build v2.9.2 - Mechanics Fix)</p>
             </div>
             <div class="flex items-center space-x-2">
                 <button onclick="window.exportSave()"
@@ -393,11 +393,15 @@
                     <button onclick="document.getElementById('bug-report-modal').style.display='none'"
                         class="px-4 py-2 text-gray-400 hover:text-white transition">Cancel</button>
                     <button onclick="window.copyBugReport()"
-                        class="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 transition">Copy to
-                        Clipboard</button>
+                        class="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 transition">Copy
+                        (One-Off)</button>
+                    <button onclick="window.addToSessionLog()"
+                        class="px-4 py-2 bg-amber-700 text-white rounded hover:bg-amber-600 transition">Add to
+                        Log</button>
+                    <!-- Download JSON hidden by default unless manually needed -->
                     <button onclick="window.downloadBugReport()"
-                        class="px-4 py-2 bg-emerald-700 text-white rounded hover:bg-emerald-600 transition">Download
-                        .json</button>
+                        class="px-4 py-2 bg-emerald-900/50 text-emerald-200/50 rounded hover:bg-emerald-800 transition text-xs">Isolate
+                        JSON</button>
                 </div>
             </div>
         </div>
@@ -2776,7 +2780,13 @@ CRITICAL: Do not include "currency_gain" for general actions (hiding, moving, fi
 
 You can also add interesting narrative items with: equipment_add: [{name: "Item Name", type: "loot", tags: ["tag1"], desc: "Description"}]
 
-*** BLIGHT GUIDANCE ***
+            *** CURRENCY UPDATES (SPENDING / LOSING) ***
+            If the player SPENDS, GIVES, LOSES, or DROPS coin/gold/money during the narrative (e.g. buying ale, bribing a guard, getting robbed):
+            - You MUST include: "currency_gain: -X" (where X is the amount spent/lost).
+            - Example: "You toss the beggar a coin." -> Output must contain: currency_gain: -1
+            - Example: "You buy a room for the night (3 coin)." -> Output must contain: currency_gain: -3
+
+            *** BLIGHT GUIDANCE ***
 The Blight is a supernatural corruption that can infect anyone. When narratively appropriate:
 - Exposure to Blighted creatures, cursed artifacts, or corrupted places can cause infection
 - Use "blight_gain: X" (usually 1) when the character is exposed to significant corruption

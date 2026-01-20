@@ -130,15 +130,17 @@ export const MechanicsEngine = {
         } else { // miss
             if (rollResult.tier === 2) {
                 consequences.xp_gain = 1;
+                const severity = 2; // Tier 2 miss is always serious
+                consequences.add_pips = { stat: rollResult.stat, amount: severity };
+
+                const flavor = oracleSystem.getInjuryFlavor(rollResult.stat, severity);
+                consequences.description = `Failure with serious injury: ${flavor}`;
+            } else {
+                // Tier 1 Miss: "Failed action without additional consequence"
+                // No XP gain mentioned by user for Tier 1 fail (usually rules imply XP on fail, but user said "without additional consequence")
+                // Assuming standard "Fail" means no progress, no damage.
+                consequences.description = `Failure. The attempt yields no results.`;
             }
-
-            const severity = (rollResult.tier === 2 || actionType === 'combat') ? 2 : 1;
-            consequences.add_pips = { stat: rollResult.stat, amount: severity };
-
-            const flavor = oracleSystem.getInjuryFlavor(rollResult.stat, severity);
-            consequences.description = severity >= 2
-                ? `Failure with serious injury: ${flavor}`
-                : `Failure with strain: ${flavor}`;
 
             if (actionType === 'steal') {
                 consequences.description += ` (No loot obtained)`;
