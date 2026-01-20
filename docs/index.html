@@ -85,7 +85,7 @@
         class="flex fixed top-0 left-0 w-screen h-screen bg-black/80 z-[199] justify-center items-center"
         style="flex-direction: column;" role="status" aria-live="polite">
         <div class="spinner mb-4" aria-hidden="true"></div>
-        <span id="loading-text" class="ml-4 text-lg text-gray-300">Booting v2.9 (Session Logger)...</span>
+        <span id="loading-text" class="ml-4 text-lg text-gray-300">Booting v2.9.1 (Debug Fix)...</span>
         <div id="boot-log"></div>
         <button id="force-start-btn" onclick="window.forceUI()" aria-label="Force start the user interface">⚠️ FORCE
             UI</button>
@@ -112,7 +112,7 @@
             class="mb-4 p-4 bg-gray-800 rounded-lg border border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div>
                 <h1 class="text-2xl font-bold text-white">Ash-Lord's Covenant</h1>
-                <p class="text-sm text-gray-400">Digital RPG Prototype (Build v2.9 - Session Logger)</p>
+                <p class="text-sm text-gray-400">Digital RPG Prototype (Build v2.9.1 - Debug Fix)</p>
             </div>
             <div class="flex items-center space-x-2">
                 <button onclick="window.exportSave()"
@@ -1179,20 +1179,20 @@
             // Delegated to Pure Logic with Logging
             parseIntent(input) {
                 const result = PureMechanics.parseIntent(input);
-                DebugSystem.logEvent('ParseIntent', { input, result });
+                if (window.DebugSystem) window.DebugSystem.logEvent('ParseIntent', { input, result });
                 return result;
             },
 
             rollDice(stat, tier, character) {
                 const bonus = InventorySystem.getToolBonus(stat);
                 const result = PureMechanics.rollDice(stat, tier, character, bonus);
-                DebugSystem.logEvent('RollDice', { stat, tier, bonus, total: result.total, outcome: result.outcome });
+                if (window.DebugSystem) window.DebugSystem.logEvent('RollDice', { stat, tier, bonus, total: result.total, outcome: result.outcome });
                 return result;
             },
 
             getConsequences(res, type) {
                 const result = PureMechanics.getConsequences(res, type, OracleSystem);
-                DebugSystem.logEvent('Consequences', { type, result });
+                if (window.DebugSystem) window.DebugSystem.logEvent('Consequences', { type, result });
                 return result;
             },
 
