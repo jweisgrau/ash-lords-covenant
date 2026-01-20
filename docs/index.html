@@ -85,7 +85,7 @@
         class="flex fixed top-0 left-0 w-screen h-screen bg-black/80 z-[199] justify-center items-center"
         style="flex-direction: column;" role="status" aria-live="polite">
         <div class="spinner mb-4" aria-hidden="true"></div>
-        <span id="loading-text" class="ml-4 text-lg text-gray-300">Booting v2.8 (Playtest Tools)...</span>
+        <span id="loading-text" class="ml-4 text-lg text-gray-300">Booting v2.9 (Session Logger)...</span>
         <div id="boot-log"></div>
         <button id="force-start-btn" onclick="window.forceUI()" aria-label="Force start the user interface">⚠️ FORCE
             UI</button>
@@ -112,7 +112,7 @@
             class="mb-4 p-4 bg-gray-800 rounded-lg border border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div>
                 <h1 class="text-2xl font-bold text-white">Ash-Lord's Covenant</h1>
-                <p class="text-sm text-gray-400">Digital RPG Prototype (Build v2.8 - Playtest Tools)</p>
+                <p class="text-sm text-gray-400">Digital RPG Prototype (Build v2.9 - Session Logger)</p>
             </div>
             <div class="flex items-center space-x-2">
                 <button onclick="window.exportSave()"
@@ -3636,16 +3636,28 @@ ${TalentSystem.getActiveContext()}`;
             },
             copyBugReport: () => {
                 const desc = document.getElementById('bug-description').value;
-                const context = DebugSystem.captureContext(window.gameState); // Access gameState from window scope
+                const context = DebugSystem.captureContext(window.gameState);
                 const text = DebugSystem.formatReport(desc, context);
                 navigator.clipboard.writeText(text).then(() => alert("Report copied to clipboard!"));
                 document.getElementById('bug-report-modal').style.display = 'none';
             },
-            downloadBugReport: () => {
+            addToSessionLog: () => {
                 const desc = document.getElementById('bug-description').value;
                 const context = DebugSystem.captureContext(window.gameState);
-                DebugSystem.downloadReport(desc, context);
+                const count = DebugSystem.addReportToSession(desc, context);
+
+                // Update UI
+                const countBadge = document.getElementById('bug-count');
+                countBadge.innerText = count;
+                countBadge.classList.remove('hidden');
+                document.getElementById('download-session-btn').classList.remove('hidden');
+
+                // Close modal
                 document.getElementById('bug-report-modal').style.display = 'none';
+                document.getElementById('bug-description').value = ''; // Reset
+            },
+            downloadSessionLog: () => {
+                DebugSystem.downloadSessionLog();
             }
         });
 

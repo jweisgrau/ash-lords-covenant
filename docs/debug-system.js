@@ -67,7 +67,53 @@ ${context.gameState.recentChat.slice(-5).map(m => `- **${m.role}**: ${m.content.
 `;
     },
 
-    // Create a downloadable JSON file
+    // Session storage for batch logging
+    sessionReports: [],
+
+    // Add a report to the current session
+    addReportToSession(userDescription, context) {
+        const report = {
+            id: crypto.randomUUID(),
+            timestamp: new Date().toISOString(),
+            description: userDescription,
+            context: context
+        };
+        this.sessionReports.push(report);
+        return this.sessionReports.length;
+    },
+
+    // Download the full session log
+    downloadSessionLog() {
+        if (this.sessionReports.length === 0) {
+            alert("No bugs logged in this session yet!");
+            return;
+        }
+
+        const sessionData = {
+            timestamp: new Date().toISOString(),
+            userAgent: navigator.userAgent,
+            totalReports: this.sessionReports.length,
+            reports: this.sessionReports
+        };
+
+        const blob = new Blob([JSON.stringify(sessionData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ashlords-session-log-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    },
+
+    // Clear current session
+    clearSession() {
+        this.sessionReports = [];
+        return 0;
+    },
+
+    // Create a downloadable JSON file (Single Report - Legacy/Quick)
     downloadReport(userDescription, context) {
         const report = {
             description: userDescription,
