@@ -85,7 +85,7 @@
         class="flex fixed top-0 left-0 w-screen h-screen bg-black/80 z-[199] justify-center items-center"
         style="flex-direction: column;" role="status" aria-live="polite">
         <div class="spinner mb-4" aria-hidden="true"></div>
-        <span id="loading-text" class="ml-4 text-lg text-gray-300">Booting v2.7 (Refactored & Testable)...</span>
+        <span id="loading-text" class="ml-4 text-lg text-gray-300">Booting v2.8 (Playtest Tools)...</span>
         <div id="boot-log"></div>
         <button id="force-start-btn" onclick="window.forceUI()" aria-label="Force start the user interface">⚠️ FORCE
             UI</button>
@@ -112,7 +112,7 @@
             class="mb-4 p-4 bg-gray-800 rounded-lg border border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div>
                 <h1 class="text-2xl font-bold text-white">Ash-Lord's Covenant</h1>
-                <p class="text-sm text-gray-400">Digital RPG Prototype (Build v2.7 - Refactored)</p>
+                <p class="text-sm text-gray-400">Digital RPG Prototype (Build v2.8 - Playtest Tools)</p>
             </div>
             <div class="flex items-center space-x-2">
                 <button onclick="window.exportSave()"
@@ -364,6 +364,44 @@
                 </div>
             </div>
         </div>
+
+        <!-- Bug Report UI -->
+        <div id="bug-report-ui" class="fixed bottom-4 left-4 z-[100]">
+            <button onclick="window.openBugReport()"
+                class="px-3 py-2 bg-red-900/80 text-red-200 text-xs rounded border border-red-700 hover:bg-red-800 backdrop-blur-sm transition flex items-center gap-2">
+                <span>🐞 Report Issue</span>
+            </button>
+        </div>
+
+        <div id="bug-report-modal"
+            class="fixed top-0 left-0 w-full h-full bg-black/80 z-[250] flex justify-center items-center hidden"
+            role="dialog" aria-modal="true">
+            <div class="modal-content bg-gray-800 border border-gray-600 p-6 rounded-lg max-w-lg w-full shadow-2xl">
+                <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <span>🐞 Report Game Issue</span>
+                </h2>
+                <p class="text-sm text-gray-400 mb-4">
+                    Describe what happened vs what you expected. This will capture the current game state and recent
+                    logs.
+                </p>
+
+                <textarea id="bug-description"
+                    class="w-full p-3 bg-gray-900 border border-gray-700 rounded text-gray-200 text-sm mb-4 h-32 focus:outline-none focus:border-emerald-500"
+                    placeholder="E.g. I rolled a success but the AI described a failure..."></textarea>
+
+                <div class="flex gap-2 justify-end">
+                    <button onclick="document.getElementById('bug-report-modal').style.display='none'"
+                        class="px-4 py-2 text-gray-400 hover:text-white transition">Cancel</button>
+                    <button onclick="window.copyBugReport()"
+                        class="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 transition">Copy to
+                        Clipboard</button>
+                    <button onclick="window.downloadBugReport()"
+                        class="px-4 py-2 bg-emerald-700 text-white rounded hover:bg-emerald-600 transition">Download
+                        .json</button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- Load game data first (no module required) -->
@@ -1138,11 +1176,29 @@
         // ===== MECHANICS ENGINE (Client-Side) =====
 
         const MechanicsEngine = {
-            // Delegated to Pure Logic
-            parseIntent(input) { return PureMechanics.parseIntent(input); },
-            rollDice(stat, tier, character) { return PureMechanics.rollDice(stat, tier, character, InventorySystem.getToolBonus(stat)); },
-            getConsequences(res, type) { return PureMechanics.getConsequences(res, type, OracleSystem); },
-            formatRollResult(res) { return PureMechanics.formatRollResult(res); },
+            // Delegated to Pure Logic with Logging
+            parseIntent(input) {
+                const result = PureMechanics.parseIntent(input);
+                DebugSystem.logEvent('ParseIntent', { input, result });
+                return result;
+            },
+
+            rollDice(stat, tier, character) {
+                const bonus = InventorySystem.getToolBonus(stat);
+                const result = PureMechanics.rollDice(stat, tier, character, bonus);
+                DebugSystem.logEvent('RollDice', { stat, tier, bonus, total: result.total, outcome: result.outcome });
+                return result;
+            },
+
+            getConsequences(res, type) {
+                const result = PureMechanics.getConsequences(res, type, OracleSystem);
+                DebugSystem.logEvent('Consequences', { type, result });
+                return result;
+            },
+
+            formatRollResult(res) {
+                return PureMechanics.formatRollResult(res);
+            },
 
             // Parse player intent from text input
             // Priority: Check for ACTION VERBS first (anywhere in text), then fall back to narrative
@@ -3562,7 +3618,7 @@ ${TalentSystem.getActiveContext()}`;
 
         if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
 
-        // Expose globals for UI event handlers (required for module script)
+        // Expose globals for UI event handlers
         Object.assign(window, {
             ui,
             init,
@@ -3573,7 +3629,24 @@ ${TalentSystem.getActiveContext()}`;
             exportSave,
             importSave,
             // Debugging
-            gameState
+            gameState,
+            openBugReport: () => {
+                document.getElementById('bug-report-modal').style.display = 'flex';
+                document.getElementById('bug-description').focus();
+            },
+            copyBugReport: () => {
+                const desc = document.getElementById('bug-description').value;
+                const context = DebugSystem.captureContext(window.gameState); // Access gameState from window scope
+                const text = DebugSystem.formatReport(desc, context);
+                navigator.clipboard.writeText(text).then(() => alert("Report copied to clipboard!"));
+                document.getElementById('bug-report-modal').style.display = 'none';
+            },
+            downloadBugReport: () => {
+                const desc = document.getElementById('bug-description').value;
+                const context = DebugSystem.captureContext(window.gameState);
+                DebugSystem.downloadReport(desc, context);
+                document.getElementById('bug-report-modal').style.display = 'none';
+            }
         });
 
     </script>
