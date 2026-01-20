@@ -1,38 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Digital RPG: Ash-Lord's Covenant</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=IM+Fell+English+SC&family=Lato:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./styles.css?v=0.9.4"> 
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=IM+Fell+English+SC&family=Lato:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css?v=0.9.4">
+
     <style>
-        #character-creation-ui, #main-game-ui { display: none; }
-        
-        #boot-log { 
-            font-family: monospace; font-size: 12px; color: #00ff00; 
-            background: rgba(0,0,0,0.8); padding: 10px; border: 1px solid #333; 
-            margin-top: 20px; max-height: 150px; overflow-y: auto; width: 80%; 
-            text-align: left; display: none;
+        #character-creation-ui,
+        #main-game-ui {
+            display: none;
         }
+
+        #boot-log {
+            font-family: monospace;
+            font-size: 12px;
+            color: #00ff00;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border: 1px solid #333;
+            margin-top: 20px;
+            max-height: 150px;
+            overflow-y: auto;
+            width: 80%;
+            text-align: left;
+            display: none;
+        }
+
         #force-start-btn {
-            margin-top: 15px; padding: 10px 20px; background: #8A3324; color: white; 
-            border: 1px solid #ff5555; border-radius: 4px; cursor: pointer; font-family: sans-serif; display: none;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: #8A3324;
+            color: white;
+            border: 1px solid #ff5555;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: sans-serif;
+            display: none;
         }
     </style>
 
     <script>
-        window.showError = function(title, message) {
+        window.showError = function (title, message) {
             var loader = document.getElementById('loading-overlay');
             if (loader) loader.style.display = 'none';
-            
+
             var modal = document.getElementById('error-modal');
             var mTitle = document.getElementById('error-title');
             var mMsg = document.getElementById('error-message');
-            
+
             if (modal && mTitle && mMsg) {
                 mTitle.textContent = title;
                 mMsg.textContent = message;
@@ -47,7 +69,7 @@
             }
         };
 
-        window.addEventListener('error', function(event) {
+        window.addEventListener('error', function (event) {
             try {
                 window.showError("Runtime Error", event.message + " at " + event.filename + ":" + event.lineno);
             } catch (e) {
@@ -56,20 +78,28 @@
         });
     </script>
 </head>
+
 <body class="antialiased">
 
-    <div id="loading-overlay" class="flex fixed top-0 left-0 w-screen h-screen bg-black/80 z-[199] justify-center items-center" style="flex-direction: column;" role="status" aria-live="polite">
+    <div id="loading-overlay"
+        class="flex fixed top-0 left-0 w-screen h-screen bg-black/80 z-[199] justify-center items-center"
+        style="flex-direction: column;" role="status" aria-live="polite">
         <div class="spinner mb-4" aria-hidden="true"></div>
         <span id="loading-text" class="ml-4 text-lg text-gray-300">Booting v2.6.1 (Playtesting Fixes)...</span>
         <div id="boot-log"></div>
-        <button id="force-start-btn" onclick="window.forceUI()" aria-label="Force start the user interface">⚠️ FORCE UI</button>
+        <button id="force-start-btn" onclick="window.forceUI()" aria-label="Force start the user interface">⚠️ FORCE
+            UI</button>
     </div>
 
-    <div id="error-modal" class="fixed top-0 left-0 w-full h-full bg-black/80 z-[200] flex justify-center items-center hidden" role="dialog" aria-modal="true" aria-labelledby="error-title">
+    <div id="error-modal"
+        class="fixed top-0 left-0 w-full h-full bg-black/80 z-[200] flex justify-center items-center hidden"
+        role="dialog" aria-modal="true" aria-labelledby="error-title">
         <div class="modal-content bg-gray-800 border border-gray-700 p-6 rounded-lg max-w-lg w-full">
             <h2 id="error-title" class="text-xl font-bold text-red-400 mb-4">Error</h2>
-            <p id="error-message" class="text-gray-300 mb-6 whitespace-pre-wrap font-mono text-sm">Something went wrong.</p>
-            <button id="close-modal-btn" onclick="document.getElementById('error-modal').style.display='none'" class="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition">
+            <p id="error-message" class="text-gray-300 mb-6 whitespace-pre-wrap font-mono text-sm">Something went wrong.
+            </p>
+            <button id="close-modal-btn" onclick="document.getElementById('error-modal').style.display='none'"
+                class="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition">
                 OK
             </button>
         </div>
@@ -78,19 +108,23 @@
     <div id="toast-container" class="fixed top-4 right-4 z-[200] flex flex-col gap-2 pointer-events-none"></div>
 
     <div class="container mx-auto max-w-7xl p-4">
-        <header class="mb-4 p-4 bg-gray-800 rounded-lg border border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <header
+            class="mb-4 p-4 bg-gray-800 rounded-lg border border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div>
                 <h1 class="text-2xl font-bold text-white">Ash-Lord's Covenant</h1>
                 <p class="text-sm text-gray-400">Digital RPG Prototype (Build v2.6.1 - Playtesting Fixes)</p>
             </div>
             <div class="flex items-center space-x-2">
-                <button onclick="window.exportSave()" class="px-3 py-2 bg-gray-700 text-xs text-gray-300 rounded-lg hover:bg-emerald-700 hover:text-white transition">
+                <button onclick="window.exportSave()"
+                    class="px-3 py-2 bg-gray-700 text-xs text-gray-300 rounded-lg hover:bg-emerald-700 hover:text-white transition">
                     Export Save
                 </button>
-                <button onclick="window.importSave()" class="px-3 py-2 bg-gray-700 text-xs text-gray-300 rounded-lg hover:bg-emerald-700 hover:text-white transition">
+                <button onclick="window.importSave()"
+                    class="px-3 py-2 bg-gray-700 text-xs text-gray-300 rounded-lg hover:bg-emerald-700 hover:text-white transition">
                     Import Save
                 </button>
-                <button id="reset-game-btn" class="px-3 py-2 bg-gray-700 text-xs text-gray-300 rounded-lg hover:bg-red-700 hover:text-white transition">
+                <button id="reset-game-btn"
+                    class="px-3 py-2 bg-gray-700 text-xs text-gray-300 rounded-lg hover:bg-red-700 hover:text-white transition">
                     Reset Game
                 </button>
             </div>
@@ -99,30 +133,41 @@
         <div id="character-creation-ui">
             <div class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-6 max-w-3xl mx-auto">
                 <h2 class="text-3xl font-bold text-white mb-2">Create Your Character</h2>
-                <p class="text-gray-400 mb-6">Every hero in this cursed world is defined by what they do (their Calling) and what haunts them (their Burden).</p>
-                
+                <p class="text-gray-400 mb-6">Every hero in this cursed world is defined by what they do (their Calling)
+                    and what haunts them (their Burden).</p>
+
                 <div class="mb-4">
-                    <label for="character-name" class="block text-sm font-medium text-gray-300 mb-1">What is your name?</label>
-                    <input type="text" id="character-name" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500" maxlength="50" required aria-required="true">
+                    <label for="character-name" class="block text-sm font-medium text-gray-300 mb-1">What is your
+                        name?</label>
+                    <input type="text" id="character-name"
+                        class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        maxlength="50" required aria-required="true">
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <h3 class="text-xl font-semibold text-emerald-400 mb-3">Choose a Calling</h3>
-                        <div id="calling-options" class="space-y-3"><p class="text-gray-500 italic">Loading data...</p></div>
+                        <div id="calling-options" class="space-y-3">
+                            <p class="text-gray-500 italic">Loading data...</p>
+                        </div>
                     </div>
                     <div>
                         <h3 class="text-xl font-semibold text-indigo-300 mb-3">Choose a Burden</h3>
-                        <div id="burden-options" class="space-y-3"><p class="text-gray-500 italic">Loading data...</p></div>
-                        
+                        <div id="burden-options" class="space-y-3">
+                            <p class="text-gray-500 italic">Loading data...</p>
+                        </div>
+
                         <div id="burden-detail-input-wrapper" class="mt-3" style="display: none;">
-                            <label for="burden-detail-input" id="burden-detail-label" class="block text-sm font-medium text-gray-300 mb-1">Define your Burden:</label>
-                            <input type="text" id="burden-detail-input" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <label for="burden-detail-input" id="burden-detail-label"
+                                class="block text-sm font-medium text-gray-300 mb-1">Define your Burden:</label>
+                            <input type="text" id="burden-detail-input"
+                                class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500">
                         </div>
                     </div>
                 </div>
 
-                <button id="create-character-btn" class="w-full mt-6 px-4 py-3 bg-emerald-700 text-white rounded-lg font-bold hover:bg-emerald-800 shadow-md">
+                <button id="create-character-btn"
+                    class="w-full mt-6 px-4 py-3 bg-emerald-700 text-white rounded-lg font-bold hover:bg-emerald-800 shadow-md">
                     Begin Your Story
                 </button>
             </div>
@@ -132,10 +177,13 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <div id="sidebar-container" class="lg:col-span-1 space-y-4 custom-scrollbar">
                     <div id="character-sheet-wrapper" class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg">
-                        <div id="character-sheet-header" class="flex justify-between items-center p-4 border-b border-gray-700 cursor-pointer">
+                        <div id="character-sheet-header"
+                            class="flex justify-between items-center p-4 border-b border-gray-700 cursor-pointer">
                             <h2 class="text-xl font-semibold text-white">Character Sheet</h2>
-                            <svg id="accordion-icon" class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            <svg id="accordion-icon" class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </div>
                         <div id="character-sheet-content" class="p-4 space-y-4">
@@ -144,42 +192,57 @@
                         </div>
                     </div>
 
-                    <div id="unified-clocks-wrapper" class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg mt-4">
-                        <div id="unified-clocks-header" class="flex justify-between items-center p-4 border-b border-gray-700 cursor-pointer hover:bg-gray-750 transition">
+                    <div id="unified-clocks-wrapper"
+                        class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg mt-4">
+                        <div id="unified-clocks-header"
+                            class="flex justify-between items-center p-4 border-b border-gray-700 cursor-pointer hover:bg-gray-750 transition">
                             <h2 class="text-xl font-semibold text-white">World State</h2>
-                            <svg id="unified-accordion-icon" class="w-6 h-6 text-gray-400 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            <svg id="unified-accordion-icon"
+                                class="w-6 h-6 text-gray-400 transform transition-transform" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </div>
 
                         <div id="unified-clocks-content" class="p-4 space-y-4">
-                            <div class="grid grid-cols-2 gap-2 border-b-spacers pb-4 mb-4"> 
+                            <div class="grid grid-cols-2 gap-2 border-b-spacers pb-4 mb-4">
                                 <div class="flex flex-col items-center">
-                                    <h4 class="text-xs uppercase text-emerald-400 font-bold tracking-wider mb-1">DESTINY</h4>
+                                    <h4 class="text-xs uppercase text-emerald-400 font-bold tracking-wider mb-1">DESTINY
+                                    </h4>
                                     <div class="clock transform scale-75">
                                         <div class="clock-face" id="destiny-clock-face"></div>
                                     </div>
-                                    <p id="destiny-narrative" class="text-xs text-gray-400 text-center mt-1 font-mono leading-tight px-1">Your destiny awaits...</p>
+                                    <p id="destiny-narrative"
+                                        class="text-xs text-gray-400 text-center mt-1 font-mono leading-tight px-1">Your
+                                        destiny awaits...</p>
                                 </div>
                                 <div class="flex flex-col items-center pl-2">
-                                    <h4 class="text-xs uppercase text-red-400 font-bold tracking-wider mb-1">THE THREAT</h4>
+                                    <h4 class="text-xs uppercase text-red-400 font-bold tracking-wider mb-1">THE THREAT
+                                    </h4>
                                     <div class="clock transform scale-75">
                                         <div class="clock-face" id="endgame-front-clock-face"></div>
                                     </div>
-                                    <span id="endgame-front-name" class="text-xs text-gray-400 text-center mt-1 font-mono leading-tight">Unknown Threat</span>
+                                    <span id="endgame-front-name"
+                                        class="text-xs text-gray-400 text-center mt-1 font-mono leading-tight">Unknown
+                                        Threat</span>
                                 </div>
                             </div>
 
                             <div class="pt-2">
-                                <h4 class="text-xs uppercase text-gray-500 mb-2 text-center font-bold tracking-widest">FACTION ACTIVITY</h4>
+                                <h4 class="text-xs uppercase text-gray-500 mb-2 text-center font-bold tracking-widest">
+                                    FACTION ACTIVITY</h4>
                                 <div id="world-clocks-container" class="grid grid-cols-2 gap-2">
-                                    <p id="world-clocks-loading" class="text-gray-400 italic col-span-2 text-center text-xs">Loading world state...</p>
+                                    <p id="world-clocks-loading"
+                                        class="text-gray-400 italic col-span-2 text-center text-xs">Loading world
+                                        state...</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div id="quest-progress-wrapper" class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4" style="display: none;">
+                    <div id="quest-progress-wrapper" class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4"
+                        style="display: none;">
                         <h2 class="text-xl font-semibold text-emerald-400 mb-2">Active Quest</h2>
                         <div id="quest-progress-content">
                             <p id="quest-title" class="font-bold text-white text-lg mb-1"></p>
@@ -190,7 +253,8 @@
                                     <span id="quest-progress-text">0/0</span>
                                 </div>
                                 <div class="w-full bg-gray-700 rounded-full h-2">
-                                    <div id="quest-progress-bar" class="bg-emerald-600 h-2 rounded-full transition-all" style="width: 0%"></div>
+                                    <div id="quest-progress-bar" class="bg-emerald-600 h-2 rounded-full transition-all"
+                                        style="width: 0%"></div>
                                 </div>
                             </div>
                             <p id="quest-xp-earned" class="text-xs text-gray-400 mt-2"></p>
@@ -199,73 +263,99 @@
                 </div>
 
                 <div class="lg:col-span-2 flex flex-col h-[80vh]">
-                    <div class="flex-grow bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4 overflow-y-auto" id="narrative-log"></div>
+                    <div class="flex-grow bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4 overflow-y-auto"
+                        id="narrative-log"></div>
 
-                    <div id="interaction-panel" class="mt-4 bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4">
+                    <div id="interaction-panel"
+                        class="mt-4 bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4">
                         <div id="chapter-phase-ui">
                             <textarea id="player-input"
-                                      class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                                      rows="3"
-                                      placeholder="Describe your character's action..."
-                                      aria-label="Enter your character's action"></textarea>
-                            
-                            <button id="submit-action-btn" class="w-full mt-3 px-4 py-3 bg-emerald-700 text-white rounded-lg font-bold hover:bg-emerald-800 shadow-md" aria-label="Submit your action to the Game Master">
+                                class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                rows="3" placeholder="Describe your character's action..."
+                                aria-label="Enter your character's action"></textarea>
+
+                            <button id="submit-action-btn"
+                                class="w-full mt-3 px-4 py-3 bg-emerald-700 text-white rounded-lg font-bold hover:bg-emerald-800 shadow-md"
+                                aria-label="Submit your action to the Game Master">
                                 Submit Action
                             </button>
-                            
-                            <p class="text-xs text-gray-500 text-center mt-2">Press <kbd class="px-1 bg-gray-700 rounded">Enter</kbd> to submit (Shift+Enter for new line)</p>
+
+                            <p class="text-xs text-gray-500 text-center mt-2">Press <kbd
+                                    class="px-1 bg-gray-700 rounded">Enter</kbd> to submit (Shift+Enter for new line)
+                            </p>
                         </div>
-                        
+
                         <div id="interlude-phase-ui" class="hidden">
                             <div class="mb-4 p-3 bg-gray-900 rounded-lg border border-emerald-700">
                                 <h3 class="text-lg font-bold text-emerald-400 mb-2">⏳ Downtime Phase</h3>
-                                <p class="text-sm text-gray-400">The world moves on while you rest. Faction clocks advance. Choose how to spend your time wisely.</p>
+                                <p class="text-sm text-gray-400">The world moves on while you rest. Faction clocks
+                                    advance. Choose how to spend your time wisely.</p>
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <button id="interlude-train-btn" class="interlude-button flex flex-col items-start text-left p-3">
+                                <button id="interlude-train-btn"
+                                    class="interlude-button flex flex-col items-start text-left p-3">
                                     <span class="font-bold text-white">Seek Training (1 XP)</span>
-                                    <span class="text-xs text-gray-400 mt-1">Study under a mentor. Gain insight or skill.</span>
+                                    <span class="text-xs text-gray-400 mt-1">Study under a mentor. Gain insight or
+                                        skill.</span>
                                 </button>
-                                <button id="interlude-asset-btn" class="interlude-button flex flex-col items-start text-left p-3">
+                                <button id="interlude-asset-btn"
+                                    class="interlude-button flex flex-col items-start text-left p-3">
                                     <span class="font-bold text-white">Acquire an Asset (1 XP)</span>
-                                    <span class="text-xs text-gray-400 mt-1">Find equipment, allies, or information.</span>
+                                    <span class="text-xs text-gray-400 mt-1">Find equipment, allies, or
+                                        information.</span>
                                 </button>
-                                <button id="interlude-reflect-btn" class="interlude-button flex flex-col items-start text-left p-3">
+                                <button id="interlude-reflect-btn"
+                                    class="interlude-button flex flex-col items-start text-left p-3">
                                     <span class="font-bold text-white">Reflect & Integrate (1 XP)</span>
-                                    <span class="text-xs text-gray-400 mt-1">Process experiences. Potentially gain a Tag.</span>
+                                    <span class="text-xs text-gray-400 mt-1">Process experiences. Potentially gain a
+                                        Tag.</span>
                                 </button>
-                                <button id="interlude-heal-btn" class="interlude-button flex flex-col items-start text-left p-3">
+                                <button id="interlude-heal-btn"
+                                    class="interlude-button flex flex-col items-start text-left p-3">
                                     <span class="font-bold text-white">Rest & Recover (3 Coin)</span>
-                                    <span class="text-xs text-gray-400 mt-1">Heal one Pip of damage. Requires coin.</span>
+                                    <span class="text-xs text-gray-400 mt-1">Heal one Pip of damage. Requires
+                                        coin.</span>
                                 </button>
-                                <button id="interlude-shop-btn" class="interlude-button flex flex-col items-start text-left p-3 border-amber-700">
+                                <button id="interlude-shop-btn"
+                                    class="interlude-button flex flex-col items-start text-left p-3 border-amber-700">
                                     <span class="font-bold text-amber-400">Visit Equipment Shop (5 XP)</span>
                                     <span class="text-xs text-gray-400 mt-1">Purchase specialized tools or armor.</span>
                                 </button>
-                                <button id="interlude-repair-btn" class="interlude-button flex flex-col items-start text-left p-3 border-blue-700">
+                                <button id="interlude-repair-btn"
+                                    class="interlude-button flex flex-col items-start text-left p-3 border-blue-700">
                                     <span class="font-bold text-blue-400">Repair Armor (Free)</span>
-                                    <span class="text-xs text-gray-400 mt-1">Restore all armor to full protection.</span>
+                                    <span class="text-xs text-gray-400 mt-1">Restore all armor to full
+                                        protection.</span>
                                 </button>
-                                <button id="interlude-cleanse-btn" class="interlude-button flex flex-col items-start text-left p-3 border-purple-700">
+                                <button id="interlude-cleanse-btn"
+                                    class="interlude-button flex flex-col items-start text-left p-3 border-purple-700">
                                     <span class="font-bold text-purple-400">Cleanse Blight (5 Coin)</span>
-                                    <span class="text-xs text-gray-400 mt-1">Seek a hedge witch to remove 1 Blight.</span>
+                                    <span class="text-xs text-gray-400 mt-1">Seek a hedge witch to remove 1
+                                        Blight.</span>
                                 </button>
                             </div>
-                            <button id="interlude-end-btn" class="w-full mt-4 px-4 py-3 bg-red-900 text-white rounded-lg font-bold hover:bg-red-800 transition border border-red-700">
+                            <button id="interlude-end-btn"
+                                class="w-full mt-4 px-4 py-3 bg-red-900 text-white rounded-lg font-bold hover:bg-red-800 transition border border-red-700">
                                 Return to Adventure →
                             </button>
-                            <p class="text-xs text-gray-500 text-center mt-2">Warning: Ending downtime advances faction clocks!</p>
+                            <p class="text-xs text-gray-500 text-center mt-2">Warning: Ending downtime advances faction
+                                clocks!</p>
                         </div>
 
                         <!-- XP Shop Modal -->
-                        <div id="xp-shop-modal" class="fixed top-0 left-0 w-full h-full bg-black/80 z-[200] flex justify-center items-center hidden" role="dialog" aria-modal="true" aria-labelledby="shop-title">
-                            <div class="modal-content bg-gray-800 border border-amber-700 p-6 rounded-lg max-w-lg w-full">
+                        <div id="xp-shop-modal"
+                            class="fixed top-0 left-0 w-full h-full bg-black/80 z-[200] flex justify-center items-center hidden"
+                            role="dialog" aria-modal="true" aria-labelledby="shop-title">
+                            <div
+                                class="modal-content bg-gray-800 border border-amber-700 p-6 rounded-lg max-w-lg w-full">
                                 <h2 id="shop-title" class="text-xl font-bold text-amber-400 mb-4">⚔️ Equipment Shop</h2>
-                                <p class="text-gray-400 text-sm mb-4">Spend 5 XP to purchase specialized gear. Choose wisely - only 3 items available per visit.</p>
+                                <p class="text-gray-400 text-sm mb-4">Spend 5 XP to purchase specialized gear. Choose
+                                    wisely - only 3 items available per visit.</p>
                                 <div id="xp-shop-items" class="space-y-3 mb-4">
                                     <!-- Items will be populated by JavaScript -->
                                 </div>
-                                <button id="xp-shop-close-btn" class="w-full px-4 py-2 bg-gray-700 text-white rounded-lg font-semibold hover:bg-gray-600 transition">
+                                <button id="xp-shop-close-btn"
+                                    class="w-full px-4 py-2 bg-gray-700 text-white rounded-lg font-semibold hover:bg-gray-600 transition">
                                     Close Shop
                                 </button>
                             </div>
@@ -279,7 +369,13 @@
     <!-- Load game data first (no module required) -->
     <script src="./game_data.js"></script>
 
-    <script>
+    <script type="module">
+        import { MechanicsEngine as PureMechanics, OracleSystem as PureOracle, TagSystem as PureTags, InventorySystem as PureInventory, processStateUpdateLogic } from './game-logic.js';
+
+        // Expose for debugging and delegation
+        window.GameLogic = { PureMechanics, PureOracle, PureTags, PureInventory };
+        window.processStateUpdateLogic = processStateUpdateLogic;
+
         // ===== STATE MANAGER (Inlined for local file:// compatibility) =====
 
         const GAME_STATE_KEY = "ashlords_game_v1";
@@ -514,7 +610,7 @@
             }
 
             getStateSlice(key) {
-                switch(key) {
+                switch (key) {
                     case 'character': return this.state.character;
                     case 'chatHistory': return this.state.chatHistory;
                     case 'worldClocks': return this.state.worldClocks;
@@ -1042,9 +1138,15 @@
         // ===== MECHANICS ENGINE (Client-Side) =====
 
         const MechanicsEngine = {
+            // Delegated to Pure Logic
+            parseIntent(input) { return PureMechanics.parseIntent(input); },
+            rollDice(stat, tier, character) { return PureMechanics.rollDice(stat, tier, character, InventorySystem.getToolBonus(stat)); },
+            getConsequences(res, type) { return PureMechanics.getConsequences(res, type, OracleSystem); },
+            formatRollResult(res) { return PureMechanics.formatRollResult(res); },
+
             // Parse player intent from text input
             // Priority: Check for ACTION VERBS first (anywhere in text), then fall back to narrative
-            parseIntent(input) {
+            _legacy_parseIntent(input) {
                 const lower = input.toLowerCase().trim();
 
                 // === PRIORITY 1: Check for action verbs ANYWHERE in the input ===
@@ -1102,7 +1204,7 @@
             },
 
             // Roll dice and calculate outcome
-            rollDice(stat, tier, character) {
+            _legacy_rollDice(stat, tier, character) {
                 const randomValue = Math.random();
                 const d10 = Math.floor(randomValue * 10) + 1;
 
@@ -1219,7 +1321,7 @@
 
             // Enhanced consequence calculation with Escalation Oracle + Oracle Tables
             // Tier 1: success/cost/miss | Tier 2: success/minor_cost/major_cost/miss
-            getConsequences(rollResult, actionType) {
+            _legacy_getConsequences(rollResult, actionType) {
                 const consequences = {
                     xp_gain: 0,
                     currency_gain: 0,
@@ -1293,14 +1395,14 @@
             },
 
             // Format roll result for display and AI context
-            formatRollResult(rollResult) {
+            _legacy_formatRollResult(rollResult) {
                 if (!rollResult) return '';
                 const { d10, stat, statMod, pips, toolBonus, total, outcome, tier } = rollResult;
                 const tierLabel = tier === 2 ? 'Perilous' : 'Challenging';
                 const pipText = pips > 0 ? ` - ${pips}(Pips)` : '';
                 const toolText = toolBonus > 0 ? ` + ${toolBonus}(Tool)` : '';
                 const outcomeLabel = outcome === 'minor_cost' ? 'MINOR COST' :
-                                    outcome === 'major_cost' ? 'MAJOR COST' : outcome.toUpperCase();
+                    outcome === 'major_cost' ? 'MAJOR COST' : outcome.toUpperCase();
                 return `Action: ${stat} (Tier ${tier} - ${tierLabel}). Roll: d10(${d10}) + ${statMod}(${stat})${toolText}${pipText} = ${total}. Result: ${outcomeLabel}`;
             }
         };
@@ -1308,8 +1410,13 @@
         // ===== ORACLE SYSTEM (Deterministic Complication Generation) =====
 
         const OracleSystem = {
+            // Delegated to Pure Logic
+            rollMinorTwist() { return PureOracle.rollMinorTwist(CONTENT_PACK_ASHLORDS); },
+            rollMajorTwist() { return PureOracle.rollMajorTwist(CONTENT_PACK_ASHLORDS); },
+            getInjuryFlavor(stat, severity) { return PureOracle.getInjuryFlavor(stat, severity); },
+
             // Roll from Tier 1 Minor Twist tables (returns category and description)
-            rollMinorTwist() {
+            _legacy_rollMinorTwist() {
                 const twists = CONTENT_PACK_ASHLORDS.TIER_1_TWISTS;
                 const categories = Object.keys(twists);
                 const category = categories[Math.floor(Math.random() * categories.length)];
@@ -1323,7 +1430,7 @@
             },
 
             // Roll from Tier 2 Major Twist table (witty grimdark)
-            rollMajorTwist() {
+            _legacy_rollMajorTwist() {
                 const table = CONTENT_PACK_ASHLORDS.TIER_2_TWISTS_WITTY;
                 const entry = table[Math.floor(Math.random() * table.length)];
                 return {
@@ -1357,7 +1464,7 @@
             },
 
             // Get injury flavor text based on stat and severity
-            getInjuryFlavor(stat, severity) {
+            _legacy_getInjuryFlavor(stat, severity) {
                 const flavor = INJURY_FLAVOR_TEXT[stat];
                 if (!flavor) return severity >= 2 ? "Serious wound" : "Minor strain";
                 return severity >= 2 ? flavor.injury : flavor.strain;
@@ -1542,12 +1649,12 @@
         // ===== GAME CODE =====
         // Note: CONTENT_PACK_ASHLORDS is loaded from game_data.js script tag
 
-        const ui = {}; 
+        const ui = {};
 
         function logBoot(msg) {
             console.log(msg);
             const el = document.getElementById('boot-log');
-            if(el) {
+            if (el) {
                 el.style.display = 'block';
                 el.innerHTML += `<div>> ${msg}</div>`;
             }
@@ -1558,7 +1665,7 @@
 
             setTimeout(() => {
                 const btn = document.getElementById('force-start-btn');
-                if(btn) btn.style.display = 'block';
+                if (btn) btn.style.display = 'block';
             }, 5000);
 
             try {
@@ -1611,22 +1718,22 @@
             ui.worldClocksContainer = safeBind('world-clocks-container');
             ui.chapterUI = safeBind('chapter-phase-ui');
             ui.interludeUI = safeBind('interlude-phase-ui');
-            
+
             const btnCreate = safeBind('create-character-btn');
             if (btnCreate) btnCreate.addEventListener('click', createCharacterAndStartGame);
-            
+
             const btnSubmit = safeBind('submit-action-btn');
             if (btnSubmit) btnSubmit.addEventListener('click', handlePlayerAction);
-            
+
             const btnReset = safeBind('reset-game-btn');
             if (btnReset) btnReset.addEventListener('click', resetGame);
-            
+
             const btnTrain = safeBind('interlude-train-btn');
             if (btnTrain) btnTrain.addEventListener('click', () => handleInterludeAction('seek_training'));
-            
+
             const btnAsset = safeBind('interlude-asset-btn');
             if (btnAsset) btnAsset.addEventListener('click', () => handleInterludeAction('acquire_asset'));
-            
+
             const btnReflect = safeBind('interlude-reflect-btn');
             if (btnReflect) btnReflect.addEventListener('click', () => handleInterludeAction('reflect'));
 
@@ -1651,24 +1758,24 @@
             const btnEnd = safeBind('interlude-end-btn');
             if (btnEnd) btnEnd.addEventListener('click', () => handleInterludeAction('end_interlude'));
 
-            if(ui.playerInput) ui.playerInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handlePlayerAction(); } });
-            
+            if (ui.playerInput) ui.playerInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handlePlayerAction(); } });
+
             const btnCloseModal = safeBind('close-modal-btn');
-            if(btnCloseModal && ui.modal) {
-                 btnCloseModal.addEventListener('click', () => {
+            if (btnCloseModal && ui.modal) {
+                btnCloseModal.addEventListener('click', () => {
                     ui.modal.style.display = 'none';
-                 });
+                });
             }
 
             const toggleAccordion = (headerId, contentId, iconId) => {
                 const header = document.getElementById(headerId);
                 const content = document.getElementById(contentId);
                 const icon = document.getElementById(iconId);
-                if(header && content) {
+                if (header && content) {
                     header.onclick = () => {
                         const isHidden = content.style.display === 'none';
                         content.style.display = isHidden ? 'block' : 'none';
-                        if(icon) icon.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(-90deg)';
+                        if (icon) icon.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(-90deg)';
                     };
                 }
             };
@@ -1676,8 +1783,8 @@
             toggleAccordion('unified-clocks-header', 'unified-clocks-content', 'unified-accordion-icon');
 
             window.forceUI = () => {
-                if(ui.loading) ui.loading.style.display = 'none';
-                if(ui.charCreation) ui.charCreation.style.display = 'block';
+                if (ui.loading) ui.loading.style.display = 'none';
+                if (ui.charCreation) ui.charCreation.style.display = 'block';
                 renderOptions();
             };
         }
@@ -1762,29 +1869,29 @@
             const createStatLine = (stats) => {
                 const positive = Object.entries(stats).filter(([, v]) => v > 0);
                 const negative = Object.entries(stats).filter(([, v]) => v < 0);
-                
+
                 const format = ([k, v]) => {
                     const sign = v > 0 ? '+' : '';
                     const colorClass = v > 0 ? 'text-emerald-400' : 'text-gray-500';
                     return `<span class="${colorClass}">${k.toUpperCase()} ${sign}${v}</span>`;
                 };
-                
+
                 const posStr = positive.map(format).join(' / ');
                 const negStr = negative.map(format).join(' / ');
-                
+
                 if (posStr && negStr) return `${posStr} / ${negStr}`;
                 return posStr || negStr;
             };
-                
+
             if (ui.callingOpts) {
                 ui.callingOpts.innerHTML = '';
                 CONTENT_PACK_ASHLORDS.callings.forEach(c => {
-                    const tHtml = (c.talents||[]).map(t=>`<div><b class="text-gray-300">${t.name}</b>: <span class="text-gray-400 text-xs">${t.description}</span></div>`).join('');
+                    const tHtml = (c.talents || []).map(t => `<div><b class="text-gray-300">${t.name}</b>: <span class="text-gray-400 text-xs">${t.description}</span></div>`).join('');
                     const card = document.createElement('div');
                     card.className = 'playbook-card p-4 rounded-lg cursor-pointer border border-gray-700 mb-2';
                     card.dataset.id = c.id;
                     card.innerHTML = `<h4 class="text-white font-bold">${c.name}</h4><p class="text-gray-400 text-sm mb-2">${c.description}</p><div class="text-xs font-mono mb-2">${createStatLine(c.stats)}</div><div class="space-y-1">${tHtml}</div>`;
-                    card.onclick = () => { if(ui.callingOpts) Array.from(ui.callingOpts.children).forEach(x=>x.classList.remove('selected')); card.classList.add('selected'); };
+                    card.onclick = () => { if (ui.callingOpts) Array.from(ui.callingOpts.children).forEach(x => x.classList.remove('selected')); card.classList.add('selected'); };
                     ui.callingOpts.appendChild(card);
                 });
             }
@@ -1792,16 +1899,16 @@
             if (ui.burdenOpts) {
                 ui.burdenOpts.innerHTML = '';
                 CONTENT_PACK_ASHLORDS.burdens.forEach(b => {
-                    const tHtml = (b.talents||[]).map(t=>`<div><b class="text-gray-300">${t.name}</b>: <span class="text-gray-400 text-xs">${t.description}</span></div>`).join('');
+                    const tHtml = (b.talents || []).map(t => `<div><b class="text-gray-300">${t.name}</b>: <span class="text-gray-400 text-xs">${t.description}</span></div>`).join('');
                     const card = document.createElement('div');
                     card.className = 'playbook-card p-4 rounded-lg cursor-pointer border border-gray-700 mb-2';
                     card.dataset.id = b.id;
                     card.dataset.requiresInput = b.requiresInput;
                     card.innerHTML = `<h4 class="text-white font-bold">${b.name}</h4><p class="text-gray-400 text-sm mb-2">${b.description}</p><div class="text-xs font-mono mb-2">${createStatLine(b.stats)}</div><div class="space-y-1">${tHtml}</div>`;
                     card.onclick = () => {
-                        if(ui.burdenOpts) Array.from(ui.burdenOpts.children).forEach(x=>x.classList.remove('selected')); card.classList.add('selected');
-                        if(ui.burdenDetailWrap) ui.burdenDetailWrap.style.display = b.requiresInput ? 'block' : 'none';
-                        if(b.requiresInput && ui.burdenDetailLabel) ui.burdenDetailLabel.textContent = b.inputLabel || "Define details:";
+                        if (ui.burdenOpts) Array.from(ui.burdenOpts.children).forEach(x => x.classList.remove('selected')); card.classList.add('selected');
+                        if (ui.burdenDetailWrap) ui.burdenDetailWrap.style.display = b.requiresInput ? 'block' : 'none';
+                        if (b.requiresInput && ui.burdenDetailLabel) ui.burdenDetailLabel.textContent = b.inputLabel || "Define details:";
                     };
                     ui.burdenOpts.appendChild(card);
                 });
@@ -1811,45 +1918,45 @@
         function displayCharacter(data) {
             const sheet = document.getElementById('character-sheet-data');
             if (!sheet) return;
-            if(ui.characterSheetLoading) ui.characterSheetLoading.style.display = 'none';
-            
-            if(CONTENT_PACK_ASHLORDS && data.playbook) {
+            if (ui.characterSheetLoading) ui.characterSheetLoading.style.display = 'none';
+
+            if (CONTENT_PACK_ASHLORDS && data.playbook) {
                 const callingName = data.playbook?.calling;
                 const callingObj = callingName ? CONTENT_PACK_ASHLORDS.callings.find(c => c.name === callingName) : null;
-                
-                if(callingObj) {
+
+                if (callingObj) {
                     const questData = CONTENT_PACK_ASHLORDS.LEGENDARY_QUESTS ? CONTENT_PACK_ASHLORDS.LEGENDARY_QUESTS[callingObj.id] : null;
                     const destinyText = document.getElementById('destiny-narrative');
-                    if(questData && destinyText) {
-                        destinyText.textContent = questData.title; 
+                    if (questData && destinyText) {
+                        destinyText.textContent = questData.title;
                         destinyText.style.color = "var(--c-alchemical-gold)";
                     }
                 }
             }
 
-            const pipsData = data.pips || {}; 
-            
-            const statsHtml = Object.entries(data.stats || {}).map(([k,v]) => {
+            const pipsData = data.pips || {};
+
+            const statsHtml = Object.entries(data.stats || {}).map(([k, v]) => {
                 const pipCount = pipsData[k] || 0;
                 const pip1Class = pipCount >= 1 ? "filled" : "";
                 const pip2Class = pipCount >= 2 ? "filled" : "";
-                
+
                 return `
                 <div class="stat-block p-2 text-center border border-gray-700 rounded hover:bg-gray-700" onclick="updateDescription('${k}', 'Pips: ${pipCount}/2', 'stat')">
-                    <div class="text-xs text-gray-400 uppercase">${k.substring(0,3)}</div>
-                    <div class="text-xl font-bold ${v>0?'text-emerald-400':'text-gray-300'}">${v>0?'+'+v:v}</div>
+                    <div class="text-xs text-gray-400 uppercase">${k.substring(0, 3)}</div>
+                    <div class="text-xl font-bold ${v > 0 ? 'text-emerald-400' : 'text-gray-300'}">${v > 0 ? '+' + v : v}</div>
                     <div class="pip-container">
                         <div class="pip ${pip1Class}"></div>
                         <div class="pip ${pip2Class}"></div>
                     </div>
                 </div>`;
             }).join('');
-            
+
             const escapeStr = (str) => str.replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, ' ');
 
             // Build talents with activation buttons
             const activeTalent = TalentSystem.getActiveTalent();
-            const talentsHtml = (data.talents||[]).map(t => {
+            const talentsHtml = (data.talents || []).map(t => {
                 const talentConfig = TalentSystem.getTalentConfig(t.id);
                 const isActive = activeTalent === t.id;
                 const isCalling = talentConfig?.type === 'calling';
@@ -1857,9 +1964,9 @@
 
                 // Different styling for calling vs burden talents
                 const borderColor = isActive ? 'border-yellow-500 bg-yellow-900/20' :
-                                   isCalling ? 'border-emerald-700 hover:border-emerald-500' :
-                                   isBurden ? 'border-red-700 hover:border-red-500' :
-                                   'border-gray-700 hover:border-gray-500';
+                    isCalling ? 'border-emerald-700 hover:border-emerald-500' :
+                        isBurden ? 'border-red-700 hover:border-red-500' :
+                            'border-gray-700 hover:border-gray-500';
                 const labelColor = isCalling ? 'text-emerald-400' : isBurden ? 'text-red-400' : 'text-gray-400';
                 const typeLabel = isCalling ? 'CALLING' : isBurden ? 'BURDEN' : '';
 
@@ -1870,8 +1977,8 @@
                 // Button text
                 const btnText = isActive ? 'READY' : isCalling ? 'Ready' : 'Activate';
                 const btnClass = isActive ? 'bg-yellow-600 text-black' :
-                                isCalling ? 'bg-emerald-800 hover:bg-emerald-700 text-emerald-200' :
-                                'bg-red-800 hover:bg-red-700 text-red-200';
+                    isCalling ? 'bg-emerald-800 hover:bg-emerald-700 text-emerald-200' :
+                        'bg-red-800 hover:bg-red-700 text-red-200';
 
                 return `
                     <div class="talent-block p-1.5 border ${borderColor} rounded flex items-center gap-2"
@@ -1890,7 +1997,7 @@
                         </button>
                     </div>`;
             }).join('');
-            
+
             const equipHtml = (data.equipment || []).map(i => {
                 const safeName = (i.name || 'Unknown Item').replace(/'/g, "&apos;");
                 const loreContent = (i.lore || i.desc || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n');
@@ -1899,16 +2006,16 @@
                 let specialBadge = '';
                 if (i.type === 'tool' && i.stat) {
                     // Tool: show "+1 STAT" badge
-                    specialBadge = `<span class="equip-tag text-emerald-400 border border-emerald-600 bg-emerald-900/30">+1 ${i.stat.substring(0,3)}</span>`;
+                    specialBadge = `<span class="equip-tag text-emerald-400 border border-emerald-600 bg-emerald-900/30">+1 ${i.stat.substring(0, 3)}</span>`;
                 } else if (i.type === 'armor' && i.stat) {
                     // Armor: show pip meter with diamond shapes
                     const currentPips = i.pips || 0;
                     const maxPips = i.max_pips || 2;
                     // Color-code by armor type
                     const armorColorClass = i.stat === 'FORCE' ? 'armor-pip-force' :
-                                           i.stat === 'FINESSE' ? 'armor-pip-finesse' :
-                                           i.stat === 'RESOLVE' ? 'armor-pip-resolve' : 'armor-pip-default';
-                    const pipDisplay = Array.from({length: maxPips}, (_, idx) =>
+                        i.stat === 'FINESSE' ? 'armor-pip-finesse' :
+                            i.stat === 'RESOLVE' ? 'armor-pip-resolve' : 'armor-pip-default';
+                    const pipDisplay = Array.from({ length: maxPips }, (_, idx) =>
                         `<span class="armor-pip ${idx < currentPips ? 'filled' : ''} ${armorColorClass}"></span>`
                     ).join('');
                     specialBadge = `<span class="equip-tag border border-gray-600 flex items-center gap-0.5">${pipDisplay}</span>`;
@@ -1918,9 +2025,9 @@
                     specialBadge = safeProperties.map(p => {
                         if (typeof p !== 'string') return '';
                         const type = p.toLowerCase().includes('heavy') ? 'heavy' :
-                                     p.toLowerCase().includes('silver') || p.toLowerCase().includes('gold') || p.toLowerCase().includes('precious') ? 'precious' :
-                                     p.toLowerCase().includes('consumable') ? 'consumable' :
-                                     p.toLowerCase().includes('fragile') || p.toLowerCase().includes('shabby') ? 'fragile' : '';
+                            p.toLowerCase().includes('silver') || p.toLowerCase().includes('gold') || p.toLowerCase().includes('precious') ? 'precious' :
+                                p.toLowerCase().includes('consumable') ? 'consumable' :
+                                    p.toLowerCase().includes('fragile') || p.toLowerCase().includes('shabby') ? 'fragile' : '';
                         return `<span class="equip-tag ${type}">${p}</span>`;
                     }).join(' ');
                 }
@@ -1957,23 +2064,23 @@
                     return `<span class="inline-block px-2 py-1 ${colorClass} text-xs text-white rounded cursor-pointer hover:opacity-80 mr-1 mb-1" onclick="updateDescription('${escapeStr(t.name)}', '${safeDesc}', 'tag')">${t.name}</span>`;
                 }).join('')
                 : '<span class="text-gray-500 text-xs italic">No tags yet. Earn them through play.</span>';
-            
+
             // Blight tracker - visible for ALL characters (anyone can be infected)
             const blightStage = data.blight || 0;
             const blightMax = 5;
             const blightFlavor = blightStage === 0 ? 'Uncorrupted.' :
-                                 blightStage === 1 ? 'A faint taint lingers.' :
-                                 blightStage === 2 ? 'It whispers to you.' :
-                                 blightStage === 3 ? 'The corruption grows.' :
-                                 blightStage === 4 ? 'Nearly consumed...' :
-                                 'Lost to the Blight.';
+                blightStage === 1 ? 'A faint taint lingers.' :
+                    blightStage === 2 ? 'It whispers to you.' :
+                        blightStage === 3 ? 'The corruption grows.' :
+                            blightStage === 4 ? 'Nearly consumed...' :
+                                'Lost to the Blight.';
 
             const blightHtml = `
                 <div class="mt-2 p-1.5 ${blightStage > 0 ? 'bg-purple-900/30 border-purple-700' : 'bg-gray-900/30 border-gray-700'} border rounded">
                     <div class="flex items-center gap-2">
                         <h4 class="text-xs uppercase font-semibold ${blightStage > 0 ? 'text-purple-400' : 'text-gray-500'} tracking-wider">Blight</h4>
                         <div class="flex gap-0.5">
-                            ${Array.from({length: blightMax}, (_, i) => `
+                            ${Array.from({ length: blightMax }, (_, i) => `
                                 <div class="w-3 h-3 rounded-full border ${i < blightStage ? 'bg-purple-600 border-purple-400' : 'bg-gray-800 border-gray-700'}"></div>
                             `).join('')}
                         </div>
@@ -2024,9 +2131,9 @@
 
         window.updateDescription = (title, description, type, lore = '') => {
             const display = document.getElementById('description-display');
-            if(display) {
+            if (display) {
                 let content = `<strong class="text-emerald-400 block mb-1">${title}</strong>`;
-                if(description) content += `<p class="text-gray-400 text-sm mb-2">${description}</p>`;
+                if (description) content += `<p class="text-gray-400 text-sm mb-2">${description}</p>`;
                 if (lore) content += `<div class="mt-2 pt-2 border-t border-gray-700 font-mono text-xs text-red-300">${lore.replace(/\\n/g, '<br>')}</div>`;
 
                 display.innerHTML = content;
@@ -2302,7 +2409,7 @@
                     }
                     // Remove the equipment_add from narrative
                     cleanNarrative = cleanNarrative.slice(0, equipmentKeyMatch.index) +
-                                    cleanNarrative.slice(extracted.endIndex);
+                        cleanNarrative.slice(extracted.endIndex);
                     cleanNarrative = cleanNarrative.trim();
                 } else {
                     console.error("Unbalanced brackets in equipment_add");
@@ -2549,11 +2656,11 @@ Name: ${character.name}
 Calling: ${character.playbook?.calling} / Burden: ${character.playbook?.burden}
 Stats: FOR ${character.stats.FORCE}, FIN ${character.stats.FINESSE}, INF ${character.stats.INFLUENCE}, WIT ${character.stats.WITS}, RES ${character.stats.RESOLVE}
 Injuries: ${pipContext}
-Equipment: ${(character.equipment||[]).map(e => {
-    if (e.type === 'tool') return `${e.name} (+1 ${e.stat})`;
-    if (e.type === 'armor') return `${e.name} (${e.pips || 0}/${e.max_pips || 2} ${e.stat} armor)`;
-    return e.name;
-}).join(', ')}
+Equipment: ${(character.equipment || []).map(e => {
+                if (e.type === 'tool') return `${e.name} (+1 ${e.stat})`;
+                if (e.type === 'armor') return `${e.name} (${e.pips || 0}/${e.max_pips || 2} ${e.stat} armor)`;
+                return e.name;
+            }).join(', ')}
 Coin: ${character.currency}
 XP: ${character.xp || 0}
 
@@ -2732,7 +2839,7 @@ ${TalentSystem.getActiveContext()}`;
                 }
             }
         }
-        
+
         async function processStateUpdate(update) {
             if (!update) return;
 
@@ -2945,7 +3052,7 @@ ${TalentSystem.getActiveContext()}`;
                 showToast(`Tag removed: ${update.tag_remove}`);
             }
         }
-        
+
         async function resetGame() {
             if (!confirm("WARNING: This will wipe your character, story, and world state. This cannot be undone.\n\nAre you sure?")) {
                 return;
@@ -3205,7 +3312,7 @@ ${TalentSystem.getActiveContext()}`;
                     // Reflect action complete (tags now added via AI-driven tag_add responses)
                 }
 
-            } catch(e) {
+            } catch (e) {
                 console.error("Interlude Error:", e);
                 window.showError("Interlude Error", e.message);
             } finally {
@@ -3213,12 +3320,12 @@ ${TalentSystem.getActiveContext()}`;
             }
         }
 
-        function hideLoading() { if(ui.loading) ui.loading.style.display = 'none'; }
-        function showLoading() { if(ui.loading) ui.loading.style.display = 'flex'; }
+        function hideLoading() { if (ui.loading) ui.loading.style.display = 'none'; }
+        function showLoading() { if (ui.loading) ui.loading.style.display = 'flex'; }
 
         // ===== EXPORT/IMPORT SAVE FUNCTIONS =====
 
-        window.exportSave = function() {
+        window.exportSave = function () {
             const saveData = gameState.exportState();
             const blob = new Blob([saveData], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
@@ -3230,7 +3337,7 @@ ${TalentSystem.getActiveContext()}`;
             showToast('Save exported!');
         };
 
-        window.importSave = function() {
+        window.importSave = function () {
             const input = document.createElement('input');
             input.type = 'file';
             input.accept = 'application/json';
@@ -3454,6 +3561,22 @@ ${TalentSystem.getActiveContext()}`;
         }
 
         if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
+
+        // Expose globals for UI event handlers (required for module script)
+        Object.assign(window, {
+            ui,
+            init,
+            openXPShop,
+            purchaseFromShop,
+            handleInterludeAction,
+            resetGame,
+            exportSave,
+            importSave,
+            // Debugging
+            gameState
+        });
+
     </script>
 </body>
+
 </html>

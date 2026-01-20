@@ -1,0 +1,3459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital RPG: Ash-Lord's Covenant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=IM+Fell+English+SC&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css?v=0.9.4"> 
+    
+    <style>
+        #character-creation-ui, #main-game-ui { display: none; }
+        
+        #boot-log { 
+            font-family: monospace; font-size: 12px; color: #00ff00; 
+            background: rgba(0,0,0,0.8); padding: 10px; border: 1px solid #333; 
+            margin-top: 20px; max-height: 150px; overflow-y: auto; width: 80%; 
+            text-align: left; display: none;
+        }
+        #force-start-btn {
+            margin-top: 15px; padding: 10px 20px; background: #8A3324; color: white; 
+            border: 1px solid #ff5555; border-radius: 4px; cursor: pointer; font-family: sans-serif; display: none;
+        }
+    </style>
+
+    <script>
+        window.showError = function(title, message) {
+            var loader = document.getElementById('loading-overlay');
+            if (loader) loader.style.display = 'none';
+            
+            var modal = document.getElementById('error-modal');
+            var mTitle = document.getElementById('error-title');
+            var mMsg = document.getElementById('error-message');
+            
+            if (modal && mTitle && mMsg) {
+                mTitle.textContent = title;
+                mMsg.textContent = message;
+                modal.style.display = 'flex';
+            } else {
+                console.error("CRITICAL UI FAILURE: " + title + " - " + message);
+                if (document.body) {
+                    document.body.innerHTML = '<div style="color:red; padding:20px; background:black;"><h1>CRITICAL ERROR</h1><h2>' + title + '</h2><p>' + message + '</p></div>';
+                } else {
+                    alert("CRITICAL ERROR (DOM Not Ready): " + title + "\n" + message);
+                }
+            }
+        };
+
+        window.addEventListener('error', function(event) {
+            try {
+                window.showError("Runtime Error", event.message + " at " + event.filename + ":" + event.lineno);
+            } catch (e) {
+                console.error("Error Handler Failed:", e);
+            }
+        });
+    </script>
+</head>
+<body class="antialiased">
+
+    <div id="loading-overlay" class="flex fixed top-0 left-0 w-screen h-screen bg-black/80 z-[199] justify-center items-center" style="flex-direction: column;" role="status" aria-live="polite">
+        <div class="spinner mb-4" aria-hidden="true"></div>
+        <span id="loading-text" class="ml-4 text-lg text-gray-300">Booting v2.6.1 (Playtesting Fixes)...</span>
+        <div id="boot-log"></div>
+        <button id="force-start-btn" onclick="window.forceUI()" aria-label="Force start the user interface">⚠️ FORCE UI</button>
+    </div>
+
+    <div id="error-modal" class="fixed top-0 left-0 w-full h-full bg-black/80 z-[200] flex justify-center items-center hidden" role="dialog" aria-modal="true" aria-labelledby="error-title">
+        <div class="modal-content bg-gray-800 border border-gray-700 p-6 rounded-lg max-w-lg w-full">
+            <h2 id="error-title" class="text-xl font-bold text-red-400 mb-4">Error</h2>
+            <p id="error-message" class="text-gray-300 mb-6 whitespace-pre-wrap font-mono text-sm">Something went wrong.</p>
+            <button id="close-modal-btn" onclick="document.getElementById('error-modal').style.display='none'" class="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition">
+                OK
+            </button>
+        </div>
+    </div>
+
+    <div id="toast-container" class="fixed top-4 right-4 z-[200] flex flex-col gap-2 pointer-events-none"></div>
+
+    <div class="container mx-auto max-w-7xl p-4">
+        <header class="mb-4 p-4 bg-gray-800 rounded-lg border border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-white">Ash-Lord's Covenant</h1>
+                <p class="text-sm text-gray-400">Digital RPG Prototype (Build v2.6.1 - Playtesting Fixes)</p>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button onclick="window.exportSave()" class="px-3 py-2 bg-gray-700 text-xs text-gray-300 rounded-lg hover:bg-emerald-700 hover:text-white transition">
+                    Export Save
+                </button>
+                <button onclick="window.importSave()" class="px-3 py-2 bg-gray-700 text-xs text-gray-300 rounded-lg hover:bg-emerald-700 hover:text-white transition">
+                    Import Save
+                </button>
+                <button id="reset-game-btn" class="px-3 py-2 bg-gray-700 text-xs text-gray-300 rounded-lg hover:bg-red-700 hover:text-white transition">
+                    Reset Game
+                </button>
+            </div>
+        </header>
+
+        <div id="character-creation-ui">
+            <div class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-6 max-w-3xl mx-auto">
+                <h2 class="text-3xl font-bold text-white mb-2">Create Your Character</h2>
+                <p class="text-gray-400 mb-6">Every hero in this cursed world is defined by what they do (their Calling) and what haunts them (their Burden).</p>
+                
+                <div class="mb-4">
+                    <label for="character-name" class="block text-sm font-medium text-gray-300 mb-1">What is your name?</label>
+                    <input type="text" id="character-name" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500" maxlength="50" required aria-required="true">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h3 class="text-xl font-semibold text-emerald-400 mb-3">Choose a Calling</h3>
+                        <div id="calling-options" class="space-y-3"><p class="text-gray-500 italic">Loading data...</p></div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-indigo-300 mb-3">Choose a Burden</h3>
+                        <div id="burden-options" class="space-y-3"><p class="text-gray-500 italic">Loading data...</p></div>
+                        
+                        <div id="burden-detail-input-wrapper" class="mt-3" style="display: none;">
+                            <label for="burden-detail-input" id="burden-detail-label" class="block text-sm font-medium text-gray-300 mb-1">Define your Burden:</label>
+                            <input type="text" id="burden-detail-input" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                    </div>
+                </div>
+
+                <button id="create-character-btn" class="w-full mt-6 px-4 py-3 bg-emerald-700 text-white rounded-lg font-bold hover:bg-emerald-800 shadow-md">
+                    Begin Your Story
+                </button>
+            </div>
+        </div>
+
+        <div id="main-game-ui">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div id="sidebar-container" class="lg:col-span-1 space-y-4 custom-scrollbar">
+                    <div id="character-sheet-wrapper" class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg">
+                        <div id="character-sheet-header" class="flex justify-between items-center p-4 border-b border-gray-700 cursor-pointer">
+                            <h2 class="text-xl font-semibold text-white">Character Sheet</h2>
+                            <svg id="accordion-icon" class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                        <div id="character-sheet-content" class="p-4 space-y-4">
+                            <p id="character-sheet-loading" class="text-gray-400 italic">Loading character data...</p>
+                            <div id="character-sheet-data"></div>
+                        </div>
+                    </div>
+
+                    <div id="unified-clocks-wrapper" class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg mt-4">
+                        <div id="unified-clocks-header" class="flex justify-between items-center p-4 border-b border-gray-700 cursor-pointer hover:bg-gray-750 transition">
+                            <h2 class="text-xl font-semibold text-white">World State</h2>
+                            <svg id="unified-accordion-icon" class="w-6 h-6 text-gray-400 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+
+                        <div id="unified-clocks-content" class="p-4 space-y-4">
+                            <div class="grid grid-cols-2 gap-2 border-b-spacers pb-4 mb-4"> 
+                                <div class="flex flex-col items-center">
+                                    <h4 class="text-xs uppercase text-emerald-400 font-bold tracking-wider mb-1">DESTINY</h4>
+                                    <div class="clock transform scale-75">
+                                        <div class="clock-face" id="destiny-clock-face"></div>
+                                    </div>
+                                    <p id="destiny-narrative" class="text-xs text-gray-400 text-center mt-1 font-mono leading-tight px-1">Your destiny awaits...</p>
+                                </div>
+                                <div class="flex flex-col items-center pl-2">
+                                    <h4 class="text-xs uppercase text-red-400 font-bold tracking-wider mb-1">THE THREAT</h4>
+                                    <div class="clock transform scale-75">
+                                        <div class="clock-face" id="endgame-front-clock-face"></div>
+                                    </div>
+                                    <span id="endgame-front-name" class="text-xs text-gray-400 text-center mt-1 font-mono leading-tight">Unknown Threat</span>
+                                </div>
+                            </div>
+
+                            <div class="pt-2">
+                                <h4 class="text-xs uppercase text-gray-500 mb-2 text-center font-bold tracking-widest">FACTION ACTIVITY</h4>
+                                <div id="world-clocks-container" class="grid grid-cols-2 gap-2">
+                                    <p id="world-clocks-loading" class="text-gray-400 italic col-span-2 text-center text-xs">Loading world state...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="quest-progress-wrapper" class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4" style="display: none;">
+                        <h2 class="text-xl font-semibold text-emerald-400 mb-2">Active Quest</h2>
+                        <div id="quest-progress-content">
+                            <p id="quest-title" class="font-bold text-white text-lg mb-1"></p>
+                            <p id="quest-chapter" class="text-sm text-gray-400 mb-2"></p>
+                            <div class="bg-gray-900 rounded p-2">
+                                <div class="flex justify-between text-xs text-gray-400 mb-1">
+                                    <span>Progress</span>
+                                    <span id="quest-progress-text">0/0</span>
+                                </div>
+                                <div class="w-full bg-gray-700 rounded-full h-2">
+                                    <div id="quest-progress-bar" class="bg-emerald-600 h-2 rounded-full transition-all" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <p id="quest-xp-earned" class="text-xs text-gray-400 mt-2"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2 flex flex-col h-[80vh]">
+                    <div class="flex-grow bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4 overflow-y-auto" id="narrative-log"></div>
+
+                    <div id="interaction-panel" class="mt-4 bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4">
+                        <div id="chapter-phase-ui">
+                            <textarea id="player-input"
+                                      class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                      rows="3"
+                                      placeholder="Describe your character's action..."
+                                      aria-label="Enter your character's action"></textarea>
+                            
+                            <button id="submit-action-btn" class="w-full mt-3 px-4 py-3 bg-emerald-700 text-white rounded-lg font-bold hover:bg-emerald-800 shadow-md" aria-label="Submit your action to the Game Master">
+                                Submit Action
+                            </button>
+                            
+                            <p class="text-xs text-gray-500 text-center mt-2">Press <kbd class="px-1 bg-gray-700 rounded">Enter</kbd> to submit (Shift+Enter for new line)</p>
+                        </div>
+                        
+                        <div id="interlude-phase-ui" class="hidden">
+                            <div class="mb-4 p-3 bg-gray-900 rounded-lg border border-emerald-700">
+                                <h3 class="text-lg font-bold text-emerald-400 mb-2">⏳ Downtime Phase</h3>
+                                <p class="text-sm text-gray-400">The world moves on while you rest. Faction clocks advance. Choose how to spend your time wisely.</p>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <button id="interlude-train-btn" class="interlude-button flex flex-col items-start text-left p-3">
+                                    <span class="font-bold text-white">Seek Training (1 XP)</span>
+                                    <span class="text-xs text-gray-400 mt-1">Study under a mentor. Gain insight or skill.</span>
+                                </button>
+                                <button id="interlude-asset-btn" class="interlude-button flex flex-col items-start text-left p-3">
+                                    <span class="font-bold text-white">Acquire an Asset (1 XP)</span>
+                                    <span class="text-xs text-gray-400 mt-1">Find equipment, allies, or information.</span>
+                                </button>
+                                <button id="interlude-reflect-btn" class="interlude-button flex flex-col items-start text-left p-3">
+                                    <span class="font-bold text-white">Reflect & Integrate (1 XP)</span>
+                                    <span class="text-xs text-gray-400 mt-1">Process experiences. Potentially gain a Tag.</span>
+                                </button>
+                                <button id="interlude-heal-btn" class="interlude-button flex flex-col items-start text-left p-3">
+                                    <span class="font-bold text-white">Rest & Recover (3 Coin)</span>
+                                    <span class="text-xs text-gray-400 mt-1">Heal one Pip of damage. Requires coin.</span>
+                                </button>
+                                <button id="interlude-shop-btn" class="interlude-button flex flex-col items-start text-left p-3 border-amber-700">
+                                    <span class="font-bold text-amber-400">Visit Equipment Shop (5 XP)</span>
+                                    <span class="text-xs text-gray-400 mt-1">Purchase specialized tools or armor.</span>
+                                </button>
+                                <button id="interlude-repair-btn" class="interlude-button flex flex-col items-start text-left p-3 border-blue-700">
+                                    <span class="font-bold text-blue-400">Repair Armor (Free)</span>
+                                    <span class="text-xs text-gray-400 mt-1">Restore all armor to full protection.</span>
+                                </button>
+                                <button id="interlude-cleanse-btn" class="interlude-button flex flex-col items-start text-left p-3 border-purple-700">
+                                    <span class="font-bold text-purple-400">Cleanse Blight (5 Coin)</span>
+                                    <span class="text-xs text-gray-400 mt-1">Seek a hedge witch to remove 1 Blight.</span>
+                                </button>
+                            </div>
+                            <button id="interlude-end-btn" class="w-full mt-4 px-4 py-3 bg-red-900 text-white rounded-lg font-bold hover:bg-red-800 transition border border-red-700">
+                                Return to Adventure →
+                            </button>
+                            <p class="text-xs text-gray-500 text-center mt-2">Warning: Ending downtime advances faction clocks!</p>
+                        </div>
+
+                        <!-- XP Shop Modal -->
+                        <div id="xp-shop-modal" class="fixed top-0 left-0 w-full h-full bg-black/80 z-[200] flex justify-center items-center hidden" role="dialog" aria-modal="true" aria-labelledby="shop-title">
+                            <div class="modal-content bg-gray-800 border border-amber-700 p-6 rounded-lg max-w-lg w-full">
+                                <h2 id="shop-title" class="text-xl font-bold text-amber-400 mb-4">⚔️ Equipment Shop</h2>
+                                <p class="text-gray-400 text-sm mb-4">Spend 5 XP to purchase specialized gear. Choose wisely - only 3 items available per visit.</p>
+                                <div id="xp-shop-items" class="space-y-3 mb-4">
+                                    <!-- Items will be populated by JavaScript -->
+                                </div>
+                                <button id="xp-shop-close-btn" class="w-full px-4 py-2 bg-gray-700 text-white rounded-lg font-semibold hover:bg-gray-600 transition">
+                                    Close Shop
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load game data first (no module required) -->
+    <script src="./game_data.js"></script>
+
+    <script>
+        // ===== STATE MANAGER (Inlined for local file:// compatibility) =====
+
+        const GAME_STATE_KEY = "ashlords_game_v1";
+        const BACKUP_KEY = "ashlords_game_v1_backup";
+
+        const createFreshState = () => ({
+            version: "2.3.0",
+            userId: `local-${crypto.randomUUID()}`,
+            character: null,
+            gameState: {
+                phase: "character_creation",  // character_creation, adventure, downtime
+                turn_count: 0,
+                adventure_turn_count: 0,      // Turns since last downtime
+                saga_log: "The story begins...",
+                current_location: "Unknown"
+            },
+            chatHistory: [],
+            worldClocks: { clocks: [] },
+            destinyFrontClocks: {
+                destiny: { current: 0, segments: 8 },
+                front: { current: 0, segments: 8, name: "The Threat Looms" }
+            },
+            // Hidden progress clocks (not shown to player directly)
+            progressClocks: [],
+            // Tags - narrative facts about the character
+            tags: [],
+            questState: { current_quest: null, last_offer_turn: 0 },
+            campaign: null
+        });
+
+        // ===== HTML SANITIZATION UTILITIES =====
+
+        function escapeHtml(text) {
+            if (typeof text !== 'string') return text;
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Sanitize AI content while preserving safe markdown-like formatting
+        function sanitizeContent(content) {
+            if (typeof content !== 'string') return content;
+
+            // First escape all HTML
+            let safe = escapeHtml(content);
+
+            // Re-enable safe markdown: **bold** and *italic*
+            safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            safe = safe.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+
+            // Convert newlines to <br> for display
+            safe = safe.replace(/\n/g, '<br>');
+
+            return safe;
+        }
+
+        class StateValidator {
+            static validate(updates, currentState) {
+                const errors = [];
+                if (updates.character) {
+                    const char = updates.character;
+                    if (char.stats) {
+                        for (const [stat, val] of Object.entries(char.stats)) {
+                            if (val < -1 || val > 5) {
+                                errors.push(`Stat ${stat} out of bounds: ${val}`);
+                            }
+                        }
+                    }
+                    if (char.pips) {
+                        for (const [stat, pips] of Object.entries(char.pips)) {
+                            if (pips < 0 || pips > 2) {
+                                errors.push(`Pips ${stat} out of bounds: ${pips}`);
+                            }
+                        }
+                    }
+                    if (char.currency !== undefined && char.currency < 0) {
+                        errors.push(`Currency cannot be negative: ${char.currency}`);
+                    }
+                    if (char.xp !== undefined && char.xp < 0) {
+                        errors.push(`XP cannot be negative: ${char.xp}`);
+                    }
+                }
+                if (updates.chatHistory && updates.chatHistory.length > 30) {
+                    errors.push(`Chat history exceeds 30 messages`);
+                }
+                if (errors.length > 0) {
+                    throw new Error("Validation failed:\n" + errors.join("\n"));
+                }
+                return true;
+            }
+        }
+
+        class ErrorRecovery {
+            static recoverState() {
+                try {
+                    const stateStr = localStorage.getItem(GAME_STATE_KEY);
+                    if (stateStr) {
+                        const state = JSON.parse(stateStr);
+                        if (this.validateStructure(state)) {
+                            console.log("✅ Loaded state from localStorage");
+                            return state;
+                        }
+                    }
+                } catch (e) {
+                    console.error("❌ Main state corrupted:", e);
+                }
+                try {
+                    const backupStr = localStorage.getItem(BACKUP_KEY);
+                    if (backupStr) {
+                        const backup = JSON.parse(backupStr);
+                        if (this.validateStructure(backup)) {
+                            console.warn("⚠️ Recovered from backup state");
+                            return backup;
+                        }
+                    }
+                } catch (e) {
+                    console.error("❌ Backup state corrupted:", e);
+                }
+                console.log("🆕 Creating fresh state");
+                return createFreshState();
+            }
+
+            static validateStructure(state) {
+                return state && state.version && state.userId && state.gameState && Array.isArray(state.chatHistory);
+            }
+
+            static createBackup(state) {
+                try {
+                    localStorage.setItem(BACKUP_KEY, JSON.stringify(state));
+                } catch (e) {
+                    console.error("Failed to create backup:", e);
+                }
+            }
+        }
+
+        class TransactionQueue {
+            constructor(stateManager) {
+                this.stateManager = stateManager;
+                this.queue = [];
+                this.processing = false;
+            }
+
+            async enqueue(transaction) {
+                return new Promise((resolve, reject) => {
+                    this.queue.push({ transaction, resolve, reject });
+                    this.processNext();
+                });
+            }
+
+            async processNext() {
+                if (this.processing || this.queue.length === 0) return;
+                this.processing = true;
+                const { transaction, resolve, reject } = this.queue.shift();
+                try {
+                    const updates = await transaction(this.stateManager.state);
+                    const result = await this.stateManager.updateState(updates);
+                    resolve(result);
+                } catch (error) {
+                    console.error("Transaction failed:", error);
+                    reject(error);
+                } finally {
+                    this.processing = false;
+                    this.processNext();
+                }
+            }
+        }
+
+        class GameStateManager {
+            constructor() {
+                this.state = ErrorRecovery.recoverState();
+                this.listeners = new Map();
+                this.txQueue = new TransactionQueue(this);
+                ErrorRecovery.createBackup(this.state);
+            }
+
+            subscribe(key, callback) {
+                if (!this.listeners.has(key)) {
+                    this.listeners.set(key, new Set());
+                }
+                this.listeners.get(key).add(callback);
+                // Always call callback immediately with current state (even if null)
+                const slice = this.getStateSlice(key);
+                callback(slice);
+            }
+
+            unsubscribe(key, callback) {
+                this.listeners.get(key)?.delete(callback);
+            }
+
+            async updateState(updates) {
+                try {
+                    StateValidator.validate(updates, this.state);
+                    const newState = this.deepMerge(this.state, updates);
+                    localStorage.setItem(GAME_STATE_KEY, JSON.stringify(newState));
+                    if (newState.gameState?.turn_count % 5 === 0) {
+                        ErrorRecovery.createBackup(newState);
+                    }
+                    this.state = newState;
+                    this.notifySubscribers(updates);
+                    return { success: true };
+                } catch (error) {
+                    console.error("State update failed:", error);
+                    return { success: false, error: error.message };
+                }
+            }
+
+            deepMerge(target, source) {
+                const output = { ...target };
+                for (const key in source) {
+                    if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+                        output[key] = this.deepMerge(target[key] || {}, source[key]);
+                    } else {
+                        output[key] = source[key];
+                    }
+                }
+                return output;
+            }
+
+            notifySubscribers(updates) {
+                for (const [key, callbacks] of this.listeners) {
+                    if (this.wasKeyAffected(key, updates)) {
+                        const slice = this.getStateSlice(key);
+                        callbacks.forEach(cb => {
+                            try { cb(slice); } catch (e) { console.error(`Listener error for ${key}:`, e); }
+                        });
+                    }
+                }
+            }
+
+            wasKeyAffected(key, updates) {
+                return key in updates || key === 'all';
+            }
+
+            getStateSlice(key) {
+                switch(key) {
+                    case 'character': return this.state.character;
+                    case 'chatHistory': return this.state.chatHistory;
+                    case 'worldClocks': return this.state.worldClocks;
+                    case 'destinyFrontClocks': return this.state.destinyFrontClocks;
+                    case 'gameState': return this.state.gameState;
+                    case 'questState': return this.state.questState;
+                    case 'all': return this.state;
+                    default: return null;
+                }
+            }
+
+            getState() { return this.state; }
+            async transaction(fn) { return this.txQueue.enqueue(fn); }
+            exportState() { return JSON.stringify(this.state, null, 2); }
+
+            importState(stateJson) {
+                try {
+                    const imported = JSON.parse(stateJson);
+                    if (ErrorRecovery.validateStructure(imported)) {
+                        this.state = imported;
+                        localStorage.setItem(GAME_STATE_KEY, stateJson);
+                        ErrorRecovery.createBackup(imported);
+                        this.notifySubscribers({ all: true });
+                        return true;
+                    }
+                    return false;
+                } catch (e) {
+                    console.error("Import failed:", e);
+                    return false;
+                }
+            }
+
+            reset() {
+                this.state = createFreshState();
+                localStorage.setItem(GAME_STATE_KEY, JSON.stringify(this.state));
+                localStorage.removeItem(BACKUP_KEY);
+                this.notifySubscribers({ all: true });
+            }
+        }
+
+        const gameState = new GameStateManager();
+
+        // ===== INVENTORY SYSTEM (Equipment Management) =====
+
+        const InventorySystem = {
+            // Get tool bonus for a stat (returns 0 or 1)
+            getToolBonus(stat) {
+                const character = gameState.getState().character;
+                if (!character) return 0;
+                const tool = (character.equipment || []).find(
+                    i => i.type === 'tool' && i.stat === stat
+                );
+                return tool ? (tool.bonus || 1) : 0;
+            },
+
+            // Get available armor pips for a stat
+            getArmorPips(stat) {
+                const character = gameState.getState().character;
+                if (!character) return 0;
+                const armor = (character.equipment || []).find(
+                    i => i.type === 'armor' && i.stat === stat
+                );
+                return armor ? (armor.pips || 0) : 0;
+            },
+
+            // Damage armor before character takes pips - returns remaining damage
+            async damageArmor(stat, amount) {
+                const character = gameState.getState().character;
+                if (!character) return amount;
+
+                const equipment = character.equipment || [];
+                const armorIndex = equipment.findIndex(
+                    i => i.type === 'armor' && i.stat === stat && (i.pips || 0) > 0
+                );
+
+                if (armorIndex === -1) return amount; // No armor to absorb
+
+                const armor = equipment[armorIndex];
+                const absorbed = Math.min(armor.pips, amount);
+                const remaining = amount - absorbed;
+
+                // Update armor pips
+                const newEquipment = [...equipment];
+                newEquipment[armorIndex] = { ...armor, pips: armor.pips - absorbed };
+
+                await gameState.transaction(async (state) => ({
+                    character: {
+                        ...state.character,
+                        equipment: newEquipment
+                    }
+                }));
+
+                if (absorbed > 0) {
+                    showToast(`${armor.name} absorbs ${absorbed} damage!`);
+                }
+
+                return remaining;
+            },
+
+            // Repair all armor during downtime
+            async repairAllArmor() {
+                const character = gameState.getState().character;
+                if (!character) return;
+
+                const equipment = character.equipment || [];
+                let repairedAny = false;
+
+                const repairedEquipment = equipment.map(item => {
+                    if (item.type === 'armor' && item.pips < (item.max_pips || 2)) {
+                        repairedAny = true;
+                        return { ...item, pips: item.max_pips || 2 };
+                    }
+                    return item;
+                });
+
+                if (repairedAny) {
+                    await gameState.transaction(async (state) => ({
+                        character: {
+                            ...state.character,
+                            equipment: repairedEquipment
+                        }
+                    }));
+                    showToast('All armor repaired!');
+                }
+            },
+
+            // Add item to inventory
+            async addItem(item) {
+                const character = gameState.getState().character;
+                if (!character) return false;
+
+                // For tools/armor, check if we already have one for that stat
+                if (item.type === 'tool' || item.type === 'armor') {
+                    const existing = (character.equipment || []).find(
+                        i => i.type === item.type && i.stat === item.stat
+                    );
+                    if (existing) {
+                        showToast(`Already have a ${item.stat} ${item.type}!`);
+                        return false;
+                    }
+                }
+
+                // Prepare item with proper structure
+                const newItem = {
+                    name: item.name,
+                    type: item.type || 'loot',
+                    properties: item.properties || [],
+                    lore: item.lore || item.desc || '',
+                    ...(item.type === 'tool' ? { stat: item.stat, bonus: item.bonus || 1 } : {}),
+                    ...(item.type === 'armor' ? { stat: item.stat, pips: item.max_pips || 2, max_pips: item.max_pips || 2 } : {}),
+                    ...(item.tags ? { tags: item.tags } : {}),
+                    ...(item.desc ? { desc: item.desc } : {})
+                };
+
+                await gameState.transaction(async (state) => ({
+                    character: {
+                        ...state.character,
+                        equipment: [...(state.character.equipment || []), newItem]
+                    }
+                }));
+
+                showToast(`+1 Item: ${item.name}`);
+                return true;
+            },
+
+            // Remove item by name
+            async removeItem(itemName) {
+                const character = gameState.getState().character;
+                if (!character) return false;
+
+                const equipment = character.equipment || [];
+                const index = equipment.findIndex(i => i.name === itemName);
+                if (index === -1) return false;
+
+                const newEquipment = [...equipment];
+                newEquipment.splice(index, 1);
+
+                await gameState.transaction(async (state) => ({
+                    character: {
+                        ...state.character,
+                        equipment: newEquipment
+                    }
+                }));
+
+                showToast(`Removed: ${itemName}`);
+                return true;
+            },
+
+            // Check if character has an item
+            hasItem(itemName) {
+                const character = gameState.getState().character;
+                if (!character) return false;
+                return (character.equipment || []).some(i => i.name === itemName);
+            },
+
+            // Get all equipment of a type
+            getEquipmentByType(type) {
+                const character = gameState.getState().character;
+                if (!character) return [];
+                return (character.equipment || []).filter(i => i.type === type);
+            },
+
+            // Get 3 random items from MASTER_GEAR_LIST that player doesn't own
+            getAvailableShopItems(count = 3) {
+                const character = gameState.getState().character;
+                if (!character || !CONTENT_PACK_ASHLORDS.MASTER_GEAR_LIST) return [];
+
+                const owned = (character.equipment || []).map(e => e.name);
+                const available = CONTENT_PACK_ASHLORDS.MASTER_GEAR_LIST.filter(
+                    item => !owned.includes(item.name)
+                );
+
+                // Shuffle and pick
+                const shuffled = [...available].sort(() => Math.random() - 0.5);
+                return shuffled.slice(0, count);
+            }
+        };
+
+        // ===== TALENT SYSTEM (Calling & Burden Abilities) =====
+
+        const TalentSystem = {
+            // Currently active/ready talent (for calling talents awaiting action)
+            _activeTalent: null,
+
+            // Talent configurations with types and costs
+            TALENT_CONFIG: {
+                // Calling talents (passive bonuses - ready before action)
+                mercenary_code: {
+                    type: 'calling',
+                    effect: 'tier_reduction',
+                    condition: 'combat_paid',
+                    description: 'Combat rolls → Tier 1 when being paid for objective'
+                },
+                shadow_walk: {
+                    type: 'calling',
+                    effect: 'tier_reduction',
+                    condition: 'stealth_ambush',
+                    description: 'Hostile actions from hiding → Tier 1'
+                },
+                highborn: {
+                    type: 'calling',
+                    effect: 'tier_reduction',
+                    condition: 'social_highrank',
+                    description: 'Social rolls vs nobles/officials → Tier 1'
+                },
+                slayers_knowledge: {
+                    type: 'calling',
+                    effect: 'tier_reduction',
+                    condition: 'vs_monsters',
+                    description: 'Actions vs Beasts/Blighted → Tier 1'
+                },
+                artifact_attunement: {
+                    type: 'calling',
+                    effect: 'tier_reduction',
+                    condition: 'magical_devices',
+                    description: 'Magical device interactions → Tier 1'
+                },
+
+                // Burden talents (active abilities with costs)
+                call_deep: {
+                    type: 'burden',
+                    effect: 'summon_creature',
+                    cost: '+1 Blight',
+                    costType: 'blight',
+                    costAmount: 1,
+                    description: 'Summon a Blighted Creature to fight for you'
+                },
+                chain_breaker: {
+                    type: 'burden',
+                    effect: 'break_binding',
+                    cost: '+2 RESOLVE Pips',
+                    costType: 'pips',
+                    costStat: 'RESOLVE',
+                    costAmount: 2,
+                    description: 'Instantly shatter any physical or magical binding'
+                },
+                symbiotic_surge: {
+                    type: 'burden',
+                    effect: 'auto_success',
+                    affectedStats: ['FORCE', 'RESOLVE'],
+                    cost: '+1 Blight',
+                    costType: 'blight',
+                    costAmount: 1,
+                    description: 'Auto-succeed on FORCE/RESOLVE with Critical Success'
+                },
+                mastermind: {
+                    type: 'burden',
+                    effect: 'flashback',
+                    cost: '+2 WITS Pips',
+                    costType: 'pips',
+                    costStat: 'WITS',
+                    costAmount: 2,
+                    description: 'Flashback: You prepared for this exact situation'
+                },
+                adrenaline_spike: {
+                    type: 'burden',
+                    effect: 'ignore_damage',
+                    cost: '+2 FORCE Pips',
+                    costType: 'pips',
+                    costStat: 'FORCE',
+                    costAmount: 2,
+                    description: 'Ignore ALL Damage and Conditions for one scene'
+                }
+            },
+
+            // Get talent configuration
+            getTalentConfig(talentId) {
+                return this.TALENT_CONFIG[talentId] || null;
+            },
+
+            // Get currently active talent
+            getActiveTalent() {
+                return this._activeTalent;
+            },
+
+            // Activate a talent
+            async activate(talentId) {
+                const config = this.getTalentConfig(talentId);
+                if (!config) {
+                    console.warn('Unknown talent:', talentId);
+                    return;
+                }
+
+                const state = gameState.getState();
+                const character = state.character;
+                if (!character) return;
+
+                // Check if talent already used this chapter
+                const talentsUsedThisChapter = state.talentsUsedThisChapter || [];
+                if (talentsUsedThisChapter.includes(talentId)) {
+                    showToast('Talent already used this chapter. Rest to reset.', 4000);
+                    console.warn(`⚠️ Talent ${talentId} already used this chapter`);
+                    return;
+                }
+
+                if (config.type === 'calling') {
+                    // Calling talents: toggle ready state for next action
+                    if (this._activeTalent === talentId) {
+                        this._activeTalent = null;
+                        showToast('Talent deactivated');
+                    } else {
+                        this._activeTalent = talentId;
+                        showToast(`${this._getTalentName(talentId)} READY - next qualifying action → Tier 1`);
+
+                        // Mark talent as used this chapter
+                        await gameState.transaction(async (state) => {
+                            const used = [...(state.talentsUsedThisChapter || [])];
+                            if (!used.includes(talentId)) {
+                                used.push(talentId);
+                            }
+                            return { talentsUsedThisChapter: used };
+                        });
+                    }
+                    // Refresh character display to show active state
+                    displayCharacter(character);
+
+                } else if (config.type === 'burden') {
+                    // Check if pip cost would have any effect
+                    let costWarning = '';
+                    if (config.costType === 'pips') {
+                        const currentPips = character.pips?.[config.costStat] || 0;
+                        const effectiveCost = Math.min(config.costAmount, 2 - currentPips);
+                        if (effectiveCost <= 0) {
+                            costWarning = `\n\n⚠️ WARNING: You already have max pips in ${config.costStat}!\nThe pip cost will have no effect.`;
+                        } else if (effectiveCost < config.costAmount) {
+                            costWarning = `\n\n⚠️ Note: You have ${currentPips} ${config.costStat} pips.\nOnly ${effectiveCost} pip(s) will be added (max 2).`;
+                        }
+                    }
+
+                    // Burden talents: apply cost and effect immediately
+                    const confirmed = confirm(
+                        `Activate ${this._getTalentName(talentId)}?\n\n` +
+                        `Effect: ${config.description}\n` +
+                        `Cost: ${config.cost}` +
+                        costWarning +
+                        `\n\nThis cost will be applied immediately.`
+                    );
+
+                    if (!confirmed) return;
+
+                    // Mark talent as used this chapter
+                    await gameState.transaction(async (state) => {
+                        const used = [...(state.talentsUsedThisChapter || [])];
+                        if (!used.includes(talentId)) {
+                            used.push(talentId);
+                        }
+                        return { talentsUsedThisChapter: used };
+                    });
+
+                    // Apply cost
+                    await this._applyCost(config);
+
+                    // Set as active for AI context
+                    this._activeTalent = talentId;
+
+                    // Add context message for AI
+                    const contextMsg = `[TALENT ACTIVATED: ${this._getTalentName(talentId)}] - ${config.description}. The cost (${config.cost}) has been paid. Narrate the effect dramatically.`;
+                    await addMessageToChat('user', contextMsg);
+
+                    // Clear active talent after sending (burden talents are one-shot)
+                    this._activeTalent = null;
+
+                    // Refresh display
+                    displayCharacter(gameState.getState().character);
+                }
+            },
+
+            // Apply cost for burden talents
+            async _applyCost(config) {
+                if (config.costType === 'blight') {
+                    await this.addBlight(config.costAmount);
+                } else if (config.costType === 'pips') {
+                    await gameState.transaction(async (state) => {
+                        const pips = { ...(state.character.pips || {}) };
+                        pips[config.costStat] = Math.min(2, (pips[config.costStat] || 0) + config.costAmount);
+                        return {
+                            character: {
+                                ...state.character,
+                                pips
+                            }
+                        };
+                    });
+                    showToast(`+${config.costAmount} ${config.costStat} pips (${config.cost})`);
+                }
+            },
+
+            // Get talent name from character data
+            _getTalentName(talentId) {
+                const character = gameState.getState().character;
+                const talent = (character?.talents || []).find(t => t.id === talentId);
+                return talent?.name || talentId;
+            },
+
+            // Add blight to character
+            async addBlight(amount = 1) {
+                await gameState.transaction(async (state) => {
+                    const currentBlight = state.character.blight || 0;
+                    const newBlight = Math.min(5, currentBlight + amount);
+                    return {
+                        character: {
+                            ...state.character,
+                            blight: newBlight
+                        }
+                    };
+                });
+                showToast(`+${amount} Blight corruption`);
+
+                // Check for blight death
+                const newState = gameState.getState();
+                if (newState.character.blight >= 5) {
+                    await addMessageToChat('model', '**THE BLIGHT CONSUMES YOU.**\n\nThe corruption has spread too far. Your body twists, your mind fragments. What remains is no longer you, but something hungry and hollow. Your story ends here... or perhaps begins anew as a creature of the Blight.');
+                }
+            },
+
+            // Remove blight from character (via cleansing rituals, etc.)
+            async removeBlight(amount = 1) {
+                const character = gameState.getState().character;
+                if (!character || (character.blight || 0) <= 0) {
+                    return false; // No blight to remove
+                }
+
+                await gameState.transaction(async (state) => {
+                    const currentBlight = state.character.blight || 0;
+                    const newBlight = Math.max(0, currentBlight - amount);
+                    return {
+                        character: {
+                            ...state.character,
+                            blight: newBlight
+                        }
+                    };
+                });
+                showToast(`-${amount} Blight cleansed`);
+                return true;
+            },
+
+            /**
+             * Check if a calling talent should apply tier reduction.
+             * Shows a confirmation prompt to ensure player accountability for talent conditions.
+             *
+             * DESIGN NOTE: Talent conditions (e.g., "when defending an innocent") are narrative
+             * and context-dependent. Rather than complex parsing, we trust the player to honestly
+             * confirm when conditions are met. The AI narrative context reinforces this.
+             */
+            shouldReduceTier(actionType, context) {
+                if (!this._activeTalent) return false;
+
+                const config = this.getTalentConfig(this._activeTalent);
+                if (!config || config.type !== 'calling') return false;
+
+                const talentName = this._getTalentName(this._activeTalent);
+
+                // Prompt player to confirm their action meets the talent condition
+                const confirmed = confirm(
+                    `Apply ${talentName}?\n\n` +
+                    `Condition: ${config.description}\n\n` +
+                    `Does your current action meet this condition?\n` +
+                    `(This will reduce the action from Tier 2 to Tier 1)`
+                );
+
+                return confirmed;
+            },
+
+            // Consume the active talent (after action resolves)
+            consumeActiveTalent() {
+                const was = this._activeTalent;
+                this._activeTalent = null;
+                return was;
+            },
+
+            // Get context string for AI prompt
+            getActiveContext() {
+                if (!this._activeTalent) return '';
+
+                const config = this.getTalentConfig(this._activeTalent);
+                const name = this._getTalentName(this._activeTalent);
+
+                if (config?.type === 'calling') {
+                    return `\n*** TALENT ACTIVE: ${name} ***\nThe player has readied their calling talent. If their action qualifies (${config.description}), the roll is Tier 1 instead of Tier 2.`;
+                }
+
+                return '';
+            }
+        };
+
+        // ===== MECHANICS ENGINE (Client-Side) =====
+
+        const MechanicsEngine = {
+            // Parse player intent from text input
+            // Priority: Check for ACTION VERBS first (anywhere in text), then fall back to narrative
+            parseIntent(input) {
+                const lower = input.toLowerCase().trim();
+
+                // === PRIORITY 1: Check for action verbs ANYWHERE in the input ===
+
+                // Combat - always Tier 2 (check first as it's highest stakes)
+                if (/attack|fight|strike|hit|kill|stab|slash|punch|kick|shoot|throw.*(at|toward)|battle|duel|assault/.test(lower)) {
+                    return { needsRoll: true, stat: 'FORCE', tier: 2, type: 'combat' };
+                }
+
+                // Stealing/Pickpocketing - gives loot on success (check BEFORE general stealth)
+                if (/pickpocket|steal|pilfer|filch|swipe|lift|loot|rob|take.*(coin|gold|money|purse|wallet|pouch)/.test(lower)) {
+                    return { needsRoll: true, stat: 'FINESSE', tier: 1, type: 'steal' };
+                }
+
+                // General Stealth/Finesse - no automatic loot
+                if (/sneak|hide|stealth|creep|shadow|pick.*(lock)|climb|dodge|evade|escape|slip/.test(lower)) {
+                    return { needsRoll: true, stat: 'FINESSE', tier: 1, type: 'stealth' };
+                }
+
+                // Social/Influence - hostile = Tier 2
+                if (/persuade|convince|negotiate|bribe|charm|seduce|intimidate|threaten|lie|deceive|bluff|manipulate|coerce/.test(lower)) {
+                    const isHostile = /threaten|intimidate|hostile|angry|suspicious|coerce/.test(lower);
+                    return { needsRoll: true, stat: 'INFLUENCE', tier: isHostile ? 2 : 1, type: 'social' };
+                }
+
+                // Investigation/Wits
+                if (/search|investigate|find|discover|figure|solve|deduce|analyze|study|research|recall|remember|examine.*(closely|carefully)|inspect/.test(lower)) {
+                    return { needsRoll: true, stat: 'WITS', tier: 1, type: 'investigate' };
+                }
+
+                // Endurance/Resolve
+                if (/endure|resist|withstand|brave|courage|face.*(fear|horror)|push through|keep going/.test(lower)) {
+                    return { needsRoll: true, stat: 'RESOLVE', tier: 1, type: 'endurance' };
+                }
+
+                // === PRIORITY 2: No action verbs found - check for narrative/dialogue ===
+
+                // Simple observation (no hidden search intent)
+                if (/^(look at|examine|observe|watch|look around)/.test(lower) && !/search|find|hidden|closely|carefully/.test(lower)) {
+                    return { needsRoll: false, type: 'narrative' };
+                }
+
+                // Simple dialogue (no persuasion intent)
+                if (/^(ask|talk|speak|say|tell|greet|chat)/.test(lower) && !/persuade|convince|lie|threaten/.test(lower)) {
+                    return { needsRoll: false, type: 'dialogue' };
+                }
+
+                // Pure movement/waiting (ONLY if no other action verbs)
+                if (/^(walk|leave|go|move|exit|enter|wait|rest|sleep)\b/.test(lower)) {
+                    return { needsRoll: false, type: 'narrative' };
+                }
+
+                // Default: ambiguous - will ask AI to classify or default to narrative
+                return { needsRoll: false, type: 'narrative', ambiguous: true };
+            },
+
+            // Roll dice and calculate outcome
+            rollDice(stat, tier, character) {
+                const randomValue = Math.random();
+                const d10 = Math.floor(randomValue * 10) + 1;
+
+                // Debug logging to monitor for patterns
+                console.log(`🎲 Dice Roll Debug - Raw random: ${randomValue.toFixed(4)}, d10 result: ${d10}, stat: ${stat}, tier: ${tier}`);
+
+                const statMod = character.stats[stat] || 0;
+                const pips = character.pips?.[stat] || 0;
+                // Add tool bonus from equipment
+                const toolBonus = InventorySystem.getToolBonus(stat);
+                const total = d10 + statMod + toolBonus - pips;
+
+                let outcome;
+                if (tier === 1) {
+                    // Tier 1: 8+ Success, 5-7 Cost, 4- Miss
+                    if (total >= 8) outcome = 'success';
+                    else if (total >= 5) outcome = 'cost';
+                    else outcome = 'miss';
+                } else {
+                    // Tier 2: 11+ Full Success, 8-10 Minor Cost, 6-7 Major Cost, 5- Failure
+                    if (total >= 11) outcome = 'success';
+                    else if (total >= 8) outcome = 'minor_cost';
+                    else if (total >= 6) outcome = 'major_cost';
+                    else outcome = 'miss';
+                }
+
+                return { d10, statMod, pips, toolBonus, total, outcome, stat, tier };
+            },
+
+
+            // Apply consequences to game state
+            async applyConsequences(consequences) {
+                // Handle damage with armor absorption first
+                if (consequences.add_pips) {
+                    const stat = consequences.add_pips.stat;
+                    let damageAmount = consequences.add_pips.amount;
+
+                    // Try to absorb damage with armor first
+                    damageAmount = await InventorySystem.damageArmor(stat, damageAmount);
+
+                    // Apply remaining damage to character pips
+                    if (damageAmount > 0) {
+                        await gameState.transaction(async (state) => {
+                            const character = state.character;
+                            const currentPips = { ...(character.pips || {}) };
+                            currentPips[stat] = Math.min(2, (currentPips[stat] || 0) + damageAmount);
+                            return {
+                                character: {
+                                    ...character,
+                                    pips: currentPips
+                                }
+                            };
+                        });
+                        showToast(`${stat} damage: +${damageAmount} pip${damageAmount > 1 ? 's' : ''}`);
+                    }
+                }
+
+                // Handle XP and currency gains
+                await gameState.transaction(async (state) => {
+                    const updates = {};
+                    const character = state.character;
+
+                    if (consequences.xp_gain > 0) {
+                        updates.character = {
+                            ...character,
+                            xp: (character.xp || 0) + consequences.xp_gain
+                        };
+                        showToast(`+${consequences.xp_gain} XP`);
+                    }
+
+                    if (consequences.currency_gain !== 0) {
+                        const newCurrency = Math.max(0, (character.currency || 0) + consequences.currency_gain);
+                        updates.character = {
+                            ...(updates.character || character),
+                            currency: newCurrency
+                        };
+                        showToast(`${consequences.currency_gain > 0 ? '+' : ''}${consequences.currency_gain} Coin`);
+                    }
+
+                    return updates;
+                });
+            },
+
+            // Escalation Oracle (1d6) - determines complication severity on Cost
+            rollEscalationOracle() {
+                const d6 = Math.floor(Math.random() * 6) + 1;
+                let result;
+
+                if (d6 <= 4) {
+                    // 1-4: Minor Twist (Tier 1 complication)
+                    result = {
+                        type: 'minor_twist',
+                        description: 'Minor complication',
+                        advanceThreat: false
+                    };
+                } else if (d6 === 5) {
+                    // 5: Minor Twist + Advance Threat Clock
+                    result = {
+                        type: 'minor_threat',
+                        description: 'Minor complication + threat advances',
+                        advanceThreat: true
+                    };
+                } else {
+                    // 6: Major Oracle Twist (Tier 2 complication)
+                    result = {
+                        type: 'major_twist',
+                        description: 'Major complication!',
+                        advanceThreat: false
+                    };
+                }
+
+                return { d6, ...result };
+            },
+
+            // Enhanced consequence calculation with Escalation Oracle + Oracle Tables
+            // Tier 1: success/cost/miss | Tier 2: success/minor_cost/major_cost/miss
+            getConsequences(rollResult, actionType) {
+                const consequences = {
+                    xp_gain: 0,
+                    currency_gain: 0,
+                    add_pips: null,
+                    escalation: null,
+                    twist: null,  // Oracle-generated twist for AI narrative
+                    description: '',
+                    stealContext: actionType === 'steal'  // Flag for AI to know stealing occurred
+                };
+
+                if (rollResult.outcome === 'success') {
+                    consequences.xp_gain = 1;
+                    // For steal: AI will determine loot based on context
+                    if (actionType === 'steal') {
+                        consequences.description = 'Success! The AI will describe what was stolen based on the target.';
+                    } else {
+                        consequences.description = 'Success!';
+                    }
+                } else if (rollResult.outcome === 'cost' || rollResult.outcome === 'minor_cost') {
+                    // Tier 1 cost OR Tier 2 minor cost: Success + minor twist
+                    consequences.xp_gain = 1;
+
+                    // Roll minor twist from Oracle
+                    const minorTwist = OracleSystem.rollMinorTwist();
+                    consequences.twist = minorTwist;
+
+                    // For steal on cost: partial success, AI decides reduced loot
+                    if (actionType === 'steal') {
+                        consequences.description = `Success with complication! Partial loot - AI describes what was grabbed.`;
+                    } else {
+                        consequences.description = `Success with minor complication`;
+                    }
+                } else if (rollResult.outcome === 'major_cost') {
+                    // Tier 2 major cost: Success + major twist + pip damage
+                    consequences.xp_gain = 1;
+
+                    // Roll major twist from Oracle
+                    const majorTwist = OracleSystem.rollMajorTwist();
+                    consequences.twist = majorTwist;
+
+                    // Major cost always includes pip damage
+                    consequences.add_pips = { stat: rollResult.stat, amount: 1 };
+
+                    if (actionType === 'steal') {
+                        consequences.description = `Success with major complication! Partial loot + injury.`;
+                    } else {
+                        consequences.description = `Success with major complication and injury`;
+                    }
+                } else { // miss
+                    // Tier 2 failures still award XP (learning from failure)
+                    if (rollResult.tier === 2) {
+                        consequences.xp_gain = 1;
+                    }
+
+                    const severity = (rollResult.tier === 2 || actionType === 'combat') ? 2 : 1;
+                    consequences.add_pips = { stat: rollResult.stat, amount: severity };
+
+                    // Get injury flavor text from Oracle
+                    const flavor = OracleSystem.getInjuryFlavor(rollResult.stat, severity);
+                    consequences.description = severity >= 2
+                        ? `Failure with serious injury: ${flavor}`
+                        : `Failure with strain: ${flavor}`;
+
+                    // No loot on miss for steal
+                    if (actionType === 'steal') {
+                        consequences.description += ` (No loot obtained)`;
+                    }
+                }
+
+                return consequences;
+            },
+
+            // Format roll result for display and AI context
+            formatRollResult(rollResult) {
+                if (!rollResult) return '';
+                const { d10, stat, statMod, pips, toolBonus, total, outcome, tier } = rollResult;
+                const tierLabel = tier === 2 ? 'Perilous' : 'Challenging';
+                const pipText = pips > 0 ? ` - ${pips}(Pips)` : '';
+                const toolText = toolBonus > 0 ? ` + ${toolBonus}(Tool)` : '';
+                const outcomeLabel = outcome === 'minor_cost' ? 'MINOR COST' :
+                                    outcome === 'major_cost' ? 'MAJOR COST' : outcome.toUpperCase();
+                return `Action: ${stat} (Tier ${tier} - ${tierLabel}). Roll: d10(${d10}) + ${statMod}(${stat})${toolText}${pipText} = ${total}. Result: ${outcomeLabel}`;
+            }
+        };
+
+        // ===== ORACLE SYSTEM (Deterministic Complication Generation) =====
+
+        const OracleSystem = {
+            // Roll from Tier 1 Minor Twist tables (returns category and description)
+            rollMinorTwist() {
+                const twists = CONTENT_PACK_ASHLORDS.TIER_1_TWISTS;
+                const categories = Object.keys(twists);
+                const category = categories[Math.floor(Math.random() * categories.length)];
+                const table = twists[category];
+                const entry = table[Math.floor(Math.random() * table.length)];
+                return {
+                    category,
+                    description: entry,
+                    type: 'minor'
+                };
+            },
+
+            // Roll from Tier 2 Major Twist table (witty grimdark)
+            rollMajorTwist() {
+                const table = CONTENT_PACK_ASHLORDS.TIER_2_TWISTS_WITTY;
+                const entry = table[Math.floor(Math.random() * table.length)];
+                return {
+                    complication: entry.complication,
+                    twist: entry.twist,
+                    description: `${entry.complication} ${entry.twist}`,
+                    type: 'major'
+                };
+            },
+
+            // Roll Core Oracle (Action + Theme combination)
+            rollCoreOracle() {
+                const actions = CONTENT_PACK_ASHLORDS.ORACLES.ACTIONS;
+                const themes = CONTENT_PACK_ASHLORDS.ORACLES.THEMES;
+                return {
+                    action: actions[Math.floor(Math.random() * actions.length)],
+                    theme: themes[Math.floor(Math.random() * themes.length)]
+                };
+            },
+
+            // Roll a location from the oracle
+            rollLocation() {
+                const locations = CONTENT_PACK_ASHLORDS.ORACLES.LOCATIONS;
+                return locations[Math.floor(Math.random() * locations.length)];
+            },
+
+            // Get a quest hook with engine-switch reveal
+            rollQuestHook() {
+                const hooks = CONTENT_PACK_ASHLORDS.QUEST_HOOKS;
+                return hooks[Math.floor(Math.random() * hooks.length)];
+            },
+
+            // Get injury flavor text based on stat and severity
+            getInjuryFlavor(stat, severity) {
+                const flavor = INJURY_FLAVOR_TEXT[stat];
+                if (!flavor) return severity >= 2 ? "Serious wound" : "Minor strain";
+                return severity >= 2 ? flavor.injury : flavor.strain;
+            },
+
+            // Format twist for display
+            formatTwist(twist) {
+                if (!twist) return '';
+                if (twist.type === 'major') {
+                    return `MAJOR COMPLICATION: ${twist.description}`;
+                }
+                return `Complication (${twist.category.replace(/_/g, ' ')}): ${twist.description}`;
+            }
+        };
+
+        // ===== WORLD TURN & PHASE MANAGEMENT =====
+
+        const WorldTurn = {
+            // Execute World Turn during Downtime
+            // Advances faction clocks and triggers Grim Portents
+            async execute() {
+                const state = gameState.getState();
+                const worldClocks = state.worldClocks?.clocks || [];
+                const updates = [];
+                const portents = [];
+
+                // Advance each faction clock by 1
+                for (const clock of worldClocks) {
+                    const newCurrent = Math.min(clock.segments, (clock.current || 0) + 1);
+
+                    // Check if clock just filled
+                    if (newCurrent >= clock.segments && clock.current < clock.segments) {
+                        portents.push({
+                            faction: clock.name,
+                            event: `The ${clock.name} have achieved their goal: ${clock.goal || 'Advance Agenda'}!`
+                        });
+                    }
+
+                    updates.push({
+                        ...clock,
+                        current: newCurrent
+                    });
+                }
+
+                // Update world clocks
+                await gameState.transaction(async (state) => ({
+                    worldClocks: { clocks: updates }
+                }));
+
+                // Return portents for narrative
+                return portents;
+            },
+
+            // Check if downtime should trigger (every 5 adventure turns or after major event)
+            shouldTriggerDowntime(state) {
+                const turnsSinceDowntime = state.gameState?.adventure_turn_count || 0;
+
+                // Check for injury threshold (any stat at 2 pips)
+                const hasSerious = Object.values(state.character?.pips || {}).some(p => p >= 2);
+
+                // Trigger downtime after 5 turns OR if seriously injured
+                return turnsSinceDowntime >= 5 || hasSerious;
+            },
+
+            // Generate World Turn narrative for AI
+            async generateWorldTurnNarrative(portents) {
+                if (portents.length === 0) {
+                    return "The factions continue their machinations in the shadows...";
+                }
+
+                return portents.map(p => p.event).join('\n\n');
+            }
+        };
+
+        // ===== TAG SYSTEM =====
+
+        const TagSystem = {
+            // Add a tag to the character (with strict rate limiting)
+            async addTag(tag) {
+                const state = gameState.getState();
+                const tags = state.tags || [];
+                const turnCount = state.gameState?.turn_count || 0;
+
+                // Rate limiting: max 1 tag per 10 turns (tags are RARE)
+                if (tags.length > 0) {
+                    const lastTagTurn = Math.max(...tags.map(t => t.acquired_turn || 0));
+                    if (turnCount - lastTagTurn < 10) {
+                        console.warn(`⚠️ Tag rate limit: Must wait 10 turns between tags (${10 - (turnCount - lastTagTurn)} turns remaining)`);
+                        showToast('Tag rate limit: Only one tag per 10 turns', 3000);
+                        return;
+                    }
+                }
+
+                // Cap at 5 total tags (only for critical persistent narrative facts)
+                if (tags.length >= 5) {
+                    console.warn('⚠️ Tag cap reached: Maximum 5 tags');
+                    showToast('Tag limit reached: Remove old tags before adding new ones', 3000);
+                    return;
+                }
+
+                // Avoid duplicates
+                if (tags.find(t => t.name === tag.name)) {
+                    console.log(`Tag "${tag.name}" already exists, skipping`);
+                    return;
+                }
+
+                await gameState.transaction(async (state) => {
+                    const updatedTags = [...(state.tags || [])];
+                    updatedTags.push({
+                        name: tag.name,
+                        type: tag.type || 'story',  // 'story', 'reputation', 'relationship', 'secret'
+                        description: tag.description || '',
+                        acquired_turn: state.gameState?.turn_count || 0
+                    });
+                    return { tags: updatedTags };
+                });
+                showToast(`New Tag: ${tag.name}`);
+            },
+
+            // Remove a tag
+            async removeTag(tagName) {
+                await gameState.transaction(async (state) => {
+                    const tags = (state.tags || []).filter(t => t.name !== tagName);
+                    return { tags };
+                });
+            },
+
+            // Get tags for AI context
+            getTagsContext(state) {
+                const tags = state.tags || [];
+                if (tags.length === 0) return "None yet.";
+                return tags.map(t => `• ${t.name} (${t.type}): ${t.description}`).join('\n');
+            }
+        };
+
+        // ===== PROGRESS CLOCK SYSTEM (Hidden from player) =====
+
+        const ProgressClockSystem = {
+            // Create a new hidden progress clock
+            async createClock(name, segments = 6, type = 'threat') {
+                await gameState.transaction(async (state) => {
+                    const clocks = [...(state.progressClocks || [])];
+                    clocks.push({
+                        name,
+                        segments,
+                        current: 0,
+                        type,  // 'threat', 'opportunity', 'countdown'
+                        created_turn: state.gameState?.turn_count || 0
+                    });
+                    return { progressClocks: clocks };
+                });
+            },
+
+            // Advance a progress clock
+            async advanceClock(name, amount = 1) {
+                let triggered = false;
+                await gameState.transaction(async (state) => {
+                    const clocks = (state.progressClocks || []).map(c => {
+                        if (c.name === name) {
+                            const newCurrent = Math.min(c.segments, (c.current || 0) + amount);
+                            if (newCurrent >= c.segments) {
+                                triggered = true;
+                            }
+                            return { ...c, current: newCurrent };
+                        }
+                        return c;
+                    });
+                    return { progressClocks: clocks };
+                });
+                return triggered;
+            },
+
+            // Remove a completed clock
+            async removeClock(name) {
+                await gameState.transaction(async (state) => {
+                    const clocks = (state.progressClocks || []).filter(c => c.name !== name);
+                    return { progressClocks: clocks };
+                });
+            }
+        };
+
+        // ===== GAME CODE =====
+        // Note: CONTENT_PACK_ASHLORDS is loaded from game_data.js script tag
+
+        const ui = {}; 
+
+        function logBoot(msg) {
+            console.log(msg);
+            const el = document.getElementById('boot-log');
+            if(el) {
+                el.style.display = 'block';
+                el.innerHTML += `<div>> ${msg}</div>`;
+            }
+        }
+
+        async function init() {
+            logBoot("🚀 INIT SEQUENCE v2.6.1 (Playtesting Fixes)");
+
+            setTimeout(() => {
+                const btn = document.getElementById('force-start-btn');
+                if(btn) btn.style.display = 'block';
+            }, 5000);
+
+            try {
+                bindUI();
+            } catch (e) {
+                window.showError("UI Error", "Failed to bind UI. " + e.message);
+                return;
+            }
+
+            try {
+                logBoot("Step 1: Checking Game Data...");
+                // Game data is loaded via script tag (no module import needed)
+                if (typeof CONTENT_PACK_ASHLORDS === 'undefined') {
+                    throw new Error("Game data not loaded. Make sure game_data.js is present.");
+                }
+                logBoot("✅ Data Loaded.");
+
+            } catch (e) {
+                logBoot(`❌ DATA ERROR: ${e.message}`);
+                window.showError("Initialization Error", `Failed to load game data. ${e.message}`);
+                return;
+            }
+
+            try {
+                logBoot("Step 2: Setting up state listeners...");
+                setupStateListeners();
+                logBoot("✅ State listeners ready.");
+                hideLoading();
+            } catch (e) {
+                logBoot(`❌ SETUP ERROR: ${e.message}`);
+                window.showError("Setup Error", e.message);
+            }
+        }
+
+        function bindUI() {
+            const safeBind = (id) => document.getElementById(id);
+
+            ui.loading = safeBind('loading-overlay');
+            ui.charCreation = safeBind('character-creation-ui');
+            ui.mainGame = safeBind('main-game-ui');
+            ui.callingOpts = safeBind('calling-options');
+            ui.burdenOpts = safeBind('burden-options');
+            ui.burdenDetailWrap = safeBind('burden-detail-input-wrapper');
+            ui.burdenDetailInput = safeBind('burden-detail-input');
+            ui.burdenDetailLabel = safeBind('burden-detail-label');
+            ui.charName = safeBind('character-name');
+            ui.playerInput = safeBind('player-input');
+            ui.modal = safeBind('error-modal');
+            ui.characterSheetLoading = safeBind('character-sheet-loading');
+            ui.worldClocksContainer = safeBind('world-clocks-container');
+            ui.chapterUI = safeBind('chapter-phase-ui');
+            ui.interludeUI = safeBind('interlude-phase-ui');
+            
+            const btnCreate = safeBind('create-character-btn');
+            if (btnCreate) btnCreate.addEventListener('click', createCharacterAndStartGame);
+            
+            const btnSubmit = safeBind('submit-action-btn');
+            if (btnSubmit) btnSubmit.addEventListener('click', handlePlayerAction);
+            
+            const btnReset = safeBind('reset-game-btn');
+            if (btnReset) btnReset.addEventListener('click', resetGame);
+            
+            const btnTrain = safeBind('interlude-train-btn');
+            if (btnTrain) btnTrain.addEventListener('click', () => handleInterludeAction('seek_training'));
+            
+            const btnAsset = safeBind('interlude-asset-btn');
+            if (btnAsset) btnAsset.addEventListener('click', () => handleInterludeAction('acquire_asset'));
+            
+            const btnReflect = safeBind('interlude-reflect-btn');
+            if (btnReflect) btnReflect.addEventListener('click', () => handleInterludeAction('reflect'));
+
+            const btnHeal = safeBind('interlude-heal-btn');
+            if (btnHeal) btnHeal.addEventListener('click', () => handleInterludeAction('heal'));
+
+            const btnShop = safeBind('interlude-shop-btn');
+            if (btnShop) btnShop.addEventListener('click', () => openXPShop());
+
+            const btnRepair = safeBind('interlude-repair-btn');
+            if (btnRepair) btnRepair.addEventListener('click', () => handleInterludeAction('repair_armor'));
+
+            const btnCleanse = safeBind('interlude-cleanse-btn');
+            if (btnCleanse) btnCleanse.addEventListener('click', () => handleInterludeAction('cleanse_blight'));
+
+            const btnShopClose = safeBind('xp-shop-close-btn');
+            if (btnShopClose) btnShopClose.addEventListener('click', () => {
+                const modal = document.getElementById('xp-shop-modal');
+                if (modal) modal.style.display = 'none';
+            });
+
+            const btnEnd = safeBind('interlude-end-btn');
+            if (btnEnd) btnEnd.addEventListener('click', () => handleInterludeAction('end_interlude'));
+
+            if(ui.playerInput) ui.playerInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handlePlayerAction(); } });
+            
+            const btnCloseModal = safeBind('close-modal-btn');
+            if(btnCloseModal && ui.modal) {
+                 btnCloseModal.addEventListener('click', () => {
+                    ui.modal.style.display = 'none';
+                 });
+            }
+
+            const toggleAccordion = (headerId, contentId, iconId) => {
+                const header = document.getElementById(headerId);
+                const content = document.getElementById(contentId);
+                const icon = document.getElementById(iconId);
+                if(header && content) {
+                    header.onclick = () => {
+                        const isHidden = content.style.display === 'none';
+                        content.style.display = isHidden ? 'block' : 'none';
+                        if(icon) icon.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(-90deg)';
+                    };
+                }
+            };
+            toggleAccordion('character-sheet-header', 'character-sheet-content', 'accordion-icon');
+            toggleAccordion('unified-clocks-header', 'unified-clocks-content', 'unified-accordion-icon');
+
+            window.forceUI = () => {
+                if(ui.loading) ui.loading.style.display = 'none';
+                if(ui.charCreation) ui.charCreation.style.display = 'block';
+                renderOptions();
+            };
+        }
+
+        function setupStateListeners() {
+            // Character updates
+            gameState.subscribe('character', (character) => {
+                logBoot("📡 Character Update");
+                if (character) {
+                    ui.charCreation.style.display = 'none';
+                    ui.mainGame.style.display = 'block';
+                    displayCharacter(character);
+                } else {
+                    ui.mainGame.style.display = 'none';
+                    ui.charCreation.style.display = 'block';
+                    renderOptions();
+                }
+            });
+
+            // Chat history updates
+            gameState.subscribe('chatHistory', (chatHistory) => {
+                displayChatHistory(chatHistory || []);
+            });
+
+            // World clocks
+            gameState.subscribe('worldClocks', (worldClocks) => {
+                if (worldClocks) displayWorldClocks(worldClocks);
+            });
+
+            // Destiny and Front clocks
+            gameState.subscribe('destinyFrontClocks', (clocks) => {
+                if (clocks) {
+                    displayDestinyClock(clocks.destiny);
+                    displayEndgameFront(clocks.front);
+                }
+            });
+
+            // Quest state
+            gameState.subscribe('questState', (questState) => {
+                if (questState?.current_quest) {
+                    displayQuestProgress(questState.current_quest);
+                } else {
+                    hideQuestProgress();
+                }
+            });
+
+            // Game state (phase changes)
+            gameState.subscribe('gameState', (state) => {
+                if (state) {
+                    if (state.phase === 'interlude' || state.phase === 'downtime') {
+                        ui.chapterUI.style.display = 'none';
+                        ui.interludeUI.style.display = 'block';
+                    } else {
+                        ui.chapterUI.style.display = 'block';
+                        ui.interludeUI.style.display = 'none';
+                    }
+                }
+            });
+
+            // Tags - refresh character sheet when tags change
+            gameState.subscribe('tags', (tags) => {
+                const character = gameState.getState().character;
+                if (character) {
+                    displayCharacter(character);
+                }
+            });
+        }
+
+        // Function to manually trigger downtime (can be called by player or code)
+        async function triggerDowntime() {
+            await gameState.transaction(async (state) => ({
+                gameState: {
+                    ...state.gameState,
+                    phase: 'downtime'
+                }
+            }));
+            showToast('Entering Downtime Phase...');
+            await addMessageToChat('model', `**Downtime begins.**\n\nThe immediate danger has passed, and you find a moment to catch your breath. The world continues to turn—factions plot, threats loom—but for now, you have time to rest, reflect, or prepare.\n\nChoose your downtime actions wisely. When you return to adventure, the faction clocks will advance.`);
+        }
+
+        function renderOptions() {
+            const createStatLine = (stats) => {
+                const positive = Object.entries(stats).filter(([, v]) => v > 0);
+                const negative = Object.entries(stats).filter(([, v]) => v < 0);
+                
+                const format = ([k, v]) => {
+                    const sign = v > 0 ? '+' : '';
+                    const colorClass = v > 0 ? 'text-emerald-400' : 'text-gray-500';
+                    return `<span class="${colorClass}">${k.toUpperCase()} ${sign}${v}</span>`;
+                };
+                
+                const posStr = positive.map(format).join(' / ');
+                const negStr = negative.map(format).join(' / ');
+                
+                if (posStr && negStr) return `${posStr} / ${negStr}`;
+                return posStr || negStr;
+            };
+                
+            if (ui.callingOpts) {
+                ui.callingOpts.innerHTML = '';
+                CONTENT_PACK_ASHLORDS.callings.forEach(c => {
+                    const tHtml = (c.talents||[]).map(t=>`<div><b class="text-gray-300">${t.name}</b>: <span class="text-gray-400 text-xs">${t.description}</span></div>`).join('');
+                    const card = document.createElement('div');
+                    card.className = 'playbook-card p-4 rounded-lg cursor-pointer border border-gray-700 mb-2';
+                    card.dataset.id = c.id;
+                    card.innerHTML = `<h4 class="text-white font-bold">${c.name}</h4><p class="text-gray-400 text-sm mb-2">${c.description}</p><div class="text-xs font-mono mb-2">${createStatLine(c.stats)}</div><div class="space-y-1">${tHtml}</div>`;
+                    card.onclick = () => { if(ui.callingOpts) Array.from(ui.callingOpts.children).forEach(x=>x.classList.remove('selected')); card.classList.add('selected'); };
+                    ui.callingOpts.appendChild(card);
+                });
+            }
+
+            if (ui.burdenOpts) {
+                ui.burdenOpts.innerHTML = '';
+                CONTENT_PACK_ASHLORDS.burdens.forEach(b => {
+                    const tHtml = (b.talents||[]).map(t=>`<div><b class="text-gray-300">${t.name}</b>: <span class="text-gray-400 text-xs">${t.description}</span></div>`).join('');
+                    const card = document.createElement('div');
+                    card.className = 'playbook-card p-4 rounded-lg cursor-pointer border border-gray-700 mb-2';
+                    card.dataset.id = b.id;
+                    card.dataset.requiresInput = b.requiresInput;
+                    card.innerHTML = `<h4 class="text-white font-bold">${b.name}</h4><p class="text-gray-400 text-sm mb-2">${b.description}</p><div class="text-xs font-mono mb-2">${createStatLine(b.stats)}</div><div class="space-y-1">${tHtml}</div>`;
+                    card.onclick = () => {
+                        if(ui.burdenOpts) Array.from(ui.burdenOpts.children).forEach(x=>x.classList.remove('selected')); card.classList.add('selected');
+                        if(ui.burdenDetailWrap) ui.burdenDetailWrap.style.display = b.requiresInput ? 'block' : 'none';
+                        if(b.requiresInput && ui.burdenDetailLabel) ui.burdenDetailLabel.textContent = b.inputLabel || "Define details:";
+                    };
+                    ui.burdenOpts.appendChild(card);
+                });
+            }
+        }
+
+        function displayCharacter(data) {
+            const sheet = document.getElementById('character-sheet-data');
+            if (!sheet) return;
+            if(ui.characterSheetLoading) ui.characterSheetLoading.style.display = 'none';
+            
+            if(CONTENT_PACK_ASHLORDS && data.playbook) {
+                const callingName = data.playbook?.calling;
+                const callingObj = callingName ? CONTENT_PACK_ASHLORDS.callings.find(c => c.name === callingName) : null;
+                
+                if(callingObj) {
+                    const questData = CONTENT_PACK_ASHLORDS.LEGENDARY_QUESTS ? CONTENT_PACK_ASHLORDS.LEGENDARY_QUESTS[callingObj.id] : null;
+                    const destinyText = document.getElementById('destiny-narrative');
+                    if(questData && destinyText) {
+                        destinyText.textContent = questData.title; 
+                        destinyText.style.color = "var(--c-alchemical-gold)";
+                    }
+                }
+            }
+
+            const pipsData = data.pips || {}; 
+            
+            const statsHtml = Object.entries(data.stats || {}).map(([k,v]) => {
+                const pipCount = pipsData[k] || 0;
+                const pip1Class = pipCount >= 1 ? "filled" : "";
+                const pip2Class = pipCount >= 2 ? "filled" : "";
+                
+                return `
+                <div class="stat-block p-2 text-center border border-gray-700 rounded hover:bg-gray-700" onclick="updateDescription('${k}', 'Pips: ${pipCount}/2', 'stat')">
+                    <div class="text-xs text-gray-400 uppercase">${k.substring(0,3)}</div>
+                    <div class="text-xl font-bold ${v>0?'text-emerald-400':'text-gray-300'}">${v>0?'+'+v:v}</div>
+                    <div class="pip-container">
+                        <div class="pip ${pip1Class}"></div>
+                        <div class="pip ${pip2Class}"></div>
+                    </div>
+                </div>`;
+            }).join('');
+            
+            const escapeStr = (str) => str.replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, ' ');
+
+            // Build talents with activation buttons
+            const activeTalent = TalentSystem.getActiveTalent();
+            const talentsHtml = (data.talents||[]).map(t => {
+                const talentConfig = TalentSystem.getTalentConfig(t.id);
+                const isActive = activeTalent === t.id;
+                const isCalling = talentConfig?.type === 'calling';
+                const isBurden = talentConfig?.type === 'burden';
+
+                // Different styling for calling vs burden talents
+                const borderColor = isActive ? 'border-yellow-500 bg-yellow-900/20' :
+                                   isCalling ? 'border-emerald-700 hover:border-emerald-500' :
+                                   isBurden ? 'border-red-700 hover:border-red-500' :
+                                   'border-gray-700 hover:border-gray-500';
+                const labelColor = isCalling ? 'text-emerald-400' : isBurden ? 'text-red-400' : 'text-gray-400';
+                const typeLabel = isCalling ? 'CALLING' : isBurden ? 'BURDEN' : '';
+
+                // Cost display for burden talents
+                const costText = talentConfig?.cost ?
+                    `<span class="text-xs text-red-300">${talentConfig.cost}</span>` : '';
+
+                // Button text
+                const btnText = isActive ? 'READY' : isCalling ? 'Ready' : 'Activate';
+                const btnClass = isActive ? 'bg-yellow-600 text-black' :
+                                isCalling ? 'bg-emerald-800 hover:bg-emerald-700 text-emerald-200' :
+                                'bg-red-800 hover:bg-red-700 text-red-200';
+
+                return `
+                    <div class="talent-block p-1.5 border ${borderColor} rounded flex items-center gap-2"
+                         onclick="updateDescription('${escapeStr(t.name)}', '${escapeStr(t.description)}', 'talent')">
+                        <div class="flex-grow flex flex-col">
+                            <div class="flex items-center gap-1">
+                                <span class="text-sm text-gray-300 font-medium">${t.name}</span>
+                                <span class="text-xs ${labelColor}">${typeLabel}</span>
+                            </div>
+                            ${costText}
+                        </div>
+                        <button onclick="event.stopPropagation(); TalentSystem.activate('${t.id}')"
+                                class="talent-activation-btn ${isActive ? 'active' : ''} ${isCalling ? 'calling' : ''}"
+                                title="${btnText}">
+                            🔥
+                        </button>
+                    </div>`;
+            }).join('');
+            
+            const equipHtml = (data.equipment || []).map(i => {
+                const safeName = (i.name || 'Unknown Item').replace(/'/g, "&apos;");
+                const loreContent = (i.lore || i.desc || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n');
+
+                // Build special display for tools and armor
+                let specialBadge = '';
+                if (i.type === 'tool' && i.stat) {
+                    // Tool: show "+1 STAT" badge
+                    specialBadge = `<span class="equip-tag text-emerald-400 border border-emerald-600 bg-emerald-900/30">+1 ${i.stat.substring(0,3)}</span>`;
+                } else if (i.type === 'armor' && i.stat) {
+                    // Armor: show pip meter with diamond shapes
+                    const currentPips = i.pips || 0;
+                    const maxPips = i.max_pips || 2;
+                    // Color-code by armor type
+                    const armorColorClass = i.stat === 'FORCE' ? 'armor-pip-force' :
+                                           i.stat === 'FINESSE' ? 'armor-pip-finesse' :
+                                           i.stat === 'RESOLVE' ? 'armor-pip-resolve' : 'armor-pip-default';
+                    const pipDisplay = Array.from({length: maxPips}, (_, idx) =>
+                        `<span class="armor-pip ${idx < currentPips ? 'filled' : ''} ${armorColorClass}"></span>`
+                    ).join('');
+                    specialBadge = `<span class="equip-tag border border-gray-600 flex items-center gap-0.5">${pipDisplay}</span>`;
+                } else {
+                    // Regular items: show property badges
+                    const safeProperties = (i.properties || []).filter(p => p);
+                    specialBadge = safeProperties.map(p => {
+                        if (typeof p !== 'string') return '';
+                        const type = p.toLowerCase().includes('heavy') ? 'heavy' :
+                                     p.toLowerCase().includes('silver') || p.toLowerCase().includes('gold') || p.toLowerCase().includes('precious') ? 'precious' :
+                                     p.toLowerCase().includes('consumable') ? 'consumable' :
+                                     p.toLowerCase().includes('fragile') || p.toLowerCase().includes('shabby') ? 'fragile' : '';
+                        return `<span class="equip-tag ${type}">${p}</span>`;
+                    }).join(' ');
+                }
+
+                // Type badge
+                const typeBadge = i.type && i.type !== 'loot'
+                    ? `<span class="text-xs px-1 rounded ${i.type === 'tool' ? 'bg-emerald-900 text-emerald-300' : i.type === 'armor' ? 'bg-blue-900 text-blue-300' : 'bg-gray-700 text-gray-400'}">${i.type}</span>`
+                    : '';
+
+                return `<li class="text-sm text-gray-300 py-2 border-b border-gray-800 cursor-pointer hover:text-emerald-400 flex justify-between items-center" onclick="updateDescription('${safeName}', '', 'item', '${loreContent}')">
+                    <span class="flex items-center gap-2">${typeBadge}${i.name}</span>
+                    <div class="flex items-center gap-2">
+                        ${specialBadge}
+                        <button onclick="event.stopPropagation(); dropItem('${safeName}')"
+                                class="text-xs text-gray-500 hover:text-red-400 px-1 transition"
+                                title="Drop item">✕</button>
+                    </div>
+                </li>`;
+            }).join('');
+
+            // Build Tags HTML
+            const currentState = gameState.getState();
+            const tags = currentState.tags || [];
+            const tagsHtml = tags.length > 0
+                ? tags.map(t => {
+                    const typeColors = {
+                        'story': 'bg-gray-600',
+                        'reputation': 'bg-amber-800',
+                        'relationship': 'bg-blue-800',
+                        'secret': 'bg-purple-800'
+                    };
+                    const colorClass = typeColors[t.type] || 'bg-gray-600';
+                    const safeDesc = (t.description || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    return `<span class="inline-block px-2 py-1 ${colorClass} text-xs text-white rounded cursor-pointer hover:opacity-80 mr-1 mb-1" onclick="updateDescription('${escapeStr(t.name)}', '${safeDesc}', 'tag')">${t.name}</span>`;
+                }).join('')
+                : '<span class="text-gray-500 text-xs italic">No tags yet. Earn them through play.</span>';
+            
+            // Blight tracker - visible for ALL characters (anyone can be infected)
+            const blightStage = data.blight || 0;
+            const blightMax = 5;
+            const blightFlavor = blightStage === 0 ? 'Uncorrupted.' :
+                                 blightStage === 1 ? 'A faint taint lingers.' :
+                                 blightStage === 2 ? 'It whispers to you.' :
+                                 blightStage === 3 ? 'The corruption grows.' :
+                                 blightStage === 4 ? 'Nearly consumed...' :
+                                 'Lost to the Blight.';
+
+            const blightHtml = `
+                <div class="mt-2 p-1.5 ${blightStage > 0 ? 'bg-purple-900/30 border-purple-700' : 'bg-gray-900/30 border-gray-700'} border rounded">
+                    <div class="flex items-center gap-2">
+                        <h4 class="text-xs uppercase font-semibold ${blightStage > 0 ? 'text-purple-400' : 'text-gray-500'} tracking-wider">Blight</h4>
+                        <div class="flex gap-0.5">
+                            ${Array.from({length: blightMax}, (_, i) => `
+                                <div class="w-3 h-3 rounded-full border ${i < blightStage ? 'bg-purple-600 border-purple-400' : 'bg-gray-800 border-gray-700'}"></div>
+                            `).join('')}
+                        </div>
+                        <span class="text-xs ${blightStage > 0 ? 'text-purple-300' : 'text-gray-500'}">${blightStage}/${blightMax}</span>
+                        ${blightStage > 0 ? `<span class="text-xs text-purple-300/70 italic ml-auto">${blightFlavor}</span>` : ''}
+                    </div>
+                </div>
+            `;
+
+            // UI UPDATE (v0.9.5): Removed the Conditions container div
+            sheet.innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <h3 class="text-xl font-bold text-white">${data.name || "Unknown"}</h3>
+                            <p class="text-sm text-emerald-400">${data.playbook?.calling || "?"} / ${data.playbook?.burden || "?"}</p>
+                        </div>
+                        <div class="text-right flex items-center space-x-4">
+                             <div>
+                                 <p class="text-xs text-gray-500">EXP</p>
+                                 <p class="text-lg font-bold text-emerald-400">${data.xp || 0}</p>
+                             </div>
+                             <div>
+                                 <p class="text-xs text-gray-500">COIN</p>
+                                 <p class="text-lg font-bold ${(data.currency || 0) > 0 ? 'text-emerald-400' : 'text-gray-600'}">${data.currency || 0}</p>
+                             </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-5 gap-2 select-none">${statsHtml}</div>
+                    ${blightHtml}
+                    <div>
+                        <h4 class="text-xs uppercase font-semibold text-gray-500 mb-2 tracking-wider">Talents</h4>
+                        <div class="grid grid-cols-2 gap-2">${talentsHtml || '<p class="text-sm text-gray-500 italic col-span-2">No talents.</p>'}</div>
+                    </div>
+                    <div>
+                        <h4 class="text-xs uppercase font-semibold text-gray-500 mb-2 tracking-wider">Equipment</h4>
+                        <ul class="space-y-0">${equipHtml || '<span class="text-gray-500 text-xs">None</span>'}</ul>
+                    </div>
+                    <div>
+                        <h4 class="text-xs uppercase font-semibold text-gray-500 mb-2 tracking-wider">Tags</h4>
+                        <div class="flex flex-wrap">${tagsHtml}</div>
+                    </div>
+                    <div id="description-display" class="text-sm text-left text-gray-400 min-h-[3.5em] p-3 bg-gray-900 rounded-r-lg flex flex-col justify-center mt-2 border-t-2 border-gray-800">
+                        <span class="italic opacity-50">Select any attribute, talent, item, or tag above to view details.</span>
+                    </div>
+                </div>`;
+        }
+
+        window.updateDescription = (title, description, type, lore = '') => {
+            const display = document.getElementById('description-display');
+            if(display) {
+                let content = `<strong class="text-emerald-400 block mb-1">${title}</strong>`;
+                if(description) content += `<p class="text-gray-400 text-sm mb-2">${description}</p>`;
+                if (lore) content += `<div class="mt-2 pt-2 border-t border-gray-700 font-mono text-xs text-red-300">${lore.replace(/\\n/g, '<br>')}</div>`;
+
+                display.innerHTML = content;
+                display.classList.remove('active');
+                void display.offsetWidth;
+                display.classList.add('active');
+            }
+        };
+
+        // Drop/remove item from inventory
+        window.dropItem = async (itemName) => {
+            const confirmed = confirm(`Drop "${itemName}"?\n\nThis item will be permanently removed from your inventory.`);
+            if (!confirmed) return;
+
+            const success = await InventorySystem.removeItem(itemName);
+            if (success) {
+                // Refresh character display
+                const character = gameState.getState().character;
+                if (character) {
+                    displayCharacter(character);
+                }
+                // Add narrative note
+                await addMessageToChat('model', `You discard **${itemName}**, leaving it behind.`);
+            }
+        };
+
+        async function createCharacterAndStartGame() {
+            const charName = ui.charName.value.trim();
+            const selectedCallingEl = ui.callingOpts.querySelector('.selected');
+            const selectedBurdenEl = ui.burdenOpts.querySelector('.selected');
+
+            if (!charName || !selectedCallingEl || !selectedBurdenEl) {
+                return window.showError("Missing Info", "Please fill all fields.");
+            }
+
+            showLoading();
+
+            try {
+                const callingId = selectedCallingEl.dataset.id;
+                const burdenId = selectedBurdenEl.dataset.id;
+                const calling = CONTENT_PACK_ASHLORDS.callings.find(c => c.id === callingId);
+                const burden = CONTENT_PACK_ASHLORDS.burdens.find(b => b.id === burdenId);
+
+                const combinedStats = { FORCE: 0, FINESSE: 0, INFLUENCE: 0, WITS: 0, RESOLVE: 0 };
+                for (const stat in combinedStats) {
+                    // Combine calling and burden stats, then clamp to valid range (-1 to +5)
+                    const rawValue = (calling.stats[stat] || 0) + (burden.stats[stat] || 0);
+                    combinedStats[stat] = Math.max(-1, Math.min(5, rawValue));
+                }
+
+                const newCharacter = {
+                    name: charName,
+                    playbook: { calling: calling.name, burden: burden.name, callingId: callingId, burdenId: burdenId },
+                    stats: combinedStats,
+                    pips: {},
+                    talents: [...(calling.talents || []), ...(burden.talents || [])],
+                    equipment: [...(calling.equipment || []), ...(burden.equipment || [])],
+                    xp: 0,
+                    xp_locked: 0,
+                    currency: 0,
+                    blight: 0  // Blight tracker for blight-related burdens
+                };
+
+                // Get front name from calling
+                const fronts = CONTENT_PACK_ASHLORDS.endgame_fronts || {};
+                const frontInfo = fronts[callingId];
+
+                // Initialize world clocks
+                const clockData = (CONTENT_PACK_ASHLORDS.FACTIONS || []).map(f => ({
+                    name: f.name,
+                    current: 0,
+                    segments: 6,
+                    goal: f.goal || "Advance Agenda"
+                }));
+
+                // Update state atomically
+                await gameState.transaction(async (state) => ({
+                    character: newCharacter,
+                    gameState: {
+                        phase: 'adventure',
+                        turn_count: 0,
+                        saga_log: "The story begins...",
+                        current_location: "The Tavern"
+                    },
+                    worldClocks: {
+                        clocks: clockData
+                    },
+                    destinyFrontClocks: {
+                        destiny: { current: 0, segments: 8 },
+                        front: {
+                            current: 0,
+                            segments: 8,
+                            name: frontInfo?.name || "The Threat Looms"
+                        }
+                    },
+                    campaign: {
+                        id: "ashlords_covenant_main_v1",
+                        started_at: Date.now(),
+                        active: true,
+                        version: "1.0.0"
+                    },
+                    chatHistory: [{
+                        role: 'model',
+                        content: "You are in a dimly lit tavern, the air thick with stale ale and desperation. Ash-Warden enforcers, clad in rusted, reinforced plate armor, are shaking down the tavern keeper over a fabricated 'Blight Tax'. One guard, his face a mask of bored cruelty beneath a grim iron visor, shoves the old man. 'Pay up, or we shut you down.' What do you do?",
+                        timestamp: Date.now(),
+                        id: crypto.randomUUID()
+                    }]
+                }));
+
+            } catch (error) {
+                window.showError("Creation Failed", error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        /**
+         * Extract balanced bracket content starting from a position
+         * Returns {content, endIndex} or null if no valid brackets found
+         */
+        function extractBalancedBrackets(text, startIndex) {
+            if (text[startIndex] !== '[') return null;
+
+            let depth = 0;
+            let inString = false;
+            let escapeNext = false;
+
+            for (let i = startIndex; i < text.length; i++) {
+                const char = text[i];
+
+                if (escapeNext) {
+                    escapeNext = false;
+                    continue;
+                }
+
+                if (char === '\\' && inString) {
+                    escapeNext = true;
+                    continue;
+                }
+
+                if (char === '"' || char === "'") {
+                    inString = !inString;
+                    continue;
+                }
+
+                if (inString) continue;
+
+                if (char === '[') depth++;
+                else if (char === ']') {
+                    depth--;
+                    if (depth === 0) {
+                        return {
+                            content: text.slice(startIndex, i + 1),
+                            endIndex: i + 1
+                        };
+                    }
+                }
+            }
+            return null; // Unbalanced brackets
+        }
+
+        // Validate that GM narrative uses second person (not third person)
+        function validateSecondPerson(narrative) {
+            // Check for third-person patterns that indicate incorrect perspective
+            const thirdPersonPatterns = [
+                /\b(he|she|they)\s+(walks?|runs?|fights?|speaks?|says?|does|is|has|goes|looks|feels|thinks)\b/i,
+                /\b(his|her|their)\s+(sword|weapon|hand|face|eyes|voice|heart|mind|body)\b/i,
+                /\bthe\s+(mercenary|slayer|scholar|invoker|warrior|fighter|mage|character)\s+(does|is|has|walks|fights|speaks)\b/i
+            ];
+
+            const violations = [];
+            for (const pattern of thirdPersonPatterns) {
+                const match = narrative.match(pattern);
+                if (match) {
+                    violations.push(match[0]);
+                }
+            }
+
+            if (violations.length > 0) {
+                console.warn('⚠️ Third-person detected in GM narrative:', violations.join(', '));
+                console.warn('Full narrative excerpt:', narrative.substring(0, 200) + '...');
+                return false;
+            }
+            return true;
+        }
+
+        // Parse AI response for structured commands (currency_gain, equipment_add, etc.)
+        function parseAIStructuredResponse(text) {
+            let cleanNarrative = text;
+            const stateUpdates = {};
+
+            // Pattern to match currency_gain: X (with various formats, including negative)
+            const currencyMatch = text.match(/currency_gain:\s*(-?\d+)/i);
+            if (currencyMatch) {
+                let rawGain = parseInt(currencyMatch[1], 10);
+
+                // --- SEMANTIC VALIDATION FIX ---
+                // Prevent hallucinations: Only allow currency change if narrative mentions money/trade context
+                if (rawGain !== 0) {
+                    // Use regex with word boundaries to prevent false matches (e.g., "soldier" matching "sold")
+                    const moneyRegex = /\b(coins?|gold|silver|copper|purse|pouch|wallet|money|pay(s|ing|ment)?|paid|buy(s|ing)?|bought|sell(s|ing)?|sold|loot(s|ing|ed)?|steal(s|ing)?|stole|stolen|bribe(s|ry)?|tip(s|ped)?|found|earnings|dropped|gave|lost|taken|cash|currency|reward|treasure|wealth)\b/i;
+
+                    // Check both the raw text and clean narrative for context
+                    const contextText = (cleanNarrative + " " + text).toLowerCase();
+                    const hasMoneyContext = moneyRegex.test(contextText);
+
+                    if (!hasMoneyContext) {
+                        console.warn(`Blocked currency hallucination: ${rawGain} coin without narrative justification.`);
+                        rawGain = 0;
+                    }
+                }
+                // -------------------------------
+
+                stateUpdates.currency_gain = rawGain;
+                cleanNarrative = cleanNarrative.replace(/currency_gain:\s*-?\d+/gi, '').trim();
+            }
+
+            // Pattern to match blight_gain: X (for Blight corruption from AI)
+            const blightMatch = text.match(/blight_gain:\s*(\d+)/i);
+            if (blightMatch) {
+                stateUpdates.blight_gain = parseInt(blightMatch[1], 10);
+                cleanNarrative = cleanNarrative.replace(/blight_gain:\s*\d+/gi, '').trim();
+            }
+
+            // Pattern to match tag_add: {name: "...", type: "...", description: "..."}
+            const tagAddMatch = text.match(/tag_add:\s*\{([^}]+)\}/i);
+            if (tagAddMatch) {
+                try {
+                    // Fix common AI formatting issues
+                    let jsonStr = `{${tagAddMatch[1]}}`
+                        .replace(/'/g, '"')  // Replace single quotes
+                        .replace(/([{,]\s*)(\w+)(\s*:)/g, '$1"$2"$3');  // Quote unquoted keys
+
+                    const tagData = JSON.parse(jsonStr);
+                    if (tagData.name && tagData.type && tagData.description) {
+                        stateUpdates.tag_add = tagData;
+                    }
+                } catch (e) {
+                    console.warn('Failed to parse tag_add:', e);
+                }
+                cleanNarrative = cleanNarrative.replace(/tag_add:\s*\{[^}]+\}/gi, '').trim();
+            }
+
+            // Pattern to match tag_remove: "Tag Name"
+            const tagRemoveMatch = text.match(/tag_remove:\s*"([^"]+)"/i);
+            if (tagRemoveMatch) {
+                stateUpdates.tag_remove = tagRemoveMatch[1];
+                cleanNarrative = cleanNarrative.replace(/tag_remove:\s*"[^"]+"/gi, '').trim();
+            }
+
+            // Find equipment_add with balanced bracket parsing
+            const equipmentKeyMatch = text.match(/equipment_add:\s*/i);
+            if (equipmentKeyMatch) {
+                const keyEnd = equipmentKeyMatch.index + equipmentKeyMatch[0].length;
+                const extracted = extractBalancedBrackets(text, keyEnd);
+
+                if (extracted) {
+                    try {
+                        // Fix common AI formatting issues
+                        let jsonStr = extracted.content
+                            .replace(/'/g, '"')  // Replace single quotes with double quotes
+                            .replace(/([{,]\s*)(\w+)(\s*:)/g, '$1"$2"$3')  // Quote unquoted keys (more precise)
+                            .replace(/,\s*}/g, '}')  // Remove trailing commas
+                            .replace(/,\s*]/g, ']');  // Remove trailing commas in arrays
+
+                        const items = JSON.parse(jsonStr);
+                        if (Array.isArray(items) && items.length > 0) {
+                            stateUpdates.equipment_add = items;
+                        }
+                    } catch (e) {
+                        console.error("Failed to parse equipment_add JSON:", e, extracted.content);
+                        stateUpdates.equipmentParseError = true;
+                    }
+                    // Remove the equipment_add from narrative
+                    cleanNarrative = cleanNarrative.slice(0, equipmentKeyMatch.index) +
+                                    cleanNarrative.slice(extracted.endIndex);
+                    cleanNarrative = cleanNarrative.trim();
+                } else {
+                    console.error("Unbalanced brackets in equipment_add");
+                    stateUpdates.equipmentParseError = true;
+                    // Remove the malformed equipment_add as best we can
+                    cleanNarrative = cleanNarrative.replace(/equipment_add:\s*\[[\s\S]*$/i, '').trim();
+                }
+            }
+
+            // Clean up extra whitespace and trailing punctuation issues
+            cleanNarrative = cleanNarrative
+                .replace(/\s+/g, ' ')
+                .replace(/\s+([.!?,])/g, '$1')
+                .trim();
+
+            return {
+                cleanNarrative,
+                stateUpdates: Object.keys(stateUpdates).length > 0 ? stateUpdates : null,
+                parseErrors: stateUpdates.equipmentParseError ? ['Some items could not be added to inventory (parse error)'] : []
+            };
+        }
+
+        async function handlePlayerAction() {
+            const text = ui.playerInput.value.trim();
+            if (!text) return;
+
+            ui.playerInput.value = '';
+            ui.playerInput.disabled = true;
+            document.getElementById('submit-action-btn').disabled = true;
+            showLoading();
+
+            try {
+                // Add user message
+                await addMessageToChat('user', text);
+
+                const state = gameState.getState();
+                const character = state.character;
+
+                // 1. Parse player intent (client-side)
+                const intent = MechanicsEngine.parseIntent(text);
+                console.log("Parsed intent:", intent);
+
+                let rollResult = null;
+                let consequences = null;
+                let mechanicsContext = null;
+
+                // 2. If action needs a roll, handle mechanics client-side
+                if (intent.needsRoll && intent.stat) {
+                    // Check if calling talent reduces tier
+                    let effectiveTier = intent.tier;
+                    let talentApplied = null;
+                    const hadTalentReady = TalentSystem.getActiveTalent() !== null;
+
+                    if (effectiveTier === 2 && TalentSystem.shouldReduceTier(intent.type)) {
+                        effectiveTier = 1;
+                        talentApplied = TalentSystem.consumeActiveTalent();
+                        showToast('Calling talent applied: Tier 2 → Tier 1');
+                    } else if (hadTalentReady && effectiveTier === 1) {
+                        // Talent was ready but action was already Tier 1
+                        // Get name before consuming, then consume the talent
+                        const talentId = TalentSystem.getActiveTalent();
+                        const talentName = TalentSystem._getTalentName(talentId);
+                        TalentSystem.consumeActiveTalent();
+                        showToast(`${talentName || 'Talent'} not needed (action already Tier 1)`);
+                    }
+
+                    // Roll dice
+                    rollResult = MechanicsEngine.rollDice(intent.stat, effectiveTier, character);
+                    rollResult.talentApplied = talentApplied; // Track for AI context
+                    console.log("Roll result:", rollResult);
+
+                    // Calculate consequences (with Escalation Oracle for costs)
+                    consequences = MechanicsEngine.getConsequences(rollResult, intent.type);
+                    console.log("Consequences:", consequences);
+
+                    // Apply consequences to game state
+                    await MechanicsEngine.applyConsequences(consequences);
+
+                    // If Escalation Oracle says advance threat, do it
+                    if (consequences.escalation?.advanceThreat) {
+                        await gameState.transaction(async (state) => {
+                            const front = state.destinyFrontClocks?.front || {};
+                            return {
+                                destinyFrontClocks: {
+                                    ...state.destinyFrontClocks,
+                                    front: {
+                                        ...front,
+                                        current: Math.min(front.segments || 8, (front.current || 0) + 1)
+                                    }
+                                }
+                            };
+                        });
+                        showToast('The Threat advances...');
+                    }
+
+                    // Build mechanics context for AI
+                    mechanicsContext = MechanicsEngine.formatRollResult(rollResult);
+                    mechanicsContext += `\nOutcome: ${consequences.description}`;
+                    if (consequences.add_pips) {
+                        mechanicsContext += `\nPlayer takes ${consequences.add_pips.amount} pip(s) of ${consequences.add_pips.stat} damage.`;
+                    }
+                    if (consequences.escalation) {
+                        mechanicsContext += `\nEscalation Oracle (d6=${consequences.escalation.d6}): ${consequences.escalation.description}`;
+                    }
+                    // Add Oracle-generated twist for AI to narrate
+                    if (consequences.twist) {
+                        mechanicsContext += `\n\n*** COMPLICATION TO NARRATE ***\n"${consequences.twist.description}"`;
+                        if (consequences.twist.type === 'major') {
+                            mechanicsContext += `\n(This is a MAJOR complication - make it dramatic and consequential!)`;
+                        }
+                    }
+                }
+
+                // 3. Call AI for narrative only (much simpler prompt)
+                const narrative = await callAINarrative(text, mechanicsContext);
+
+                // Validate second person perspective (log warnings only)
+                validateSecondPerson(narrative);
+
+                // 4. Parse AI response for structured commands and clean narrative
+                const { cleanNarrative, stateUpdates, parseErrors } = parseAIStructuredResponse(narrative);
+
+                // 5. Process any state updates from AI (currency_gain, equipment_add, etc.)
+                if (stateUpdates) {
+                    await processStateUpdate(stateUpdates);
+                }
+
+                // Notify user of any parse errors
+                if (parseErrors && parseErrors.length > 0) {
+                    parseErrors.forEach(err => showToast(err, 5000));
+                }
+
+                // 6. Build and display the full message
+                let fullMessage = cleanNarrative;
+                if (rollResult) {
+                    // Append mechanics in styled block
+                    let mechanicsDisplay = MechanicsEngine.formatRollResult(rollResult);
+
+                    // Add oracle twist result if present
+                    if (consequences?.twist) {
+                        mechanicsDisplay += `\n[Oracle: ${consequences.twist.description}]`;
+                    }
+
+                    // Ensure mechanics block always exists and is properly wrapped
+                    if (!fullMessage.includes('<mechanics>')) {
+                        fullMessage += `\n\n<mechanics>${mechanicsDisplay}</mechanics>`;
+                    } else {
+                        // If <mechanics> tag somehow already exists, don't duplicate
+                        console.warn('⚠️ Mechanics tag already present in narrative - skipping duplicate');
+                    }
+                }
+
+                await addMessageToChat('model', fullMessage);
+
+                // 5. Increment turn counts
+                await gameState.transaction(async (state) => ({
+                    gameState: {
+                        ...state.gameState,
+                        turn_count: (state.gameState?.turn_count || 0) + 1,
+                        adventure_turn_count: (state.gameState?.adventure_turn_count || 0) + 1
+                    }
+                }));
+
+                // 6. Check for automatic downtime trigger
+                const newState = gameState.getState();
+                if (WorldTurn.shouldTriggerDowntime(newState)) {
+                    console.log("Downtime trigger conditions met!");
+                    // Don't auto-transition yet, let the next AI response suggest it
+                    // The AI will be aware of the adventure_turn_count and suggest downtime
+                }
+
+            } catch (e) {
+                console.error("Action Error:", e);
+                window.showError("GM Response Error", e.message);
+            } finally {
+                ui.playerInput.disabled = false;
+                ui.playerInput.focus();
+                document.getElementById('submit-action-btn').disabled = false;
+                hideLoading();
+            }
+        }
+
+        // ===== NARRATIVE AI (Simplified - mechanics handled client-side) =====
+        async function callAINarrative(playerAction, mechanicsContext) {
+            const PROXY_URL = 'https://ash-lords-rpg-proxy.jweisgrau.workers.dev';
+
+            const state = gameState.getState();
+            const character = state.character;
+            const chatHistory = state.chatHistory || [];
+            const recentMessages = chatHistory.slice(-10);
+
+            // Build conversation context
+            const conversationContext = recentMessages
+                .map(m => `${m.role.toUpperCase()}: ${m.content}`)
+                .join('\n\n');
+
+            // Build character context
+            const pipsData = character.pips || {};
+            let pipContext = Object.entries(pipsData)
+                .filter(([_, count]) => count > 0)
+                .map(([stat, count]) => `${stat}: ${count} Pips`)
+                .join(', ') || "None";
+
+            // Get tags context
+            const tagsContext = TagSystem.getTagsContext(state);
+
+            // Check quest availability and roll quest hook if needed
+            const turnCount = state.gameState?.turn_count || 0;
+            const hasQuest = state.questState?.current_quest != null;
+            const lastOfferTurn = state.questState?.last_offer_turn || 0;
+            const questCooldown = 12; // Minimum turns between quest offers
+            const cooldownPassed = (turnCount - lastOfferTurn) >= questCooldown;
+            const shouldOfferQuest = turnCount >= 3 && !hasQuest && cooldownPassed;
+            const questHook = shouldOfferQuest ? OracleSystem.rollQuestHook() : null;
+
+            // Update quest offer timestamp if we generated a hook
+            if (questHook) {
+                await gameState.transaction(async (s) => ({
+                    questState: {
+                        ...s.questState,
+                        last_offer_turn: turnCount
+                    }
+                }));
+            }
+
+            // Check downtime suggestion
+            const adventureTurns = state.gameState?.adventure_turn_count || 0;
+            const hasDamage = Object.values(state.character?.pips || {}).some(p => p > 0);
+            const shouldSuggestDowntime = hasDamage || adventureTurns >= 20;
+
+            // Get faction clock status for context
+            const factionStatus = (state.worldClocks?.clocks || [])
+                .map(c => `${c.name}: ${c.current}/${c.segments}`)
+                .join(', ') || "Unknown";
+
+            const systemPrompt = `You are the AI GM for "The Ash-Lord's Covenant", a grimdark political fantasy RPG.
+
+*** YOUR ROLE ***
+Write ONLY narrative/story text. All game mechanics (dice rolls, damage, XP) are handled by the game code.
+You receive the mechanical outcome and must narrate what happens based on it.
+
+*** CHARACTER ***
+Name: ${character.name}
+Calling: ${character.playbook?.calling} / Burden: ${character.playbook?.burden}
+Stats: FOR ${character.stats.FORCE}, FIN ${character.stats.FINESSE}, INF ${character.stats.INFLUENCE}, WIT ${character.stats.WITS}, RES ${character.stats.RESOLVE}
+Injuries: ${pipContext}
+Equipment: ${(character.equipment||[]).map(e => {
+    if (e.type === 'tool') return `${e.name} (+1 ${e.stat})`;
+    if (e.type === 'armor') return `${e.name} (${e.pips || 0}/${e.max_pips || 2} ${e.stat} armor)`;
+    return e.name;
+}).join(', ')}
+Coin: ${character.currency}
+XP: ${character.xp || 0}
+
+*** CHARACTER TAGS (Story facts about the character) ***
+${tagsContext}
+
+*** GAME STATE ***
+Turn: ${turnCount} | Adventure Turns Since Rest: ${adventureTurns}
+Location: ${state.gameState?.current_location || "Unknown"}
+Active Quest: ${hasQuest ? state.questState.current_quest.title : "None"}
+
+*** FACTION CLOCK STATUS ***
+${factionStatus}
+
+*** RECENT STORY ***
+${conversationContext}
+
+*** WORLD FACTIONS (Use ONLY these) ***
+- The Ash-Wardens: Corrupt enforcers of a tyrannical regime
+- The Soot-Stained: Criminal underground, desperate survivors
+- The Iron-Forgers: Ruthless industrialists exploiting workers
+- Whispering Flesh: Flesh-warping cultists with dark secrets
+
+*** PACING GUIDANCE ***
+${questHook ? `
+QUEST HOOK (use this exact structure):
+- Present to player: "${questHook.epic_hook}"
+- Faction involved: ${questHook.faction}
+
+IMPORTANT: Work this quest opportunity naturally into your narrative through an NPC, rumor, or environmental discovery. Use the EXACT wording from "Present to player" above - do NOT add specific locations, names, or details not present in that text. Keep quest introductions abstract and mysterious.
+` : ''}
+${shouldSuggestDowntime ? `DOWNTIME HINT: The player ${hasDamage ? 'has accumulated strain or injury (pips)' : `has been active for ${adventureTurns} turns`}. If appropriate, suggest a natural pause point to recover.` : ''}
+
+*** WRITING STYLE ***
+- ALWAYS write in second person perspective ("you", "your"). Never refer to the player character by name or in third person.
+- Grimdark, morally ambiguous, consequences matter
+- 2-4 paragraphs of vivid prose
+- Show don't tell
+- End with a hook or new situation
+- If mechanics are provided, weave them naturally into the narrative
+- Reference the character's Tags when relevant to create callbacks
+- NEVER mention game mechanics explicitly (no "XP", "pips", "dice")
+- Describe injuries as wounds, exhaustion, strain - not as "pips"
+
+*** STEALING GUIDANCE ***
+When the player successfully steals (action type 'steal'), you MUST determine what was stolen based on context:
+- Pickpocketing commoners: coin purse (1-3 coin), trinkets, bread
+- Pickpocketing merchants: coin pouch (2-6 coin), keys, receipts, small tools
+- Pickpocketing nobles: valuable jewelry (5-10 coin value), sealed letters, signet rings
+- Looting bodies: weapons, armor pieces, coin, evidence, personal effects
+- Burglary/theft from locations: tools, documents, valuables, supplies
+
+For SUCCESS: Award full loot. ONLY include "currency_gain: X" if the item stolen is actual money (X = 1-6). If stealing an object, do NOT add currency.
+For COST/PARTIAL: Award reduced loot. Include "currency_gain: X" ONLY if money is found.
+For MISS: No loot is obtained. Do not include currency_gain.
+CRITICAL: Do not include "currency_gain" for general actions (hiding, moving, fighting) unless money is explicitly looted or paid.
+
+You can also add interesting narrative items with: equipment_add: [{name: "Item Name", type: "loot", tags: ["tag1"], desc: "Description"}]
+
+*** BLIGHT GUIDANCE ***
+The Blight is a supernatural corruption that can infect anyone. When narratively appropriate:
+- Exposure to Blighted creatures, cursed artifacts, or corrupted places can cause infection
+- Use "blight_gain: X" (usually 1) when the character is exposed to significant corruption
+- Blight exposure should be dramatic and consequential - not casual
+- The Blight whispers, tempts, and transforms those it touches
+
+*** TAG SYSTEM (RARE - Use Sparingly) ***
+Tags represent CRITICAL persistent narrative facts that must survive beyond the context window. They are RARE.
+- Max 5 total tags, only 1 per 10 turns - use ONLY for crucial permanent story elements
+- Examples: Permanent wanted status, unbreakable vow, cursed condition, sworn enemy, major reputation
+- To add a tag for a critical story element: tag_add: {name: "Tag Name", type: "reputation|relationship|story|secret", description: "Brief description"}
+- To remove a resolved tag: tag_remove: "Tag Name"
+- DO NOT add tags for temporary conditions, current objectives, or things already in recent context
+- Tags are for breaking narrative continuity if forgotten - if it can be re-established through dialogue, don't tag it
+
+*** OUTCOME INTERPRETATION (CRITICAL) ***
+The mechanical result includes an outcome (SUCCESS, COST, MISS). You MUST respect these outcomes:
+
+- **SUCCESS**: The action succeeds cleanly with NO complications or negative consequences. The character is competent and the outcome is favorable. Do not add detection, pursuit, or problems unless explicitly stated in a "COMPLICATION TO NARRATE" section.
+
+- **COST / MINOR COST / MAJOR COST**: The action succeeds but with a cost. The cost/complication is already provided in the mechanical result. Narrate it as written.
+
+- **MISS**: The action fails. Narrate the failure and its consequences.
+
+IMPORTANT: "Grimdark" tone does not mean every action has complications. SUCCESS means success. Reserve grimdark atmosphere for setting/world, not for undermining successful rolls.
+
+*** COMPLICATION GUIDANCE ***
+If a "COMPLICATION TO NARRATE" is provided in the mechanical result:
+- Weave it NATURALLY into your narrative - it's pre-written "witty grimdark" text
+- Honor the tone and specifics of the complication
+- Do NOT invent additional complications - the oracle has spoken
+- For MAJOR complications, make them dramatic and consequential
+- The complication may reference factions, environmental changes, or character setbacks
+${TalentSystem.getActiveContext()}`;
+
+            // Build the user prompt with mechanics context
+            let userPrompt = `PLAYER ACTION: "${playerAction}"`;
+
+            if (mechanicsContext) {
+                userPrompt += `\n\n*** MECHANICAL RESULT (narrate this outcome) ***\n${mechanicsContext}`;
+            }
+
+            const payload = {
+                contents: [
+                    { role: 'user', parts: [{ text: systemPrompt }] },
+                    ...recentMessages.map(m => ({
+                        role: m.role === 'model' ? 'model' : 'user',
+                        parts: [{ text: m.content }]
+                    })),
+                    { role: 'user', parts: [{ text: userPrompt }] }
+                ],
+                generationConfig: {
+                    temperature: 0.9,
+                    topP: 0.95,
+                    maxOutputTokens: 8192
+                }
+            };
+
+            // API call with retry
+            let attempts = 0;
+            const maxAttempts = 3;
+
+            while (attempts < maxAttempts) {
+                try {
+                    const response = await fetch(PROXY_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            model: "gemini-3-flash-preview",
+                            payload: payload
+                        })
+                    });
+
+                    if (response.status === 429 || response.status === 503) {
+                        attempts++;
+                        await new Promise(r => setTimeout(r, 2000 * attempts));
+                        continue;
+                    }
+
+                    if (!response.ok) {
+                        const errText = await response.text();
+                        throw new Error(`API HTTP ${response.status}: ${errText}`);
+                    }
+
+                    const data = await response.json();
+
+                    // Log full response structure to diagnose truncation
+                    console.log("Full API response:", JSON.stringify(data, null, 2));
+                    const candidate = data.candidates?.[0];
+                    const finishReason = candidate?.finishReason;
+                    console.log("API finishReason:", finishReason);
+                    console.log("Token usage:", data.usageMetadata);
+                    if (finishReason && finishReason !== 'STOP') {
+                        console.warn("Response may be truncated. Reason:", finishReason);
+                    }
+
+                    const text = candidate?.content?.parts?.[0]?.text;
+
+                    if (!text) {
+                        console.error("API response:", data);
+                        throw new Error("No text in response");
+                    }
+
+                    // Append quest hook indicator if one was offered this turn
+                    let finalText = text;
+                    if (questHook) {
+                        finalText += `\n\n<quest>📜 New Rumor: ${questHook.epic_hook}</quest>`;
+                    }
+
+                    return finalText;
+
+                } catch (e) {
+                    if (attempts === maxAttempts - 1) throw e;
+                    attempts++;
+                    await new Promise(r => setTimeout(r, 2000 * attempts));
+                }
+            }
+        }
+        
+        async function processStateUpdate(update) {
+            if (!update) return;
+
+            await gameState.transaction(async (state) => {
+                const character = state.character;
+                const updates = {};
+
+                // XP gain
+                if (update.xp_gain) {
+                    updates.character = {
+                        ...character,
+                        xp: (character.xp || 0) + update.xp_gain
+                    };
+                    showToast(`+${update.xp_gain} XP`);
+                }
+
+                // Currency gain/loss
+                if (update.currency_gain !== undefined && update.currency_gain !== 0 && update.currency_gain !== null) {
+                    const amount = Number(update.currency_gain);
+                    if (!isNaN(amount) && amount !== 0) {
+                        const newCurrency = Math.max(0, (character.currency || 0) + amount);
+                        updates.character = {
+                            ...(updates.character || character),
+                            currency: newCurrency
+                        };
+                        showToast(`${amount > 0 ? '+' : ''}${amount} Coin`);
+                        console.log(`Currency update: ${character.currency} + ${amount} = ${newCurrency}`);
+                    }
+                }
+
+                // Pips
+                let currentPips = { ...(character.pips || {}) };
+                let pipChanged = false;
+
+                if (update.add_pips) {
+                    const stat = update.add_pips.stat;
+                    const amt = update.add_pips.amount || 1;
+                    currentPips[stat] = Math.min(2, (currentPips[stat] || 0) + amt);
+                    pipChanged = true;
+                    showToast(`${stat} damage: +${amt} pip${amt > 1 ? 's' : ''}`);
+                }
+
+                if (update.remove_pips && update.remove_pips.stat && update.remove_pips.amount > 0) {
+                    const stat = update.remove_pips.stat;
+                    const amt = update.remove_pips.amount;
+                    const currentPipValue = currentPips[stat] || 0;
+                    if (currentPipValue > 0) {
+                        currentPips[stat] = Math.max(0, currentPipValue - amt);
+                        pipChanged = true;
+                        showToast(`${stat} healed: -${amt} pip${amt > 1 ? 's' : ''}`);
+                    }
+                }
+
+                if (pipChanged) {
+                    updates.character = {
+                        ...(updates.character || character),
+                        pips: currentPips
+                    };
+                }
+
+                // Equipment add
+                if (update.equipment_add && update.equipment_add.length > 0) {
+                    const currentEquipment = character.equipment || [];
+                    const newItems = update.equipment_add.map(item => ({
+                        name: item.name || "Unknown Item",
+                        type: item.type || "loot",
+                        properties: item.properties || item.tags || [],
+                        lore: item.lore || item.desc || "",
+                        ...(item.stat ? { stat: item.stat } : {}),
+                        ...(item.pips !== undefined ? { pips: item.pips, max_pips: item.max_pips || 2 } : {}),
+                        ...(item.bonus !== undefined ? { bonus: item.bonus } : {})
+                    }));
+
+                    updates.character = {
+                        ...(updates.character || character),
+                        equipment: [...currentEquipment, ...newItems]
+                    };
+
+                    newItems.forEach(item => showToast(`+1 Item: ${item.name}`));
+                }
+
+                // Blight gain (corruption from the Blight)
+                if (update.blight_gain && update.blight_gain > 0) {
+                    const currentBlight = character.blight || 0;
+                    const newBlight = Math.min(5, currentBlight + update.blight_gain);
+                    updates.character = {
+                        ...(updates.character || character),
+                        blight: newBlight
+                    };
+                    showToast(`+${update.blight_gain} Blight corruption`);
+
+                    // Check for blight death
+                    if (newBlight >= 5) {
+                        setTimeout(() => {
+                            addMessageToChat('model', '**THE BLIGHT CONSUMES YOU.**\n\nThe corruption has spread too far. Your body twists, your mind fragments. What remains is no longer you, but something hungry and hollow.');
+                        }, 500);
+                    }
+                }
+
+                // Equipment modify
+                if (update.item_modify && update.item_modify.length > 0) {
+                    const currentEquipment = character.equipment || [];
+                    const modifiedEquipment = currentEquipment.map(item => {
+                        const modification = update.item_modify.find(mod => mod.name === item.name);
+                        if (modification) {
+                            showToast(`Item modified: ${modification.name}`);
+                            return {
+                                ...item,
+                                name: modification.new_name || item.name,
+                                lore: modification.lore || item.lore
+                            };
+                        }
+                        return item;
+                    });
+
+                    updates.character = {
+                        ...(updates.character || character),
+                        equipment: modifiedEquipment
+                    };
+                }
+
+                // Clock advancement
+                if (update.clocks_advance && update.clocks_advance.length > 0) {
+                    const worldClocks = { ...state.worldClocks };
+                    const clocks = [...(worldClocks.clocks || [])];
+
+                    update.clocks_advance.forEach(adv => {
+                        const clock = clocks.find(c => c.name === adv.name);
+                        if (clock) {
+                            clock.current = Math.min(clock.segments, (clock.current || 0) + (adv.amount || 1));
+                            showToast(`${clock.name} advanced!`);
+                        }
+                    });
+
+                    updates.worldClocks = { clocks };
+                }
+
+                // Quest start
+                if (update.quest_start && update.quest_start.title) {
+                    updates.questState = {
+                        current_quest: {
+                            title: update.quest_start.title,
+                            chapter: update.quest_start.chapter || 1,
+                            objective: update.quest_start.objective || "",
+                            progress: 0,
+                            max_progress: update.quest_start.max_progress || 3,
+                            xp_earned: 0
+                        }
+                    };
+                    showToast(`Quest Started: ${update.quest_start.title}`);
+                }
+
+                // Quest progress
+                if (update.quest_progress && state.questState?.current_quest) {
+                    const quest = { ...state.questState.current_quest };
+                    const wasComplete = quest.progress >= quest.max_progress;
+                    quest.progress = Math.min(quest.max_progress, (quest.progress || 0) + update.quest_progress);
+                    quest.xp_earned = (quest.xp_earned || 0) + 1;
+
+                    // Check if quest just completed
+                    const nowComplete = quest.progress >= quest.max_progress;
+                    if (nowComplete && !wasComplete) {
+                        // Quest completed! Award bonus XP and clear quest
+                        const bonusXP = quest.max_progress || 3;
+                        updates.character = {
+                            ...state.character,
+                            xp: (state.character.xp || 0) + bonusXP
+                        };
+                        updates.questState = { current_quest: null };
+                        showToast(`✓ Quest Completed: ${quest.title}!`, 5000);
+                        showToast(`+${bonusXP} XP Quest Reward`, 5000);
+                    } else {
+                        updates.questState = { current_quest: quest };
+                        showToast(`Quest progress: ${quest.progress}/${quest.max_progress}`);
+                    }
+                }
+
+                // Quest completion (direct)
+                if (update.quest_complete && state.questState?.current_quest) {
+                    const quest = state.questState.current_quest;
+                    const bonusXP = quest.max_progress || 3;
+                    updates.character = {
+                        ...state.character,
+                        xp: (state.character.xp || 0) + bonusXP
+                    };
+                    updates.questState = { current_quest: null };
+                    showToast(`✓ Quest Completed: ${quest.title}!`, 5000);
+                    showToast(`+${bonusXP} XP Quest Reward`, 5000);
+                }
+
+                // Trigger interlude
+                if (update.trigger_interlude === true) {
+                    updates.gameState = {
+                        ...state.gameState,
+                        phase: 'interlude'
+                    };
+                    showToast('Interlude begins - time to rest');
+                }
+
+                return updates;
+            });
+
+            // Handle tag operations outside transaction (they have their own transactions)
+            if (update.tag_add) {
+                await TagSystem.addTag(update.tag_add);
+            }
+
+            if (update.tag_remove) {
+                await TagSystem.removeTag(update.tag_remove);
+                showToast(`Tag removed: ${update.tag_remove}`);
+            }
+        }
+        
+        async function resetGame() {
+            if (!confirm("WARNING: This will wipe your character, story, and world state. This cannot be undone.\n\nAre you sure?")) {
+                return;
+            }
+
+            showLoading("Resetting game...");
+
+            try {
+                gameState.reset();
+                location.reload();
+            } catch (e) {
+                console.error(e);
+                alert("Reset Error: " + e.message);
+                location.reload();
+            }
+        }
+
+        // ===== XP SHOP SYSTEM =====
+
+        function openXPShop() {
+            const state = gameState.getState();
+            const character = state.character;
+
+            if ((character.xp || 0) < 5) {
+                return window.showError("Insufficient XP", "You need 5 XP to browse the equipment shop.");
+            }
+
+            const items = InventorySystem.getAvailableShopItems(3);
+            const container = document.getElementById('xp-shop-items');
+
+            if (items.length === 0) {
+                container.innerHTML = '<p class="text-gray-400 text-center py-4">You already own all available equipment!</p>';
+            } else {
+                container.innerHTML = items.map((item, idx) => {
+                    const typeColor = item.type === 'tool' ? 'text-emerald-400' : 'text-blue-400';
+                    const statBadge = item.stat ? `<span class="${typeColor}">${item.stat}</span>` : '';
+                    const bonusText = item.type === 'tool' ? `+${item.bonus || 1} bonus` : `${item.max_pips || 2} armor pips`;
+
+                    return `
+                        <div class="bg-gray-900 border border-gray-700 rounded-lg p-3 hover:border-amber-600 transition">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <span class="font-bold text-white">${item.name}</span>
+                                    <span class="text-xs ml-2 px-1 rounded ${item.type === 'tool' ? 'bg-emerald-900 text-emerald-300' : 'bg-blue-900 text-blue-300'}">${item.type}</span>
+                                </div>
+                                <span class="text-amber-400 font-bold">${item.cost_xp} XP</span>
+                            </div>
+                            <p class="text-gray-400 text-sm mb-2">${item.desc}</p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs text-gray-500">${statBadge} ${bonusText}</span>
+                                <button onclick="purchaseFromShop(${idx})" class="px-3 py-1 bg-amber-700 text-white text-sm rounded hover:bg-amber-600 transition">
+                                    Purchase
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Store available items for purchase reference
+            window._shopItems = items;
+
+            // Show the modal
+            const modal = document.getElementById('xp-shop-modal');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        // Track purchase state to prevent double-click race condition
+        let _purchaseInProgress = false;
+
+        async function purchaseFromShop(index) {
+            // Prevent concurrent purchases
+            if (_purchaseInProgress) {
+                return;
+            }
+
+            const items = window._shopItems || [];
+            const item = items[index];
+            if (!item) return;
+
+            _purchaseInProgress = true;
+
+            try {
+                // Atomic transaction: check and deduct XP together
+                let purchaseSuccess = false;
+                await gameState.transaction(async (s) => {
+                    const currentXp = s.character.xp || 0;
+                    if (currentXp < item.cost_xp) {
+                        throw new Error(`Insufficient XP. You have ${currentXp}, need ${item.cost_xp}.`);
+                    }
+                    purchaseSuccess = true;
+                    return {
+                        character: { ...s.character, xp: Math.max(0, currentXp - item.cost_xp) }
+                    };
+                });
+
+                if (!purchaseSuccess) return;
+
+                showToast(`-${item.cost_xp} XP`);
+
+                // Add item to inventory
+                await InventorySystem.addItem(item);
+
+                // Add narrative message
+                await addMessageToChat('model', `You spend ${item.cost_xp} XP at a skilled craftsman's workshop. After careful negotiation, you acquire **${item.name}** - ${item.desc.toLowerCase()}`);
+
+                // Close the shop and refresh it (in case they want to buy more)
+                const modal = document.getElementById('xp-shop-modal');
+                if (modal) modal.style.display = 'none';
+            } catch (e) {
+                window.showError("Purchase Failed", e.message);
+            } finally {
+                _purchaseInProgress = false;
+            }
+        }
+
+        async function handleInterludeAction(actionType) {
+            const state = gameState.getState();
+            const character = state.character;
+
+            // Different costs for different actions
+            const actionConfig = {
+                seek_training: { costType: 'xp', cost: 1, label: 'Seek Training' },
+                acquire_asset: { costType: 'xp', cost: 1, label: 'Acquire an Asset' },
+                reflect: { costType: 'xp', cost: 1, label: 'Reflect & Integrate' },
+                heal: { costType: 'coin', cost: 3, label: 'Rest & Recover' },
+                repair_armor: { costType: 'none', cost: 0, label: 'Repair Armor' },
+                cleanse_blight: { costType: 'coin', cost: 5, label: 'Cleanse Blight' },
+                end_interlude: { costType: 'none', cost: 0, label: 'Return to Adventure' }
+            };
+
+            const config = actionConfig[actionType];
+            if (!config) return;
+
+            // Check if player can afford the action
+            if (config.costType === 'xp' && (character.xp || 0) < config.cost) {
+                return window.showError("Insufficient XP", `You need ${config.cost} XP for this action.`);
+            }
+            if (config.costType === 'coin' && (character.currency || 0) < config.cost) {
+                return window.showError("Insufficient Coin", `You need ${config.cost} coin for this action.`);
+            }
+
+            // For healing, check if there's damage to heal
+            if (actionType === 'heal') {
+                const hasPips = Object.values(character.pips || {}).some(p => p > 0);
+                if (!hasPips) {
+                    return window.showError("No Damage", "You have no injuries to heal.");
+                }
+            }
+
+            // For repair armor, check if there's armor to repair
+            if (actionType === 'repair_armor') {
+                const hasArmorToRepair = (character.equipment || []).some(
+                    e => e.type === 'armor' && (e.pips || 0) < (e.max_pips || 2)
+                );
+                if (!hasArmorToRepair) {
+                    return window.showError("No Repairs Needed", "All your armor is already at full protection.");
+                }
+            }
+
+            // For cleanse blight, check if there's blight to cleanse
+            if (actionType === 'cleanse_blight') {
+                if ((character.blight || 0) <= 0) {
+                    return window.showError("No Corruption", "You have no Blight corruption to cleanse.");
+                }
+            }
+
+            // Confirm action
+            let confirmMsg = `${config.label}`;
+            if (config.cost > 0) {
+                confirmMsg += ` (Cost: ${config.cost} ${config.costType.toUpperCase()})`;
+            }
+            if (actionType === 'end_interlude') {
+                confirmMsg += "\n\nThis will advance all faction clocks by 1 segment!";
+            }
+            if (!confirm(confirmMsg + "\n\nProceed?")) {
+                return;
+            }
+
+            showLoading();
+
+            try {
+                // Deduct cost (with safeguards against negative values)
+                if (config.costType === 'xp') {
+                    await gameState.transaction(async (s) => ({
+                        character: { ...s.character, xp: Math.max(0, s.character.xp - config.cost) }
+                    }));
+                    showToast(`-${config.cost} XP`);
+                } else if (config.costType === 'coin') {
+                    await gameState.transaction(async (s) => ({
+                        character: { ...s.character, currency: Math.max(0, s.character.currency - config.cost) }
+                    }));
+                    showToast(`-${config.cost} Coin`);
+                }
+
+                // Handle specific actions
+                if (actionType === 'heal') {
+                    // Find the first stat with pips and heal 1
+                    const pipsEntry = Object.entries(character.pips || {}).find(([_, v]) => v > 0);
+                    if (pipsEntry) {
+                        const [stat, currentPips] = pipsEntry;
+                        await gameState.transaction(async (s) => ({
+                            character: {
+                                ...s.character,
+                                pips: { ...s.character.pips, [stat]: currentPips - 1 }
+                            }
+                        }));
+                        showToast(`${stat} healed: -1 pip`);
+                        await addMessageToChat('model', `You rest and tend to your wounds. Your ${stat} injury begins to mend, the pain slowly fading as you recover.`);
+                    }
+
+                } else if (actionType === 'repair_armor') {
+                    // Repair all armor during downtime
+                    await InventorySystem.repairAllArmor();
+                    await addMessageToChat('model', `You spend time carefully maintaining your equipment. Dented plates are hammered smooth, torn padding is replaced, and worn straps are reinforced. Your armor is restored to full protection.`);
+
+                } else if (actionType === 'cleanse_blight') {
+                    // Cleanse 1 point of Blight corruption
+                    await TalentSystem.removeBlight(1);
+                    await addMessageToChat('model', `You seek out a hedge witch who knows the old ways. Through bitter herbs, sacred smoke, and whispered prayers, she draws forth some of the corruption festering within you. The process is agonizing, but when dawn breaks, you feel lighter—cleaner. One mark of the Blight fades from your soul.`);
+
+                } else if (actionType === 'end_interlude') {
+                    // Execute World Turn - advance all faction clocks
+                    const portents = await WorldTurn.execute();
+                    showToast('Faction clocks advanced!');
+
+                    // Generate narrative about world events
+                    const worldNarrative = await WorldTurn.generateWorldTurnNarrative(portents);
+
+                    // Transition back to adventure phase
+                    await gameState.transaction(async (s) => ({
+                        gameState: {
+                            ...s.gameState,
+                            phase: 'adventure',
+                            adventure_turn_count: 0  // Reset adventure turn counter
+                        },
+                        talentsUsedThisChapter: []  // Reset talent usage for new chapter
+                    }));
+
+                    // Add world turn narrative
+                    if (portents.length > 0) {
+                        await addMessageToChat('model', `**The World Moves On...**\n\n${worldNarrative}\n\nYou step back into the fray, knowing the world has not waited for you.`);
+                    } else {
+                        await addMessageToChat('model', `The factions continue their machinations while you rested. Fresh and alert, you return to face whatever comes next.`);
+                    }
+
+                } else {
+                    // For training, asset, and reflect - call AI for narrative
+                    const prompt = `[DOWNTIME: ${actionType.toUpperCase()}] The player is spending downtime to ${config.label.toLowerCase()}. Write 2-3 paragraphs describing what happens. Be specific about what they learn, find, or realize. If this is "reflect", suggest a potential Tag they might gain based on recent events.`;
+                    const narrative = await callAINarrative(prompt, null);
+
+                    // Validate second person perspective (log warnings only)
+                    validateSecondPerson(narrative);
+
+                    await addMessageToChat('model', narrative);
+
+                    // Reflect action complete (tags now added via AI-driven tag_add responses)
+                }
+
+            } catch(e) {
+                console.error("Interlude Error:", e);
+                window.showError("Interlude Error", e.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function hideLoading() { if(ui.loading) ui.loading.style.display = 'none'; }
+        function showLoading() { if(ui.loading) ui.loading.style.display = 'flex'; }
+
+        // ===== EXPORT/IMPORT SAVE FUNCTIONS =====
+
+        window.exportSave = function() {
+            const saveData = gameState.exportState();
+            const blob = new Blob([saveData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ashlords-save-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Save exported!');
+        };
+
+        window.importSave = function() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'application/json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const success = gameState.importState(event.target.result);
+                    if (success) {
+                        showToast('Save imported successfully!');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        window.showError('Import Failed', 'Invalid save file');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        };
+
+        // ===== DISPLAY FUNCTIONS (Restored from archive) =====
+
+        async function addMessageToChat(role, content) {
+            await gameState.transaction(async (state) => {
+                const history = [...(state.chatHistory || [])];
+
+                history.push({
+                    role,
+                    content,
+                    timestamp: Date.now(),
+                    id: crypto.randomUUID()
+                });
+
+                // Keep only last 30 messages
+                const trimmed = history.slice(-30);
+
+                return { chatHistory: trimmed };
+            });
+        }
+
+        function showToast(message, duration = 3000) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, duration);
+        }
+
+        function displayChatHistory(messages) {
+            const log = document.getElementById('narrative-log');
+            if (!log) return;
+
+            log.innerHTML = '';
+
+            messages.forEach(msg => {
+                const bubble = document.createElement('div');
+                bubble.className = msg.role === 'user'
+                    ? 'narrative-bubble-user'
+                    : 'narrative-bubble-model';
+
+                let content = msg.content;
+
+                if (msg.role === 'model') {
+                    // Extract mechanics blocks before sanitization
+                    const mechanicsBlocks = [];
+                    content = content.replace(
+                        /<mechanics>([\s\S]*?)<\/mechanics>/gi,
+                        (match, inner) => {
+                            const placeholder = `%%MECHANICS_${mechanicsBlocks.length}%%`;
+                            mechanicsBlocks.push(escapeHtml(inner));
+                            return placeholder;
+                        }
+                    );
+
+                    // Extract quest hook blocks before sanitization
+                    const questBlocks = [];
+                    content = content.replace(
+                        /<quest>([\s\S]*?)<\/quest>/gi,
+                        (match, inner) => {
+                            const placeholder = `%%QUEST_${questBlocks.length}%%`;
+                            questBlocks.push(escapeHtml(inner));
+                            return placeholder;
+                        }
+                    );
+
+                    // Sanitize the main content
+                    content = sanitizeContent(content);
+
+                    // Restore mechanics blocks with safe HTML wrapper
+                    mechanicsBlocks.forEach((block, i) => {
+                        content = content.replace(
+                            `%%MECHANICS_${i}%%`,
+                            `<div class="mechanics-text">${block}</div>`
+                        );
+                    });
+
+                    // Restore quest blocks with special styling
+                    questBlocks.forEach((block, i) => {
+                        content = content.replace(
+                            `%%QUEST_${i}%%`,
+                            `<div class="quest-text">${block}</div>`
+                        );
+                    });
+                } else {
+                    // User messages: fully sanitize
+                    content = sanitizeContent(content);
+                }
+
+                bubble.innerHTML = content;
+                log.appendChild(bubble);
+            });
+
+            // Scroll to bottom
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function displayWorldClocks(data) {
+            const container = document.getElementById('world-clocks-container');
+            if (!container) return;
+
+            const loading = document.getElementById('world-clocks-loading');
+            if (loading) loading.style.display = 'none';
+
+            container.innerHTML = '';
+
+            (data.clocks || []).forEach(clock => {
+                const clockDiv = document.createElement('div');
+                clockDiv.className = 'clock';
+                clockDiv.innerHTML = `
+                    <div class="clock-face ${clock.current >= clock.segments - 1 ? 'near-full' : ''}"
+                         id="clock-${clock.name.replace(/\s+/g, '-')}">
+                        ${renderClockSegments(clock.current, clock.segments)}
+                    </div>
+                    <div class="clock-name">${clock.name}</div>
+                    <div style="font-size: 0.6rem;" class="text-gray-500 text-center">${clock.current}/${clock.segments}</div>
+                `;
+                container.appendChild(clockDiv);
+            });
+        }
+
+        function renderClockSegments(current, total) {
+            let html = '';
+            for (let i = 0; i < total; i++) {
+                const angle = (360 / total) * i;
+                const filled = i < current ? 'filled' : '';
+                html += `<div class="clock-segment ${filled}" style="transform: rotate(${angle}deg)"></div>`;
+            }
+            return html;
+        }
+
+        function displayDestinyClock(data) {
+            const face = document.getElementById('destiny-clock-face');
+            if (!face) return;
+
+            face.innerHTML = renderClockSegments(data.current || 0, data.segments || 8);
+
+            // Update narrative text based on progress
+            const narrativeEl = document.getElementById('destiny-narrative');
+            if (narrativeEl) {
+                const progress = data.current || 0;
+                const narratives = [
+                    "Your destiny awaits...",
+                    "You are nobody... yet.",
+                    "People start to notice you.",
+                    "Your name is whispered in taverns.",
+                    "A legend in the making.",
+                    "Your deeds echo across the land.",
+                    "Heroes sing of your exploits.",
+                    "The world trembles at your name.",
+                    "Time to claim your destiny."
+                ];
+                narrativeEl.textContent = narratives[Math.min(progress, narratives.length - 1)];
+            }
+        }
+
+        function displayEndgameFront(data) {
+            const face = document.getElementById('endgame-front-clock-face');
+            if (!face) return;
+
+            const current = data.current || 0;
+            const segments = data.segments || 8;
+
+            face.innerHTML = renderClockSegments(current, segments);
+
+            // Pulse animation if near full
+            if (current >= segments - 2) {
+                face.classList.add('threat-critical');
+            } else {
+                face.classList.remove('threat-critical');
+            }
+
+            // Update name
+            const nameEl = document.getElementById('endgame-front-name');
+            if (nameEl) {
+                nameEl.textContent = data.name || "Unknown Threat";
+            }
+        }
+
+        function displayQuestProgress(data) {
+            const wrapper = document.getElementById('quest-progress-wrapper');
+            if (!wrapper) return;
+
+            wrapper.style.display = 'block';
+
+            document.getElementById('quest-title').textContent = data.title || "Quest";
+            document.getElementById('quest-chapter').textContent = `Chapter ${data.chapter || 1}`;
+            document.getElementById('quest-progress-text').textContent = `${data.progress || 0}/${data.max_progress || 1}`;
+            document.getElementById('quest-xp-earned').textContent = `XP Earned: ${data.xp_earned || 0}`;
+
+            const maxProgress = Math.max(1, data.max_progress || 1); // Prevent division by zero
+            const progressPercent = ((data.progress || 0) / maxProgress) * 100;
+            document.getElementById('quest-progress-bar').style.width = `${progressPercent}%`;
+        }
+
+        function hideQuestProgress() {
+            const wrapper = document.getElementById('quest-progress-wrapper');
+            if (wrapper) wrapper.style.display = 'none';
+        }
+
+        if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
+    </script>
+</body>
+</html>

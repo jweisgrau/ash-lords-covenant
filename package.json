@@ -1,0 +1,27 @@
+{
+  "name": "rpg-game",
+  "version": "1.0.0",
+  "description": "A grimdark political fantasy RPG powered by AI (Gemini 3 Pro), featuring a sophisticated dice mechanics system, persistent state management, and deep storytelling.",
+  "main": "cloudflare-worker.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "vitest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jweisgrau/ash-lords-covenant.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/jweisgrau/ash-lords-covenant/issues"
+  },
+  "homepage": "https://github.com/jweisgrau/ash-lords-covenant#readme",
+  "devDependencies": {
+    "vitest": "^4.0.17"
+  }
+}

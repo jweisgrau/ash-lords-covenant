@@ -12,7 +12,16 @@
       "Bash(gh repo view:*)",
       "Bash(gh api:*)",
       "Bash(git mv:*)",
-      "WebFetch(domain:jweisgrau.github.io)"
+      "WebFetch(domain:jweisgrau.github.io)",
+      "WebFetch(domain:ai.google.dev)",
+      "Bash(pickpocket\" bug\\)\n- Update AI prompt with COMPLICATION GUIDANCE section\n- Increase maxOutputTokens to 8192 for longer narratives\n- Add debug logging for API response truncation diagnosis\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(cd:*)",
+      "mcp__ollama__ollama_generate",
+      "mcp__gemini__gemini_generate"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "ollama",
+    "gemini"
+  ]
 }

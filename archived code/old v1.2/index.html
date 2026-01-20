@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital RPG: Ash-Lord's Covenant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=IM+Fell+English+SC&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css?v=1.1.4"> 
+    
+    <style>
+        #character-creation-ui, #main-game-ui { display: none; }
+        #boot-log { font-family: monospace; font-size: 12px; color: #00ff00; background: rgba(0,0,0,0.8); padding: 10px; margin-top: 20px; max-height: 150px; overflow-y: auto; width: 80%; display: none; }
+        #force-start-btn { margin-top: 15px; padding: 10px 20px; background: #8A3324; color: white; border: 1px solid #ff5555; cursor: pointer; display: none; }
+        #mobile-menu-btn { display: none; }
+        @media(max-width: 768px) { #mobile-menu-btn { display: block; font-size: 1.5rem; color: #C5A059; cursor: pointer; } }
+        /* Mobile HUD Fixes */
+        #mobile-hud .blight-meter { display: inline-flex; margin-left: 5px; }
+        #mobile-hud .blight-pip { width: 6px; height: 8px; }
+
+        /* --- ASSET SYSTEM UI (Added v1.2.1) --- */
+        .equip-slot {
+            background: rgba(0,0,0,0.3);
+            border: 1px dashed rgba(227, 218, 201, 0.2);
+            border-radius: 4px;
+            padding: 4px;
+            margin-top: 4px;
+            min-height: 24px;
+            font-size: 0.75rem;
+            text-align: center;
+            color: #888;
+            cursor: help;
+        }
+        .equip-slot.filled {
+            border-style: solid;
+            border-color: var(--c-alchemical-gold);
+            color: var(--c-bone-white);
+            background: rgba(197, 160, 89, 0.1);
+        }
+        .equip-slot.heavy {
+            border-color: var(--c-dried-cinnabar);
+        }
+        .pip-mini { display: inline-block; width: 6px; height: 6px; background: #333; border: 1px solid #555; transform: rotate(45deg); margin: 0 1px; }
+        .pip-mini.filled { background: var(--c-dried-cinnabar); border-color: #f87171; }
+    </style>
+
+    <script>
+        window.showError = function(title, message) {
+            const loader = document.getElementById('loading-overlay');
+            if (loader) loader.style.display = 'none';
+            const modal = document.getElementById('error-modal');
+            if (modal) {
+                document.getElementById('error-title').textContent = title;
+                document.getElementById('error-message').textContent = message;
+                modal.style.display = 'flex';
+            } else {
+                alert("CRITICAL ERROR: " + title + "\n" + message);
+            }
+        };
+        window.addEventListener('error', function(e) { try { window.showError("Runtime Error", e.message); } catch(err) { console.error(err); } });
+    </script>
+</head>
+<body class="antialiased">
+
+    <div id="loading-overlay" class="flex fixed top-0 left-0 w-screen h-screen bg-black/80 z-[199] justify-center items-center" style="flex-direction: column;">
+        <div class="spinner mb-4"></div>
+        <span id="loading-text" class="ml-4 text-lg text-gray-300">Booting v1.2.2 (Asset Polish)...</span>
+        <div id="boot-log"></div>
+        <button id="force-start-btn" onclick="window.forceUI()">⚠️ FORCE UI</button>
+    </div>
+
+    <div id="error-modal" class="fixed top-0 left-0 w-full h-full bg-black/90 z-[200] flex justify-center items-center hidden">
+        <div class="modal-content bg-gray-800 border border-gray-700 p-6 rounded-lg max-w-lg w-full">
+            <h2 id="error-title" class="text-xl font-bold text-red-400 mb-4">Error</h2>
+            <p id="error-message" class="text-gray-300 mb-6 font-mono text-sm"></p>
+            <button onclick="document.getElementById('error-modal').style.display='none'" class="w-full px-4 py-2 bg-emerald-700 text-white rounded font-bold">OK</button>
+        </div>
+    </div>
+
+    <div id="welcome-modal" class="fixed top-0 left-0 w-full h-full bg-black/95 z-[150] flex justify-center items-center hidden">
+        <div class="welcome-modal-content rounded-lg p-6 max-w-2xl mx-auto mt-10">
+            <h2 class="text-2xl text-center text-emerald-400 mb-2">Welcome to the Cinder-City</h2>
+            
+            <!-- NARRATIVE -->
+            <div class="p-3 bg-gray-900 border border-gray-700 rounded italic text-gray-400 text-sm mb-4 text-center">
+                "The Blight is not a plague—it is a resource. The Alchemist's Guild manufactures it, the Iron-Forgers weaponize it, and the Ash-Wardens use it to justify their iron grip. You are a disposable asset in a dying city. Survive the Death Spiral long enough to become a Legend."
+            </div>
+            
+            <div class="space-y-4">
+                <!-- NEW: PACING / CYCLE -->
+                <div class="text-sm text-center border-b border-gray-700 pb-2">
+                    <strong class="text-emerald-400">THE CYCLE:</strong> 
+                    <strong class="text-yellow-500">Rumor</strong> (Select Objective) &rarr; 
+                    <strong class="text-white">Quest</strong> (Risk Life) &rarr; 
+                    <strong class="text-indigo-400">Interlude</strong> (Heal / Train).
+                    <div class="text-xs text-gray-500 mt-1 italic">The World Clocks advance in the background. Ignore a faction too long, and they will grow stronger.</div>
+                </div>
+
+                <!-- ECONOMY -->
+                <div class="text-sm text-center">
+                    <strong class="text-emerald-400">ECONOMY:</strong>
+                    <span class="text-gray-300">Barter <strong class="text-yellow-500">Valuables</strong> to Heal. Spend <strong class="text-emerald-400">XP</strong> to Equip.</span>
+                </div>
+
+                <!-- TIERS (GRID) -->
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div class="bg-gray-900/50 p-2 rounded">
+                        <strong class="text-emerald-400 block mb-1 border-b border-gray-700">THE ROLLS (Standard)</strong>
+                        <ul class="text-xs text-gray-300 space-y-1 mt-1">
+                            <li><span class="text-white font-bold">8+:</span> Full Success <span class="text-gray-500">(Safe)</span></li>
+                            <li><span class="text-white font-bold">5-7:</span> Twist <span class="text-gray-500">(No Dmg)</span></li>
+                            <li><span class="text-white font-bold">4-:</span> Failure <span class="text-red-400">(1 Strain)</span></li>
+                        </ul>
+                    </div>
+                    <div class="bg-gray-900/50 p-2 rounded">
+                        <strong class="text-red-400 block mb-1 border-b border-gray-700">THE ROLLS (Perilous)</strong>
+                        <ul class="text-xs text-gray-300 space-y-1 mt-1">
+                            <li><span class="text-white font-bold">11+:</span> Critical <span class="text-emerald-400">(+2 XP)</span></li>
+                            <li><span class="text-white font-bold">8-10:</span> Strain <span class="text-red-400">(1 Pip)</span></li>
+                            <li><span class="text-white font-bold">4-:</span> Injury <span class="text-red-500">(2 Pips)</span></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- COST -->
+                <div class="text-xs bg-gray-900 p-2 rounded border border-red-900/30 text-center">
+                    <strong class="text-red-400 block mb-1">THE COST (PIPS)</strong>
+                    <ul class="text-gray-400 text-left list-inside inline-block">
+                        <li>[x] <strong>Strain (-1):</strong> Minor harm. Clears for <strong>Free</strong> via Rest.</li>
+                        <li>[x][x] <strong>Injury (-2):</strong> Structural harm. Requires <strong>Medical Aid</strong> (Burning a <strong>Valuable</strong>).</li>
+                        <li><strong>DEATH:</strong> If <strong>10 Total Pips</strong> are filled, your story ends.</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button onclick="window.downloadStoryLog()" class="px-3 py-2 bg-gray-700 text-xs text-gray-300 rounded hover:bg-emerald-900 transition">Export Log</button>
+                <button onclick="window.resetGame()" class="btn-danger">Reset Game</button>
+                <button onclick="document.getElementById('welcome-modal').style.display='none'" class="px-6 py-2 bg-emerald-700 text-white rounded font-bold hover:bg-emerald-600 transition">CLOSE</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container" class="fixed top-4 right-4 z-[200] flex flex-col gap-2 pointer-events-none"></div>
+
+    <div id="mobile-hud">
+        <div id="hud-name">HERO</div>
+        <div>XP:<strong id="hud-xp">0</strong></div>
+        <div class="flex items-center">BLIGHT:<span id="hud-blight-container"></span></div>
+    </div>
+    <div id="mobile-toggle-btn" onclick="toggleSidebar()">☰</div>
+
+    <div class="container mx-auto max-w-7xl p-4">
+        <header class="mb-4 p-4 bg-gray-800 rounded-lg border border-gray-700 flex justify-between items-center gap-4">
+            <div class="flex items-center gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-white">Ash-Lord's Covenant</h1>
+                    <p class="text-sm text-gray-400">Digital RPG Prototype (v1.2.2)</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4 header-actions">
+                <div id="auth-status" class="text-right hidden sm:block"><p class="text-sm font-medium text-gray-400">Status: Connecting...</p></div>
+                <button id="help-btn" class="px-3 py-2 bg-gray-700 text-xs text-gray-300 rounded hover:bg-emerald-900 transition" onclick="document.getElementById('welcome-modal').style.display='flex'">System / Help</button>
+            </div>
+        </header>
+
+        <div id="character-creation-ui">
+            <div class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-6 max-w-3xl mx-auto">
+                <h2 class="text-3xl font-bold text-white mb-2">Create Your Character</h2>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Name</label>
+                    <input type="text" id="character-name" class="w-full p-3 bg-gray-900 border border-gray-700 rounded text-gray-200">
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><h3 class="text-xl font-semibold text-emerald-400 mb-3">Calling</h3><div id="calling-options" class="space-y-3"></div></div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-red-400 mb-3">Burden</h3>
+                        <div id="burden-options" class="space-y-3"></div>
+                        <div id="burden-detail-input-wrapper" class="mt-3 hidden">
+                            <label id="burden-detail-label" class="block text-sm text-gray-300 mb-1">Details:</label>
+                            <input type="text" id="burden-detail-input" class="w-full p-3 bg-gray-900 border border-gray-700 rounded text-gray-200">
+                        </div>
+                    </div>
+                </div>
+                <button id="create-character-btn" class="w-full mt-6 px-4 py-3 bg-emerald-700 text-white rounded font-bold shadow-md">Begin Your Story</button>
+            </div>
+        </div>
+
+        <div id="main-game-ui">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div id="sidebar-container" class="lg:col-span-1 space-y-4 custom-scrollbar">
+                    <div id="character-sheet-wrapper" class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg">
+                        <div id="character-sheet-header" class="flex justify-between items-center p-4 border-b border-gray-700 cursor-pointer">
+                            <h2 class="text-xl font-semibold text-white">Character</h2>
+                            <svg id="accordion-icon" class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div id="character-sheet-content" class="p-4 space-y-4">
+                            <p id="character-sheet-loading" class="text-gray-400 italic">Loading...</p>
+                            <div id="character-sheet-data"></div>
+                        </div>
+                    </div>
+
+                    <div id="unified-clocks-wrapper" class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg mt-4">
+                        <div id="unified-clocks-header" class="flex justify-between items-center p-4 border-b border-gray-700 cursor-pointer hover:bg-gray-750 transition">
+                            <h2 class="text-xl font-semibold text-white">World State</h2>
+                            <svg id="unified-accordion-icon" class="w-6 h-6 text-gray-400 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div id="unified-clocks-content" class="p-4 space-y-6">
+                            <div class="grid grid-cols-2 gap-2 border-b border-gray-700 pb-4 mb-4"> 
+                                <div class="flex flex-col items-center">
+                                    <h4 class="text-xs text-emerald-400 font-bold mb-2">DESTINY</h4>
+                                    <div class="clock transform scale-90"><div class="clock-face" id="destiny-clock-face"></div></div>
+                                    <p id="destiny-narrative" class="text-xs text-gray-400 text-center mt-2 font-mono px-1">...</p>
+                                </div>
+                                <div class="flex flex-col items-center">
+                                    <h4 class="text-xs text-red-400 font-bold mb-2">THREAT</h4>
+                                    <div class="clock transform scale-90"><div class="clock-face" id="endgame-front-clock-face"></div></div>
+                                    <span id="endgame-front-name" class="text-xs text-gray-400 text-center mt-2 font-mono">...</span>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="text-xs text-gray-500 mb-3 text-center font-bold tracking-widest">FACTIONS</h4>
+                                <div id="world-clocks-container" class="space-y-3"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="quest-progress-wrapper" class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg mt-4 p-4 hidden">
+                        <h4 id="quest-title" class="text-emerald-400 font-bold text-sm mb-1">Quest Title</h4>
+                        <div class="flex justify-between text-xs text-gray-400 mb-2">
+                            <span id="quest-chapter">Chapter 1</span>
+                            <span id="quest-progress-text">1/1</span>
+                        </div>
+                        <div class="w-full bg-gray-700 rounded-full h-2.5 mb-2">
+                            <div id="quest-progress-bar" class="bg-emerald-600 h-2.5 rounded-full" style="width: 0%"></div>
+                        </div>
+                        <p id="quest-desc" class="border-t border-gray-700 pt-2"></p>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2 flex flex-col h-[80vh]">
+                    <div id="narrative-log" class="flex-grow bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4 overflow-y-auto custom-scrollbar"></div>
+                    <div id="interaction-panel" class="relative mt-4 bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4">
+                        <div id="interaction-loader" style="display: none;">
+                            <div class="spinner"></div>
+                            <span class="text-gray-300 font-mono text-sm">Consulting the Oracle...</span>
+                        </div>
+
+                        <div id="chapter-phase-ui">
+                            <textarea id="player-input" class="w-full p-3 bg-gray-900 border border-gray-700 rounded text-gray-200" rows="3" placeholder="What do you do?"></textarea>
+                            <button id="submit-action-btn" class="w-full mt-3 px-4 py-3 bg-emerald-700 text-white rounded font-bold shadow-md hover:bg-emerald-600">Submit Action</button>
+                            <p class="text-xs text-gray-500 text-center mt-2">Enter to submit (Shift+Enter for new line)</p>
+                        </div>
+                        <div id="interlude-phase-ui" class="hidden">
+                            <p class="text-lg text-gray-300 mb-4">Interlude: Spend XP to Train/Gear. Burn Valuables to Heal.</p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <button id="interlude-train-btn" class="interlude-button">Train (6 XP)</button>
+                                <button id="interlude-asset-btn" class="interlude-button">Shop (Gear for XP)</button>
+                                <button id="interlude-recover-btn" class="interlude-button">Heal (Burn 1 Valuable)</button>
+                                <button id="interlude-repair-btn" class="interlude-button">Repair Armor (Burn 1 Valuable)</button>
+                                <button id="interlude-reflect-btn" class="interlude-button">Rest (Clear Strain)</button>
+                                <button id="interlude-end-btn" class="interlude-button end-interlude">End Interlude</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, addDoc, serverTimestamp, getDocs, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        let CONTENT_PACK_ASHLORDS = null;
+        let MASTER_GEAR_LIST = null; // Added
+        let CONDITION_DEFINITIONS = null;
+        let db, auth, userId;
+        let currentCampaignId = "ashlords_covenant_main_v1";
+        let currentCharacterData = null;
+        let currentGameState = null;
+        let recentNarrativeHistory = [];
+        let sagaLog = "";
+        let worldClocks = [];
+        let frontClockState = { current: 0, name: "" };
+        let destinyClockState = { current: 0 };
+        let fullChatHistory = []; 
+        let lastMechanicsString = ""; 
+        const ui = {}; 
+
+        function logBoot(msg) {
+            const el = document.getElementById('boot-log');
+            const txt = document.getElementById('loading-text');
+            if(txt) txt.textContent = msg;
+            if(el) {
+                el.style.display = 'block';
+                el.innerHTML += `<div>> ${msg}</div>`;
+            }
+        }
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAeHZIk7gc0oSWdv_PddXhhoWpx2Mu8BC4",
+            authDomain: "rpg-prototype-ca0b2.firebaseapp.com",
+            projectId: "rpg-prototype-ca0b2",
+            storageBucket: "rpg-prototype-ca0b2.firebasestorage.app",
+            messagingSenderId: "4118036014",
+            appId: "1:4118036014:web:2d9e4ee696120c8bfde9bf",
+            measurementId: "G-219NSHTPY9"
+        };
+        const GEMINI_API_KEY = "AIzaSyCvTDAmgByYSyxrwinqqcHNKZaYJ9_hV8M";
+
+        async function init() {
+            logBoot("🚀 V1.2.2 SYSTEM INIT");
+            setTimeout(() => {
+                const btn = document.getElementById('force-start-btn');
+                if(btn) btn.style.display = 'block';
+            }, 5000);
+
+            try {
+                bindUI();
+                // Updated import to fetch MASTER_GEAR_LIST
+                const module = await import('./game_data.js?v=1.2.2'); 
+                CONTENT_PACK_ASHLORDS = module.CONTENT_PACK_ASHLORDS;
+                MASTER_GEAR_LIST = module.MASTER_GEAR_LIST;
+                CONDITION_DEFINITIONS = module.CONDITION_DEFINITIONS; 
+                logBoot("✅ Data Loaded.");
+                
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        logBoot(`✅ AUTH SUCCESS`);
+                        document.getElementById('auth-status').innerHTML = `<p class="text-sm font-medium text-gray-400">Connected</p>`;
+                        checkAndCreateCampaign()
+                            .then(() => setupFirestoreListeners())
+                            .catch(err => window.showError("Startup Error", err.message));
+                    }
+                });
+                await signInAnonymously(auth);
+            } catch (e) {
+                window.showError("Init Error", e.message);
+            }
+        }
+
+        function showToast(message) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, 3000);
+        }
+        window.showToast = showToast;
+
+        function bindUI() {
+            const safeBind = (id) => document.getElementById(id);
+            ui.loading = safeBind('loading-overlay');
+            ui.interactionLoader = safeBind('interaction-loader');
+            ui.charCreation = safeBind('character-creation-ui');
+            ui.mainGame = safeBind('main-game-ui');
+            ui.callingOpts = safeBind('calling-options');
+            ui.burdenOpts = safeBind('burden-options');
+            ui.burdenDetailWrap = safeBind('burden-detail-input-wrapper');
+            ui.burdenDetailInput = safeBind('burden-detail-input');
+            ui.burdenDetailLabel = safeBind('burden-detail-label');
+            ui.charName = safeBind('character-name');
+            ui.playerInput = safeBind('player-input');
+            ui.characterSheetLoading = safeBind('character-sheet-loading'); 
+            
+            safeBind('create-character-btn').addEventListener('click', createCharacterAndStartGame);
+            safeBind('submit-action-btn').addEventListener('click', handlePlayerAction);
+            
+            safeBind('interlude-train-btn').addEventListener('click', () => handleInterludeAction('train'));
+            safeBind('interlude-asset-btn').addEventListener('click', () => handleInterludeAction('acquire_asset'));
+            safeBind('interlude-recover-btn').addEventListener('click', () => handleInterludeAction('recover'));
+            safeBind('interlude-repair-btn').addEventListener('click', () => handleInterludeAction('repair')); 
+            safeBind('interlude-reflect-btn').addEventListener('click', () => handleInterludeAction('reflect'));
+            safeBind('interlude-end-btn').addEventListener('click', () => handleInterludeAction('end_interlude'));
+
+            ui.playerInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handlePlayerAction(); } });
+
+            const toggleAccordion = (headerId, contentId, iconId) => {
+                const header = document.getElementById(headerId);
+                const content = document.getElementById(contentId);
+                const icon = document.getElementById(iconId);
+                if(header && content) {
+                    header.onclick = () => {
+                        const isHidden = content.style.display === 'none';
+                        content.style.display = isHidden ? 'block' : 'none';
+                        if(icon) icon.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(-90deg)';
+                    };
+                }
+            };
+            toggleAccordion('character-sheet-header', 'character-sheet-content', 'accordion-icon');
+            toggleAccordion('unified-clocks-header', 'unified-clocks-content', 'unified-accordion-icon');
+
+            window.toggleSidebar = () => {
+                const sb = document.getElementById('sidebar-container');
+                sb.classList.toggle('active');
+            };
+
+            window.forceUI = () => { ui.loading.style.display = 'none'; ui.charCreation.style.display = 'block'; renderOptions(); };
+        }
+
+        /* ==========================================
+           V1.1.8 LOGIC ENGINE - OFFLOADED MECHANICS
+           ========================================== */
+
+        async function classifyAction(playerInput) {
+            // Fix 033: Explicit bypass for Quest Acceptance (Passive)
+            if (/accept|join|take the job|agree/i.test(playerInput)) {
+                return { type: "PASSIVE", stat: null, tier: 0, rationale: "Player accepted quest." };
+            }
+
+            const prompt = `
+            ROLE: RPG Systems Logic Classifier.
+            TASK: Analyze the player's input and classify it for the game engine.
+            
+            INPUT: "${playerInput}"
+            
+            CONTEXT:
+            - PASSIVE: Asking questions, moving safely, reading, remembering (No Risk).
+            - ACTIVE: Fighting, Moving in danger, Hiding, Stealing, Persuading, Enduring (Risk involved).
+            
+            STAT RULES (Hierarchy):
+            1. FINESSE: Stealth, Hiding, Shadows, Fast Movement, Precision, Thievery.
+            2. FORCE: Violence, Breaking, Lifting, Intimidation.
+            3. INFLUENCE: Lying, Commanding, Charming.
+            4. WITS (Fix 037/038): Investigating, Searching (Active), Scanning, Analyzing, Remembering, Using Tools/Machines, Engineering, Disabling Traps, Crafting.
+            5. RESOLVE: Pure Willpower, Enduring Pain, Waiting out danger.
+            
+            **MANDATORY RULE FOR 'WITS':**
+            If the player is looking for a hidden object, analyzing a mechanism, disabling a trap, or crafting something, this MUST be classified as ACTIVE / WITS. Do not use PASSIVE for searches in dangerous environments.
+            
+            RISK ASSESSMENT (TIER):
+            - Tier 1 (Standard): Normal risk, one-on-one, standard stealth.
+            - Tier 2 (Perilous): Outnumbered, lethal combat, highly dangerous environment, magic, impossible odds.
+            
+            OUTPUT JSON ONLY:
+            {
+                "type": "PASSIVE" or "ACTIVE",
+                "stat": "FORCE" | "FINESSE" | "INFLUENCE" | "WITS" | "RESOLVE",
+                "tier": 1 or 2,
+                "rationale": "Short reason"
+            }
+            `;
+            
+            const response = await callGemini(prompt);
+            try {
+                return JSON.parse(response);
+            } catch (e) {
+                console.error("Classification Failed", e);
+                return { type: "ACTIVE", stat: "FORCE", tier: 1 }; // Fallback
+            }
+        }
+
+        function resolveMechanics(classification) {
+            if (classification.type === "PASSIVE") {
+                return {
+                    mechanicString: "NO ROLL",
+                    damagePips: 0,
+                    damageStat: null,
+                    resultType: "PASSIVE",
+                    narrativePrompt: "Describe the scene based on the player's request. No mechanics involved.",
+                    tier: 0
+                };
+            }
+
+            const statName = classification.stat;
+            const statValue = currentCharacterData.stats[statName] || 0;
+            const pips = (currentCharacterData.pips || {})[statName] || 0;
+            const tier = classification.tier || 1;
+            
+            // --- ASSET SYSTEM UPDATE v1.2.1 ---
+            // Check for Tool Bonus
+            const tools = (currentCharacterData.equipment || []).filter(i => i.type === 'tool' && i.stat === statName);
+            const toolBonus = tools.length > 0 ? 1 : 0;
+            
+            // The Roll
+            const die = Math.floor(Math.random() * 10) + 1;
+            const total = die + statValue + toolBonus - pips;
+            
+            let resultLabel = "FAIL";
+            let damage = 0;
+            
+            // STRICT RULES V1.1.8 (Fix 038: Tier 1 Twist = 0 Dmg)
+            if (tier === 1) {
+                if (total >= 8) {
+                    resultLabel = "FULL SUCCESS";
+                    damage = 0;
+                } else if (total >= 5) {
+                    resultLabel = "SUCCESS W/ TWIST"; 
+                    damage = 0; // Fix 038: Explicitly 0
+                } else {
+                    resultLabel = "FAILURE (STRAIN)";
+                    damage = 1; // Strain
+                }
+            } else { // Tier 2
+                if (total >= 11) {
+                    resultLabel = "CRITICAL SUCCESS";
+                    damage = 0;
+                } else if (total >= 8) {
+                    resultLabel = "SUCCESS W/ STRAIN"; 
+                    damage = 1; 
+                } else if (total >= 5) {
+                    resultLabel = "FAILURE W/ STRAIN"; 
+                    damage = 1;
+                } else {
+                    resultLabel = "FAILURE W/ INJURY"; 
+                    damage = 2; 
+                }
+            }
+
+            // --- ASSET SYSTEM UPDATE v1.2.1 ---
+            // Apply Damage Logic with Armor Ablation
+            const updates = {};
+            let absorbed = 0;
+
+            if (damage > 0) {
+                // Check for Armor in this stat
+                const armors = (currentCharacterData.equipment || []).filter(i => i.type === 'armor' && i.stat === statName && (i.pips||0) > 0);
+                if (armors.length > 0) {
+                    const armor = armors[0];
+                    const armorDmg = Math.min(damage, armor.pips);
+                    if (armorDmg > 0) {
+                        absorbed = armorDmg;
+                        damage -= armorDmg;
+                        // Schedule armor update
+                        updates.update_armor = { name: armor.name, new_pips: armor.pips - armorDmg };
+                    }
+                }
+
+                // Remaining damage goes to player
+                if (damage > 0) {
+                    let currentPips = (currentCharacterData.pips || {})[statName] || 0;
+                    let targetStat = statName;
+                    
+                    // Fix 036: Logic happens here, not previously.
+                    if (currentPips >= 2) {
+                        targetStat = "RESOLVE";
+                    }
+                    
+                    updates.add_pips = { stat: targetStat, amount: damage };
+                }
+            }
+
+            let mechStr = `[${statName}] (Tier ${tier}). ${resultLabel} (Die ${die} + Stat ${statValue} ${toolBonus?'+ Tool 1 ':''}- Pip ${pips} = ${total})`;
+            if (absorbed > 0) mechStr += ` [Armor Absorbed ${absorbed}]`;
+
+            return {
+                mechanicString: mechStr,
+                damagePips: damage + absorbed,
+                damageStat: updates.add_pips ? updates.add_pips.stat : (absorbed > 0 ? "Armor" : null),
+                updates: updates,
+                resultType: resultLabel,
+                tier: tier
+            };
+        }
+
+        // Fix 030: Helper for Precise XP Logic
+        function calculateXPReward(resolution) {
+            if (resolution.resultType === "PASSIVE") return 0;
+            
+            const tier = resolution.tier;
+            const result = resolution.resultType;
+            
+            // Matrix
+            if (tier === 2 && result === "CRITICAL SUCCESS") return 2;
+            if (result === "FULL SUCCESS") return 1; // Tier 1 or Tier 2
+            if (tier === 2 && result === "SUCCESS W/ STRAIN") return 1;
+            
+            // All other cases (Twist, Failure)
+            return 0;
+        }
+
+        async function narrateOutcome(playerInput, mechanics, contextQuest) {
+            const clockStr = worldClocks.map(c => `${c.name}: ${c.goal}`).join(", ");
+            const prevContext = recentNarrativeHistory;
+            const currentPhase = currentGameState?.phase || 'adventure';
+            const turnCount = currentGameState?.turn_count || 0;
+            const currentLocation = currentGameState?.current_location || "Unknown";
+            const currentQuestTitle = contextQuest ? contextQuest.title : "None";
+            
+            const prompt = `
+            ROLE: Grimdark Fantasy GM / Narrator.
+            TASK: Narrate the outcome of the player's action based on the PRE-CALCULATED mechanics.
+            
+            PLAYER INPUT: "${playerInput}"
+            PREVIOUS CONTEXT: ${prevContext}
+            GAME PHASE: ${currentPhase}
+            TURN: ${turnCount}
+            LOCATION: ${currentLocation}
+            CURRENT QUEST: ${currentQuestTitle}
+            
+            MECHANICAL RESULT (IMMUTABLE):
+            - Type: ${mechanics.resultType}
+            - Damage Dealt to Player: ${mechanics.damagePips} Pips to ${mechanics.damageStat || "None"}
+            - Mechanic Detail: ${mechanics.mechanicString}
+            
+            NARRATIVE RULES:
+            1. **CONTINUITY:** Do not change location unless the player moved. Do not invent enemies that weren't there.
+            2. **OBJECT PERMANENCE:** Maintain consistent world state.
+            3. **TONE:** Grim, visceral, dangerous.
+            
+            **CRITICAL FIXES (V1.1.8):**
+            - **FACTIONS (Fix 031):** When discussing rumors/clocks, USE ONLY THESE FACTIONS: [Ash-Wardens, Soot-Stained, Iron-Forgers, Whispering Flesh]. DO NOT invent others.
+            - **PHASE TRANSITION (Fix 039):** DO NOT output "phase_transition": "rumor_mill" UNLESS 'Current Quest' is "None" OR 'Turn' < 5 (Tutorial). If the player is on a quest, STAY in adventure mode.
+            - **ITEMS (Fix 035):** IF the narrative involves finding, receiving, or crafting an item (e.g. Baton, Bomb), you MUST output 'state_update': {'equipment_add': [{'name': 'Item Name', 'properties': ['prop1', 'prop2']}]}.
+            
+            **LOOTING:**
+            IF Result is SUCCESS and action was looting/scavenging, output "state_update" with "equipment_add".
+            
+            **QUEST SELECTION:**
+            IF player is choosing a rumor/quest: Output "quest_update": { "title": "...", "current_chapter": 1, "total_chapters": 1, "description": "SHORT OBJECTIVE..." }
+            
+            **OPENING SCENE EXCEPTION (Rumor Mill):**
+            IF (Location == "The Tavern" AND Turn >= 5 AND Phase != "rumor_mill"):
+                1. Transition phase to 'rumor_mill'.
+                2. Narrate transition to city hub.
+                3. List 4 Rumors (One for each VALID Faction listed above).
+                
+            OUTPUT JSON:
+            {
+                "narrative": "The story text...",
+                "location_update": "Only if changed and the player moved.",
+                "clocks_advance": [{"name": "Ash-Wardens", "amount": 1}],
+                "state_update": { "equipment_add": [{"name": "Item", "properties": ["tag"]}] },
+                "quest_update": { ... },
+                "phase_transition": "rumor_mill" (OPTIONAL: See rules)
+            }
+            `;
+            
+            return await callGemini(prompt);
+        }
+
+        async function handlePlayerAction() {
+            const text = ui.playerInput.value.trim(); 
+            if (!text) return;
+            
+            // Phase Switch Logic
+            if (/rest|downtime|camp|safe haven/i.test(text)) {
+                 if(confirm("Transition to Interlude (Safe Haven)?")) {
+                     ui.playerInput.value = '';
+                     await updateDoc(doc(db, "artifacts", "rpg-prototype-ca0b2", "users", userId, "game_state", "main"), { phase: 'interlude' });
+                     return;
+                 }
+            }
+
+            ui.playerInput.value = ''; 
+            ui.playerInput.disabled = true;
+            document.getElementById('submit-action-btn').disabled = true;
+            ui.interactionLoader.style.display = 'flex'; 
+            
+            await addMessageToChat('user', text);
+            
+            try {
+                // Fix 032 & ASSET SYSTEM UPDATE: Manual Bribe/Payment Logic
+                // Check if action involves payment and isn't aggressive
+                const isPayment = /bribe|pay|give coin|spend coin/i.test(text);
+                const isAggressive = /pickpocket|steal|rob|attack|stab|kill|fight|shoot|ambush|loot/i.test(text);
+
+                if (isPayment && !isAggressive) {
+                    // ASSET SYSTEM: Check for 'valuable' tag instead of coin integer
+                    const valuables = (currentCharacterData.equipment || []).filter(i => i.tags && i.tags.includes('valuable'));
+                    if (valuables.length > 0) {
+                         // Burn the first valuable found
+                         await processStateUpdate({ remove_item: valuables[0].name });
+                         await addMessageToChat("model", `[SYSTEM] Bribe Paid (Lost ${valuables[0].name})`);
+                    } else {
+                        // Broke - Let narrative handle it, but no deduction
+                    }
+                    // If paying, bypass active risk -> Passive (Auto-Success logic handled by narrative)
+                    var classification = { type: "PASSIVE", stat: "INFLUENCE", tier: 1 };
+                } else {
+                    // PHASE 1: CLASSIFY
+                    logBoot("🧠 Analzying Intent...");
+                    var classification = await classifyAction(text);
+                }
+                
+                console.log("Classification:", classification);
+                
+                // PHASE 2: RESOLVE (JS)
+                logBoot("🎲 Rolling Fate...");
+                const resolution = resolveMechanics(classification);
+                console.log("Resolution:", resolution);
+                
+                // PHASE 3: NARRATE
+                logBoot("✍️ Writing Saga...");
+                // Pass current quest to context (Fix 039)
+                const questSnap = await getDoc(doc(db, "artifacts", "rpg-prototype-ca0b2", "users", userId, "quest_state", "current_quest"));
+                const currentQuest = questSnap.exists() ? questSnap.data() : null;
+                
+                const rawNarrative = await narrateOutcome(text, resolution, currentQuest);
+                
+                // Parse and Render
+                let parsed = JSON.parse(rawNarrative);
+                let narrativeWithMech = parsed.narrative;
+                
+                if (resolution.mechanicString !== "NO ROLL") {
+                    narrativeWithMech += `\n\n<mechanics>${resolution.mechanicString}</mechanics>`;
+                }
+                
+                await addMessageToChat('model', narrativeWithMech);
+                
+                // --- STATE UPDATES ---
+                
+                // Apply JS Calculated Damage / Armor Update
+                if (resolution.updates) {
+                    if (resolution.updates.add_pips) await processStateUpdate({ add_pips: resolution.updates.add_pips });
+                    if (resolution.updates.update_armor) await processStateUpdate({ update_armor: resolution.updates.update_armor });
+                }
+
+                // Fix 030: XP Logic
+                const xpReward = calculateXPReward(resolution);
+                if (xpReward > 0) {
+                    await processStateUpdate({ xp_gain: xpReward });
+                }
+
+                // Fix 001: Looting Logic (Refined) -> No more currency_gain, rely on equipment_add from AI
+                // The AI is instructed to output state_update with equipment_add for loot.
+                
+                // Apply AI Calculated World/Loot
+                if (parsed.clocks_advance || parsed.state_update) {
+                     await processStateUpdate({ 
+                         clocks_advance: parsed.clocks_advance,
+                         ...parsed.state_update // Equipment adds handled here (Fix 035)
+                     });
+                }
+                
+                // Phase Transition
+                if (parsed.phase_transition) {
+                    await updateDoc(doc(db, "artifacts", "rpg-prototype-ca0b2", "users", userId, "game_state", "main"), { phase: parsed.phase_transition });
+                }
+                
+                // Location Update
+                if (parsed.location_update && parsed.location_update !== currentGameState.current_location) {
+                    await addMessageToChat("model", `[SYSTEM] 📍 ${parsed.location_update}`);
+                    await setDoc(doc(db, "artifacts", "rpg-prototype-ca0b2", "users", userId, "game_state", "main"), { current_location: parsed.location_update }, { merge: true });
+                }
+                
+                // Quest Update
+                if (parsed.quest_update) {
+                    await setDoc(doc(db, "artifacts", "rpg-prototype-ca0b2", "users", userId, "quest_state", "current_quest"), parsed.quest_update, { merge: true });
+                    addMessageToChat("model", `[SYSTEM] Quest Accepted: ${parsed.quest_update.title}`); 
+                }
+
+                const currentTurn = (currentGameState?.turn_count || 0) + 1;
+                await setDoc(doc(db, "artifacts", "rpg-prototype-ca0b2", "users", userId, "game_state", "main"), { turn_count: currentTurn }, { merge: true });
+
+            } catch (e) {
+                console.error(e);
+                window.showError("Game Loop Error", e.message);
+            } finally {
+                ui.playerInput.disabled = false; 
+                ui.playerInput.focus();
+                document.getElementById('submit-action-btn').disabled = false;
+                ui.interactionLoader.style.display = 'none'; 
+                ui.loading.style.display = 'none';
+            }
+        }
+
+        async function callGemini(systemPrompt) {
+            const payload = { 
+                contents: [{ parts: [{ text: " Generate Response." }] }], 
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: { responseMimeType: "application/json" } // Force JSON mode
+            };
+            
+            for(let i=0; i<3; i++) {
+                try {
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`, {
+                        method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
+                    });
+                    if(res.status === 503) { await new Promise(r=>setTimeout(r, 2000)); continue; }
+                    const data = await res.json();
+                    return data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+                } catch(e) { if(i===2) throw e; }
+            }
+        }
+
+        async function createCharacterAndStartGame() {
+            const charName = ui.charName.value.trim();
+            const selectedCallingEl = ui.callingOpts.querySelector('.selected');
+            const selectedBurdenEl = ui.burdenOpts.querySelector('.selected');
+            if (!charName || !selectedCallingEl || !selectedBurdenEl) return window.showError("Missing Info", "Please fill all fields.");
+            ui.loading.style.display = 'flex';
+            try {
+                const callingId = selectedCallingEl.dataset.id;
+                const burdenId = selectedBurdenEl.dataset.id;
+                const calling = CONTENT_PACK_ASHLORDS.callings.find(c => c.id === callingId);
+                const burden = CONTENT_PACK_ASHLORDS.burdens.find(b => b.id === burdenId);
+                const combinedStats = { FORCE: 0, FINESSE: 0, INFLUENCE: 0, WITS: 0, RESOLVE: 0 };
+                for (const stat in combinedStats) combinedStats[stat] = (calling.stats[stat] || 0) + (burden.stats[stat] || 0);
+                
+                const newCharacter = { 
+                    name: charName, playbook: { calling: calling.name, burden: burden.name }, 
+                    stats: combinedStats, pips: {}, blight: 0,
+                    talents: [...(calling.talents || []), ...(burden.talents || [])], 
+                    equipment: [...(calling.equipment || []), ...(burden.equipment || [])], 
+                    xp: 0, xp_locked: 0
+                };
+                
+                await setDoc(doc(db, "artifacts", "rpg-prototype-ca0b2", "users", userId, "characters", "main_char"), newCharacter);
+                const fronts = CONTENT_PACK_ASHLORDS.endgame_fronts || {};
+                const frontInfo = fronts[callingId];
+                if (frontInfo) await setDoc(doc(db, "artifacts", "rpg-prototype-ca0b2", "users", userId, "game_state", "front_clock"), { name: frontInfo.name }, { merge: true });
+                await setDoc(doc(db, "artifacts", "rpg-prototype-ca0b2", "users", userId, "game_state", "main"), { phase: 'adventure', turn_count: 0, saga_log: "The story begins...", current_location: "The Tavern" }, { merge: true });
+                
+                // FIX 010: Nuke old quest
+                await deleteDoc(doc(db, "artifacts", "rpg-prototype-ca0b2", "users", userId, "quest_state", "current_quest"));
+
+                await addMessageToChat("model", "You are in a dimly lit tavern, the air thick with stale ale and desperation. Ash-Warden enforcers, clad in rusted, reinforced plate armor, are shaking down the tavern keeper over a fabricated 'Blight Tax'. One guard, his face a mask of bored cruelty beneath a grim iron visor, shoves the old man. 'Pay up, or we shut you down.' What do you do?");
+                
+                const wcRef = doc(db, "artifacts", "rpg-prototype-ca0b2", "users", userId, "game_state", "world_clocks");
+                const wcSnap = await getDoc(wcRef);
+                if(!wcSnap.exists()) {
+                    const clockData = CONTENT_PACK_ASHLORDS.FACTIONS.map(f => ({ name: f.name, current: 0, segments: 6, goal: f.goal || "Advance Agenda" }));
+                    await setDoc(wcRef, { clocks: clockData });
+                }
+
+                document.getElementById('welcome-modal').style.display = 'flex';
+                
+            } catch (error) { window.showError("Creation Failed", error.message); } finally { ui.loading.style.display = 'none'; }
+        }
+
+        // Flavor Text Dictionary (Fix 038: WITS Update)
+        const statDescriptions = {
+            "FORCE": "Violence, physical power, coercion.",
+            "FINESSE": "Precision, stealth, agility.",
+            "INFLUENCE": "Charm, deception, authority.",
+            "WITS": "Observation, lore, intuition, using tools/machines, engineering.",
+            "RESOLVE": "Willpower, endurance, courage."
+        };
+
+        // --- ASSET SYSTEM UPDATE: Display Slots ---
+        function displayCharacter(data) {
+            const sheet = document.getElementById('character-sheet-data');
+            if (!sheet) return;
+            
+            if(ui.characterSheetLoading) ui.characterSheetLoading.style.display = 'none';
+            
+            const blight = data.blight || 0;
+            const pipsData = data.pips || {};
+            const gear = data.equipment || [];
+            const talents = data.talents || []; // UI-001: Restore Talents
+            
+            document.getElementById('hud-xp').innerHTML = `<span class="text-2xl text-emerald-400 font-bold">${data.xp || 0}</span>`; // UI-002: XP Yellow/Large
+            document.getElementById('hud-name').textContent = data.name;
+            
+            let hudBlightHtml = `<div class="blight-meter" style="margin-left:4px;">`;
+            for(let i=1; i<=5; i++) hudBlightHtml += `<div class="blight-pip ${i<=blight?'active':''}"></div>`;
+            hudBlightHtml += `</div>`;
+            document.getElementById('hud-blight-container').innerHTML = hudBlightHtml;
+
+            const statOrder = ['FORCE', 'FINESSE', 'INFLUENCE', 'WITS', 'RESOLVE'];
+            const statsHtml = statOrder.map(k => {
+                const v = data.stats[k] || 0;
+                const count = pipsData[k] || 0;
+                const p1 = count >= 1 ? "filled" : "";
+                const p2 = count >= 2 ? "filled" : "";
+                
+                // Slots Logic
+                const tool = gear.find(i => i.type === 'tool' && i.stat === k);
+                const armor = gear.find(i => i.type === 'armor' && i.stat === k);
+                
+                // UI-001: Clickable, Clean Empty Slots
+                const toolHtml = tool 
+                    ? `<div class="equip-slot filled ${tool.tags?.includes('heavy')?'heavy':''}" onclick="updateDescription('${tool.name}', '${tool.desc}', 'item')">${tool.name.substring(0,8)} (+1)</div>` 
+                    : `<div class="equip-slot"></div>`;
+                
+                let armorPips = "";
+                if (armor) {
+                    for(let i=0; i<armor.max_pips; i++) armorPips += `<span class="pip-mini ${i < armor.pips ? 'filled' : ''}"></span>`;
+                }
+                const armorHtml = armor 
+                    ? `<div class="equip-slot filled ${armor.tags?.includes('heavy')?'heavy':''}" onclick="updateDescription('${armor.name}', '${armor.desc}', 'item')">${armor.name.substring(0,6)} ${armorPips}</div>` 
+                    : `<div class="equip-slot"></div>`;
+
+                // UI-001: Clickable Stats
+                return `<div class="p-1 text-center rounded bg-gray-900 border border-gray-700 cursor-pointer hover:bg-gray-800" onclick="updateDescription('Stat: ${k}', '${statDescriptions[k]}', 'stat')">
+                    <div class="text-xs text-gray-400 font-bold">${k.substring(0,3)}</div>
+                    <div class="text-lg font-bold ${v>0?'text-emerald-400':'text-gray-300'}">${v>0?'+'+v:v}</div>
+                    <div class="pip-container mb-1"><div class="pip ${p1}"></div><div class="pip ${p2}"></div></div>
+                    ${toolHtml}
+                    ${armorHtml}
+                </div>`;
+            }).join('');
+
+            let sheetBlightHtml = `<div class="blight-meter" title="Blight Stage: ${blight}">`;
+            for(let i=1; i<=5; i++) sheetBlightHtml += `<div class="blight-pip ${i<=blight?'active':''}"></div>`;
+            sheetBlightHtml += `</div>`;
+            
+            const blightNames = ["Untouched", "Ash-Touched", "Infected", "Corrupted", "Hollowed", "Consumed"];
+            const blightName = blightNames[blight] || "Unknown";
+            const blightEffect = blight === 0 ? "Safe" : blight === 1 ? "Social Stigma" : blight === 2 ? "-1 Influence" : "Risk of Agency Loss";
+
+            // UI-001: Render Talents
+            const talentsHtml = talents.map(t => `<div class="p-2 mb-2 rounded bg-gray-900 border border-gray-700 cursor-pointer hover:border-emerald-500 transition" onclick="updateDescription('${t.name}', '${t.description}', 'talent')"><div class="text-sm font-bold text-gray-300">${t.name}</div></div>`).join('');
+
+            // Backpack (Excluding Equipped Tools/Armor)
+            const backpack = gear.filter(i => i.type !== 'tool' && i.type !== 'armor');
+            const backpackHtml = backpack.length ? backpack.map(i => `<li class="text-sm text-gray-400 py-1 border-b border-gray-700 flex justify-between cursor-pointer hover:text-emerald-400" onclick="updateDescription('${i.name.replace(/'/g,"\\'")}', '${(i.tags||[]).join(', ')}. ${i.desc||""}', 'item')"><span>${i.name}</span> <span class="text-xs text-yellow-500">${i.tags?.includes('valuable') ? 'Valuable' : ''}</span></li>`).join('') : '<li class="text-gray-500 italic text-sm">Empty</li>';
+
+            sheet.innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <h3 class="text-xl font-bold text-white">${data.name}</h3>
+                            <p class="text-sm text-emerald-400">${data.playbook?.calling || "?"} / ${data.playbook?.burden || "?"}</p>
+                        </div>
+                        <div class="text-right flex flex-col items-end">
+                             <div class="flex gap-2 text-xs text-gray-500">
+                                <span class="cursor-pointer" onclick="updateDescription('Growth', '6 XP to Train +1 Stat (Interlude)', 'stat')">XP: ${data.xp}</span>
+                             </div>
+                             <div class="mt-1 text-xs text-purple-400 flex items-center gap-1 cursor-pointer" onclick="updateDescription('Blight: ${blightName}', '${blightEffect}', 'stat')">BLIGHT: ${sheetBlightHtml}</div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-5 gap-1 select-none">${statsHtml}</div>
+                    
+                    <!-- UI-001: Talents -->
+                    <div>
+                        <h4 class="text-xs uppercase font-semibold text-gray-500 mb-1">Talents</h4>
+                        <div class="space-y-1">${talentsHtml}</div>
+                    </div>
+
+                    <div>
+                        <h4 class="text-xs uppercase font-semibold text-gray-500 mb-1">Backpack</h4> <!-- UI-001: Rename -->
+                        <ul class="space-y-0">${backpackHtml}</ul>
+                    </div>
+
+                    <div id="description-display" class="text-sm text-left text-gray-400 min-h-[3.5em] p-3 bg-gray-900 rounded-r-lg flex flex-col justify-center mt-2 border-t-2 border-gray-800"><span class="italic opacity-50">Select details.</span></div>
+                </div>`;
+        }
+
+        function displayChatHistory(snapshot) {
+            const log = document.getElementById('narrative-log');
+            if (!log) return;
+            log.innerHTML = '';
+            snapshot.forEach(msg => {
+                const div = document.createElement('div');
+                if (msg.content.startsWith("[SYSTEM]")) {
+                    div.className = 'narrative-bubble-system';
+                    div.innerHTML = msg.content.replace(/\n/g, '<br>').replace(/\[SYSTEM\]\s*/g, '');
+                } else {
+                    div.className = msg.role === 'user' ? 'narrative-bubble-user' : 'narrative-bubble-model';
+                    let content = msg.content.replace(/\n/g, '<br>');
+                    content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                    content = content.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+                    content = content.replace(/<mechanics>(.*?)<\/mechanics>/gi, (match, p1) => `<span class="mechanics-text">${p1.trim()}</span>`);
+                    div.innerHTML = content;
+                }
+                log.appendChild(div);
+            });
+            log.scrollTop = log.scrollHeight;
+        }
+
+        async function addMessageToChat(role, text) {
+            await addDoc(collection(db, "artifacts", "rpg-prototype-ca0b2", "users", userId, "chat_history"), { role, content: text, timestamp: serverTimestamp() });
+        }
+
+        function renderOptions() {
+            const createStatLine = (stats) => {
+                return Object.entries(stats)
+                    .filter(x => x[1] !== 0)
+                    .sort((a, b) => b[1] - a[1]) 
+                    .map(x => `${x[0].substring(0,3)} ${x[1]>0?'+':''}${x[1]}`)
+                    .join(' / ');
+            };
+                
+            if (ui.callingOpts) {
+                ui.callingOpts.innerHTML = CONTENT_PACK_ASHLORDS.callings.map(c => {
+                    const tHtml = (c.talents||[]).map(t=>`<div><b class="text-gray-300">${t.name}</b>: <span class="text-gray-400 text-xs">${t.description}</span></div>`).join('');
+                    return `<div class="playbook-card p-3 rounded border border-gray-700 cursor-pointer" data-id="${c.id}" onclick="selectCard(this, 'callingOpts')">
+                        <h4 class="text-white font-bold">${c.name}</h4>
+                        <div class="text-xs text-emerald-400 font-mono mb-2">${createStatLine(c.stats)}</div>
+                        <div class="space-y-1">${tHtml}</div>
+                    </div>`;
+                }).join('');
+            }
+
+            if (ui.burdenOpts) {
+                ui.burdenOpts.innerHTML = CONTENT_PACK_ASHLORDS.burdens.map(b => {
+                    const tHtml = (b.talents||[]).map(t=>`<div><b class="text-gray-300">${t.name}</b>: <span class="text-gray-400 text-xs">${t.description}</span></div>`).join('');
+                    return `<div class="playbook-card p-3 rounded border border-gray-700 cursor-pointer" data-id="${b.id}" data-req="${b.requiresInput}" onclick="selectCard(this, 'burdenOpts')">
+                        <h4 class="text-white font-bold">${b.name}</h4>
+                        <p class="text-xs text-gray-400">${b.description}</p>
+                        <div class="text-xs text-emerald-400 font-mono mb-2">${createStatLine(b.stats)}</div>
+                        <div class="space-y-1">${tHtml}</div>
+                    </div>`;
+                }).join('');
+            }
+        }
+
+        async function processStateUpdate(update) {
+            if(!update) return;
+            const toast = window.showToast || console.log;
+            
+            const charRef = doc(db, "artifacts", "rpg-prototype-ca0b2", "users", userId, "characters", "main_char");
+            const updates = {};
+            
+            if(update.xp_gain !== undefined && update.xp_gain !== 0) { 
+                updates.xp = (currentCharacterData.xp||0) + update.xp_gain; 
+                toast(`${update.xp_gain > 0 ? '+' : ''}${update.xp_gain} XP`); 
+                addMessageToChat("model", `[SYSTEM] ${update.xp_gain > 0 ? '+' : ''}${update.xp_gain} XP`); 
+            }
+
+            // MECH-001: Stat Increase Handling
+            if(update.stat_increase) {
+                const s = update.stat_increase.stat;
+                const amt = update.stat_increase.amount || 1;
+                const currentStats = currentCharacterData.stats || {};
+                const newVal = Math.min(4, (currentStats[s] || 0) + amt); // Hard Cap +4
+                updates[`stats.${s}`] = newVal;
+                toast(`${s} Increased to ${newVal}!`);
+                addMessageToChat("model", `[SYSTEM] Training Complete: ${s} Increased to +${newVal}`);
+            }
+
+            if(update.blight_gain !== undefined && update.blight_gain !== 0) { 
+                updates.blight = Math.min(5, (currentCharacterData.blight||0) + update.blight_gain); 
+                toast(`Blight Advanced!`); 
+                addMessageToChat("model", `[SYSTEM] Blight Advanced to Stage ${updates.blight}`);
+            }
+
+            let pips = {...(currentCharacterData.pips||{})};
+            if(update.add_pips && update.add_pips.stat && update.add_pips.amount) {
+                let stat = update.add_pips.stat;
+                const amt = update.add_pips.amount;
+                pips[stat] = Math.min(2, (pips[stat]||0) + amt);
+                updates.pips = pips;
+                toast(`${stat} Damage: +${amt}`);
+            }
+            
+            if(update.remove_pips && update.remove_pips.stat) {
+                const s = update.remove_pips.stat, a = update.remove_pips.amount || 1;
+                pips[s] = Math.max(0, (pips[s]||0)-a);
+                updates.pips = pips;
+                toast(`${s} Recovered`);
+                addMessageToChat("model", `[SYSTEM] ${s} recovered.`);
+            }
+
+            // --- ASSET SYSTEM UPDATE: Equipment Management ---
+            let newGear = [...(currentCharacterData.equipment||[])];
+            if(update.equipment_add) {
+                update.equipment_add.forEach(item => {
+                    // Unique Logic: If tool/armor, remove existing of same type/stat
+                    if (item.type === 'tool' || item.type === 'armor') {
+                        newGear = newGear.filter(g => !(g.type === item.type && g.stat === item.stat));
+                    }
+                    // Normalize item to object if string
+                    const itemObj = typeof item === 'string' ? {name: item, properties: []} : item;
+                    newGear.push(itemObj);
+                });
+                updates.equipment = newGear;
+            }
+            if (update.update_armor) {
+                // Find and update pips
+                const idx = newGear.findIndex(i => i.name === update.update_armor.name);
+                if (idx !== -1) {
+                    newGear[idx].pips = update.update_armor.new_pips;
+                    updates.equipment = newGear;
+                    toast("Armor Damaged");
+                }
+            }
+            if (update.remove_item) {
+                const idx = newGear.findIndex(i => i.name === update.remove_item);
+                if (idx !== -1) {
+                    newGear.splice(idx, 1);
+                    updates.equipment = newGear;
+                }
+            }
+            if (update.repair_armor) {
+                // Repair all armors
+                newGear.forEach(i => { if (i.type === 'armor') i.pips = i.max_pips; });
+                updates.equipment = newGear;
+                toast("Armor Repaired");
+            }
+
+            if(Object.keys(updates).length) await updateDoc(charRef, updates);
+            
+            if(update.clocks_advance) {
+                const wRef = doc(db, "artifacts", "rpg-prototype-ca0b2", "users", userId, "game_state", "world_clocks");
+                const snap = await getDoc(wRef);
+                if(snap.exists()) {
+                    let clocks = snap.data().clocks;
+                    let changed = false;
+                    update.clocks_advance.forEach(a => {
+                        let c = clocks.find(x=>x.name.includes(a.name) || a.name.includes(x.name));
+                        if(c) {
+                            c.current = Math.min(c.segments, (c.current||0) + (a.amount||1));
+                            changed = true;
+                            toast(`${c.name} advanced!`);
+                        }
+                    });
+                    if(changed) await updateDoc(wRef, {clocks});
+                }
+            }
+            checkEndgameTriggers();
+        }
+
+        function checkEndgameTriggers() {
+            if(frontClockState.current >= 8 || destinyClockState.current >= 8) {
+                document.getElementById('narrative-log').style.border = "2px solid red";
+            }
+        }
+
+        async function handleInterludeAction(actionType) {
+            const xp = currentCharacterData.xp || 0;
+            // Asset System: Use items, not coin integer
+            const gear = currentCharacterData.equipment || [];
+            const valuables = gear.filter(i => i.tags && i.tags.includes('valuable'));
+
+            let promptStr = "";
+
+            if (actionType === 'train') {
+                // MECH-001: Functional Training
+                if (xp < 6) return window.showError("Insufficient XP", "Training costs 6 XP.");
+                const statChoice = prompt("Choose Stat to Train (+1):\nFORCE, FINESSE, INFLUENCE, WITS, RESOLVE");
+                if(!statChoice) return;
+                const s = statChoice.toUpperCase();
+                if(!["FORCE", "FINESSE", "INFLUENCE", "WITS", "RESOLVE"].includes(s)) return window.showError("Invalid Stat", "Check spelling.");
+                
+                if(!confirm(`Spend 6 XP to increase ${s}?`)) return;
+                
+                await processStateUpdate({ xp_gain: -6, stat_increase: { stat: s, amount: 1 } });
+                return;
+            } 
+            
+            if (actionType === 'acquire_asset') {
+                // XP Shop Logic
+                if (!MASTER_GEAR_LIST) return window.showError("Error", "Gear list not loaded.");
+                
+                // Pick 3 Random
+                const random3 = [];
+                for(let i=0; i<3; i++) random3.push(MASTER_GEAR_LIST[Math.floor(Math.random() * MASTER_GEAR_LIST.length)]);
+                
+                const choice = prompt(`XP SHOP (Enter 1, 2, or 3):\n1. ${random3[0].name} (${random3[0].cost_xp} XP)\n2. ${random3[1].name} (${random3[1].cost_xp} XP)\n3. ${random3[2].name} (${random3[2].cost_xp} XP)`);
+                
+                if (!choice) return;
+                const idx = parseInt(choice) - 1;
+                
+                if (idx >= 0 && idx < 3) {
+                    const item = random3[idx];
+                    if (xp < item.cost_xp) return window.showError("Insufficient XP", `Cost: ${item.cost_xp} XP`);
+                    await processStateUpdate({ xp_gain: -item.cost_xp, equipment_add: [item] });
+                    await addMessageToChat("model", `[SYSTEM] Bought ${item.name}`);
+                }
+                return;
+            } 
+            
+            if (actionType === 'recover' || actionType === 'repair') {
+                if (valuables.length === 0) return window.showError("No Valuables", "You need a Valuable item to barter.");
+                if (!confirm(`Burn '${valuables[0].name}' to ${actionType}?`)) return;
+                
+                // Simplified Full Heal for prototype
+                if (actionType === 'recover') {
+                    await processStateUpdate({ 
+                        remove_item: valuables[0].name, 
+                        remove_pips: { stat: "FORCE", amount: 2 }, 
+                        remove_pips: { stat: "FINESSE", amount: 2 }, 
+                        remove_pips: { stat: "RESOLVE", amount: 2 },
+                        remove_pips: { stat: "WITS", amount: 2 },
+                        remove_pips: { stat: "INFLUENCE", amount: 2 }
+                    }); 
+                }
+                
+                if (actionType === 'repair') {
+                    await processStateUpdate({ remove_item: valuables[0].name, repair_armor: true });
+                }
+                
+                await addMessageToChat("model", `[SYSTEM] Asset Burned: ${valuables[0].name}`);
+                return;
+            } 
+            
+            if (actionType === 'reflect') {
+                // Simplified Rest
+                await processStateUpdate({ 
+                    remove_pips: {stat: "FORCE", amount: 1},
+                    remove_pips: {stat: "FINESSE", amount: 1},
+                    remove_pips: {stat: "RESOLVE", amount: 1},
+                    remove_pips: {stat: "WITS", amount: 1},
+                    remove_pips: {stat: "INFLUENCE", amount: 1}
+                });
+                await addMessageToChat("model", `[SYSTEM] Rested. Strain cleared.`);
+                return;
+            }
+
+            if (actionType === 'end_interlude') {
+                const clockStr = worldClocks.map(c => `${c.name}: ${c.goal}`).join(", ");
+                const aiPrompt = `[SYSTEM]: Interlude over. Player is ready for the next move. Narrate the transition from the safe haven back into the streets. Then, present 3 'Rumors' (Quest Hooks) as bullet points based on: ${clockStr}. Force 'total_chapters': 1. Output the JSON key "phase_transition": "rumor_mill" in the root object.`;
+                
+                await addMessageToChat("model", `[SYSTEM] Entering Downtime...`);
+                const raw = await callGemini(aiPrompt); 
+                const parsed = JSON.parse(raw); 
+                await addMessageToChat('model', parsed.narrative);
+                if (parsed.phase_transition) {
+                    await updateDoc(doc(db, "artifacts", "rpg-prototype-ca0b2", "users", userId, "game_state", "main"), { phase: parsed.phase_transition });
+                }
+                return;
+            }
+        }
+
+        window.downloadStoryLog = () => {
+            const meta = `SAGA: ${currentCharacterData.name}\nDATE: ${new Date().toLocaleString()}\n\n`;
+            const text = fullChatHistory.map(m => `[${m.role.toUpperCase()}]: ${m.content.replace(/<[^>]*>/g, '')}`).join('\n\n');
+            const blob = new Blob([meta + text], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `ashlords_saga_${Date.now()}.txt`;
+            a.click();
+        };
+
+        window.selectCard = (el, container) => {
+            Array.from(ui[container].children).forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+            if(container === 'burdenOpts') {
+                ui.burdenDetailWrap.style.display = el.dataset.req === 'true' ? 'block' : 'none';
+            }
+        };
+
+        window.resetGame = async () => {
+            if(!confirm("Wipe Save?")) return;
+            await deleteDoc(doc(db, "artifacts", "rpg-prototype-ca0b2", "users", userId, "characters", "main_char"));
+            const batch = ["world_clocks", "destiny_clock", "front_clock", "main"];
+            for(const b of batch) await deleteDoc(doc(db, "artifacts", "rpg-prototype-ca0b2", "users", userId, "game_state", b));
+            
+            const chatQ = query(collection(db, "artifacts", "rpg-prototype-ca0b2", "users", userId, "chat_history"));
+            const chatSnaps = await getDocs(chatQ);
+            const promises = chatSnaps.docs.map(d => deleteDoc(d.ref));
+            await Promise.all(promises);
+            
+            location.reload();
+        };
+        
+        window.updateDescription = (title, desc) => {
+            document.getElementById('description-display').innerHTML = `<strong class="text-emerald-400">${title}</strong><p>${desc}</p>`;
+        };
+        
+        async function checkAndCreateCampaign() {
+            const ref = doc(db, "artifacts", "rpg-prototype-ca0b2", "users", userId, "campaigns", currentCampaignId);
+            const snap = await getDoc(ref);
+            if(!snap.exists()) await setDoc(ref, { started: serverTimestamp() });
+            const wcRef = doc(db, "artifacts", "rpg-prototype-ca0b2", "users", userId, "game_state", "world_clocks");
+            const wcSnap = await getDoc(wcRef);
+            if(!wcSnap.exists()) {
+                await setDoc(wcRef, { clocks: CONTENT_PACK_ASHLORDS.FACTIONS.map(f => ({ name: f.name, current: 0, segments: 6, goal: f.goal || "Advance Agenda" })) });
+            }
+        }
+
+        function displayQuestProgress(data) {
+            const wrap = document.getElementById('quest-progress-wrapper');
+            if(!wrap) return;
+            if(!data) { wrap.style.display='none'; return; }
+            
+            // Fix 034: Ensure visibility
+            wrap.style.display = 'block';
+            
+            document.getElementById('quest-title').textContent = data.title || "Quest";
+            const current = data.current_chapter || 1;
+            const total = data.total_chapters || 1;
+            document.getElementById('quest-chapter').textContent = `Chapter ${current}`;
+            document.getElementById('quest-progress-text').textContent = `${current}/${total}`;
+            document.getElementById('quest-progress-bar').style.width = `${(current/total)*100}%`;
+            document.getElementById('quest-desc').textContent = data.description || "";
+        }
+
+        function hideQuestProgress() {
+            const wrap = document.getElementById('quest-progress-wrapper');
+            if(wrap) wrap.style.display = 'none';
+        }
+
+        function displayEndgameFront(data) { 
+            const face = document.getElementById('endgame-front-clock-face'); 
+            if(!face) return; 
+            const filled = data?.current || 0; 
+            if (filled >= 6) face.classList.add('threat-critical'); else face.classList.remove('threat-critical'); 
+            let segs = ''; 
+            for(let i=0; i<8; i++) {
+                const color = i < filled ? '#DC2626' : 'transparent';
+                segs += `<div class="clock-segment" style="transform:rotate(${45*i}deg); clip-path:polygon(0% 0%, 100% 0%, 0% 100%); width:50%; height:50%; top:0; left:50%; position:absolute; transform-origin:0 100%; background-color:${color}"></div>`; 
+            }
+            face.innerHTML = segs; 
+            document.getElementById('endgame-front-name').textContent = data?.name || "Unknown Threat"; 
+        }
+
+        function displayWorldClocks(data) {
+            const container = document.getElementById('world-clocks-container');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            const clocks = data.clocks || [];
+            clocks.forEach(c => {
+                const filled = c.current || 0;
+                const total = c.segments || 6;
+                let segmentsHtml = '';
+                for(let i=0; i<total; i++) {
+                    segmentsHtml += `<div class="faction-segment ${i<filled ? 'filled' : ''}"></div>`;
+                }
+                
+                container.innerHTML += `
+                <div class="faction-track">
+                    <div class="faction-label"><span>${c.name}</span> <span>${filled}/${total}</span></div>
+                    <div class="faction-bar">${segmentsHtml}</div>
+                </div>`;
+            });
+        }
+        
+        function displayDestinyClock(data) {
+            const face = document.getElementById('destiny-clock-face');
+            if(!face) return;
+            const filled = data?.current || 0;
+            let segs = '';
+            for(let i=0; i<8; i++) {
+                const color = i < filled ? 'var(--c-alchemical-gold)' : 'transparent';
+                segs += `<div class="clock-segment" style="transform:rotate(${45*i}deg); clip-path:polygon(0% 0%, 100% 0%, 0% 100%); width:50%; height:50%; top:0; left:50%; position:absolute; transform-origin:0 100%; background-color:${color}"></div>`;
+            }
+            face.innerHTML = segs;
+            
+            // UI-002: Dynamic Destiny Label
+            if (currentCharacterData && currentCharacterData.stats) {
+                const stats = currentCharacterData.stats;
+                const maxStat = Object.keys(stats).reduce((a, b) => stats[a] > stats[b] ? a : b);
+                const quest = CONTENT_PACK_ASHLORDS.achievement_quests[maxStat];
+                document.getElementById('destiny-narrative').textContent = quest ? quest.title : "Awaiting Destiny";
+            }
+        }
+
+        function setupFirestoreListeners() {
+            onSnapshot(doc(db, "artifacts", "rpg-prototype-ca0b2", "users", userId, "characters", "main_char"), (snap) => {
+                if (snap.exists()) {
+                    ui.charCreation.style.display = 'none';
+                    ui.mainGame.style.display = 'block';
+                    currentCharacterData = snap.data();
+                    displayCharacter(currentCharacterData);
+                } else {
+                    ui.mainGame.style.display = 'none';
+                    ui.charCreation.style.display = 'block';
+                    renderOptions(); 
+                }
+                ui.loading.style.display = 'none';
+            }, (error) => window.showError("Char Listener Error", error.message));
+            
+            const chatQuery = query(collection(db, "artifacts", "rpg-prototype-ca0b2", "users", userId, "chat_history"), orderBy("timestamp", "desc"), limit(30));
+            onSnapshot(chatQuery, (snapshot) => {
+                const msgs = [];
+                snapshot.forEach(doc => msgs.push(doc.data()));
+                msgs.sort((a,b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
+                fullChatHistory = msgs; 
+                displayChatHistory(msgs); 
+                const recent = msgs.slice(-3);
+                recentNarrativeHistory = recent.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n');
+            }, (error) => window.showError("Chat Listener Error", error.message));
+
+            onSnapshot(doc(db, "artifacts", "rpg-prototype-ca0b2", "users", userId, "game_state", "world_clocks"), (snap) => { 
+                if (snap.exists()) { const data = snap.data(); worldClocks = data.clocks || []; displayWorldClocks(data); }
+            }, (error) => window.showError("Clocks Listener Error", error.message));
+            onSnapshot(doc(db, "artifacts", "rpg-prototype-ca0b2", "users", userId, "game_state", "destiny_clock"), (snap) => { 
+                if(snap.exists()) { destinyClockState = snap.data(); displayDestinyClock(destinyClockState); }
+            }, (error) => window.showError("Destiny Listener Error", error.message));
+            onSnapshot(doc(db, "artifacts", "rpg-prototype-ca0b2", "users", userId, "game_state", "front_clock"), (snap) => { 
+                if(snap.exists()) { frontClockState = snap.data(); displayEndgameFront(frontClockState); }
+            }, (error) => window.showError("Front Listener Error", error.message));
+            onSnapshot(doc(db, "artifacts", "rpg-prototype-ca0b2", "users", userId, "quest_state", "current_quest"), (snap) => { if(snap.exists()) displayQuestProgress(snap.data()); else hideQuestProgress(); }, (error) => window.showError("Quest Listener Error", error.message));
+            onSnapshot(doc(db, "artifacts", "rpg-prototype-ca0b2", "users", userId, "game_state", "main"), (snap) => {
+                if (snap.exists()) {
+                    currentGameState = snap.data();
+                    sagaLog = currentGameState.saga_log || "";
+                    document.getElementById('interlude-phase-ui').style.display = currentGameState.phase === 'interlude' ? 'block' : 'none';
+                    document.getElementById('chapter-phase-ui').style.display = currentGameState.phase === 'interlude' ? 'none' : 'block';
+                }
+            }, (error) => window.showError("Game State Listener Error", error.message));
+        }
+
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+    </script>
+</body>
+</html>
