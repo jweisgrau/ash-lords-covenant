@@ -561,6 +561,20 @@ input.border-gray-700 { border: 1px solid rgba(227, 218, 201, 0.3) !important; }
     font-size: 0.95rem;
     color: var(--c-alchemical-gold);
 }
+
+/* ID 005: Quest Hook Text Style */
+.narrative-bubble-model .quest-text {
+    display: block;
+    margin-top: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-left: 4px solid #8b5cf6; /* Purple for quest hooks */
+    background-color: #4c1d9540; /* Dark purple tint */
+    font-style: italic;
+    font-family: var(--f-data);
+    font-size: 0.95rem;
+    color: #c4b5fd; /* Light purple text */
+}
+
 /* styles.css v0.9.2 */
 
 /* ID 032: Sidebar Scrolling */

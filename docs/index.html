@@ -306,7 +306,7 @@
             progressClocks: [],
             // Tags - narrative facts about the character
             tags: [],
-            questState: { current_quest: null },
+            questState: { current_quest: null, last_offer_turn: 0 },
             campaign: null
         });
 
@@ -2221,7 +2221,26 @@
             // Pattern to match currency_gain: X (with various formats, including negative)
             const currencyMatch = text.match(/currency_gain:\s*(-?\d+)/i);
             if (currencyMatch) {
-                stateUpdates.currency_gain = parseInt(currencyMatch[1], 10);
+                let rawGain = parseInt(currencyMatch[1], 10);
+
+                // --- SEMANTIC VALIDATION FIX ---
+                // Prevent hallucinations: Only allow currency change if narrative mentions money/trade context
+                if (rawGain !== 0) {
+                    // Use regex with word boundaries to prevent false matches (e.g., "soldier" matching "sold")
+                    const moneyRegex = /\b(coins?|gold|silver|copper|purse|pouch|wallet|money|pay(s|ing|ment)?|paid|buy(s|ing)?|bought|sell(s|ing)?|sold|loot(s|ing|ed)?|steal(s|ing)?|stole|stolen|bribe(s|ry)?|tip(s|ped)?|found|earnings|dropped|gave|lost|taken|cash|currency|reward|treasure|wealth)\b/i;
+
+                    // Check both the raw text and clean narrative for context
+                    const contextText = (cleanNarrative + " " + text).toLowerCase();
+                    const hasMoneyContext = moneyRegex.test(contextText);
+
+                    if (!hasMoneyContext) {
+                        console.warn(`Blocked currency hallucination: ${rawGain} coin without narrative justification.`);
+                        rawGain = 0;
+                    }
+                }
+                // -------------------------------
+
+                stateUpdates.currency_gain = rawGain;
                 cleanNarrative = cleanNarrative.replace(/currency_gain:\s*-?\d+/gi, '').trim();
             }
 
@@ -2493,12 +2512,26 @@
             // Check quest availability and roll quest hook if needed
             const turnCount = state.gameState?.turn_count || 0;
             const hasQuest = state.questState?.current_quest != null;
-            const shouldOfferQuest = turnCount >= 3 && !hasQuest;
+            const lastOfferTurn = state.questState?.last_offer_turn || 0;
+            const questCooldown = 12; // Minimum turns between quest offers
+            const cooldownPassed = (turnCount - lastOfferTurn) >= questCooldown;
+            const shouldOfferQuest = turnCount >= 3 && !hasQuest && cooldownPassed;
             const questHook = shouldOfferQuest ? OracleSystem.rollQuestHook() : null;
+
+            // Update quest offer timestamp if we generated a hook
+            if (questHook) {
+                await gameState.transaction(async (s) => ({
+                    questState: {
+                        ...s.questState,
+                        last_offer_turn: turnCount
+                    }
+                }));
+            }
 
             // Check downtime suggestion
             const adventureTurns = state.gameState?.adventure_turn_count || 0;
-            const shouldSuggestDowntime = adventureTurns >= 5;
+            const hasDamage = Object.values(state.character?.pips || {}).some(p => p > 0);
+            const shouldSuggestDowntime = hasDamage || adventureTurns >= 20;
 
             // Get faction clock status for context
             const factionStatus = (state.worldClocks?.clocks || [])
@@ -2548,11 +2581,11 @@ ${conversationContext}
 ${questHook ? `
 QUEST HOOK (use this exact structure):
 - Present to player: "${questHook.epic_hook}"
-- Hidden truth (reveal later as they investigate): "${questHook.political_truth}"
 - Faction involved: ${questHook.faction}
-Work this quest opportunity naturally into your narrative through an NPC, rumor, or environmental discovery.
+
+IMPORTANT: Work this quest opportunity naturally into your narrative through an NPC, rumor, or environmental discovery. Use the EXACT wording from "Present to player" above - do NOT add specific locations, names, or details not present in that text. Keep quest introductions abstract and mysterious.
 ` : ''}
-${shouldSuggestDowntime ? `DOWNTIME HINT: The player has been active for ${adventureTurns} turns. If appropriate, suggest a natural pause point (finding shelter, reaching a destination, completing an objective) where they could rest.` : ''}
+${shouldSuggestDowntime ? `DOWNTIME HINT: The player ${hasDamage ? 'has accumulated strain or injury (pips)' : `has been active for ${adventureTurns} turns`}. If appropriate, suggest a natural pause point to recover.` : ''}
 
 *** WRITING STYLE ***
 - ALWAYS write in second person perspective ("you", "your"). Never refer to the player character by name or in third person.
@@ -2573,9 +2606,10 @@ When the player successfully steals (action type 'steal'), you MUST determine wh
 - Looting bodies: weapons, armor pieces, coin, evidence, personal effects
 - Burglary/theft from locations: tools, documents, valuables, supplies
 
-For SUCCESS: Award full loot. Include "currency_gain: X" in your structured response (X = 1-6 depending on target).
-For COST/PARTIAL: Award reduced loot. Include "currency_gain: X" (X = 1-3) or a lesser item.
-For MISS: No loot is obtained. Narrate the failure and consequences.
+For SUCCESS: Award full loot. ONLY include "currency_gain: X" if the item stolen is actual money (X = 1-6). If stealing an object, do NOT add currency.
+For COST/PARTIAL: Award reduced loot. Include "currency_gain: X" ONLY if money is found.
+For MISS: No loot is obtained. Do not include currency_gain.
+CRITICAL: Do not include "currency_gain" for general actions (hiding, moving, fighting) unless money is explicitly looted or paid.
 
 You can also add interesting narrative items with: equipment_add: [{name: "Item Name", type: "loot", tags: ["tag1"], desc: "Description"}]
 
@@ -2594,6 +2628,17 @@ Tags represent CRITICAL persistent narrative facts that must survive beyond the 
 - To remove a resolved tag: tag_remove: "Tag Name"
 - DO NOT add tags for temporary conditions, current objectives, or things already in recent context
 - Tags are for breaking narrative continuity if forgotten - if it can be re-established through dialogue, don't tag it
+
+*** OUTCOME INTERPRETATION (CRITICAL) ***
+The mechanical result includes an outcome (SUCCESS, COST, MISS). You MUST respect these outcomes:
+
+- **SUCCESS**: The action succeeds cleanly with NO complications or negative consequences. The character is competent and the outcome is favorable. Do not add detection, pursuit, or problems unless explicitly stated in a "COMPLICATION TO NARRATE" section.
+
+- **COST / MINOR COST / MAJOR COST**: The action succeeds but with a cost. The cost/complication is already provided in the mechanical result. Narrate it as written.
+
+- **MISS**: The action fails. Narrate the failure and its consequences.
+
+IMPORTANT: "Grimdark" tone does not mean every action has complications. SUCCESS means success. Reserve grimdark atmosphere for setting/world, not for undermining successful rolls.
 
 *** COMPLICATION GUIDANCE ***
 If a "COMPLICATION TO NARRATE" is provided in the mechanical result:
@@ -2672,7 +2717,13 @@ ${TalentSystem.getActiveContext()}`;
                         throw new Error("No text in response");
                     }
 
-                    return text;
+                    // Append quest hook indicator if one was offered this turn
+                    let finalText = text;
+                    if (questHook) {
+                        finalText += `\n\n<quest>📜 New Rumor: ${questHook.epic_hook}</quest>`;
+                    }
+
+                    return finalText;
 
                 } catch (e) {
                     if (attempts === maxAttempts - 1) throw e;
@@ -3257,6 +3308,17 @@ ${TalentSystem.getActiveContext()}`;
                         }
                     );
 
+                    // Extract quest hook blocks before sanitization
+                    const questBlocks = [];
+                    content = content.replace(
+                        /<quest>([\s\S]*?)<\/quest>/gi,
+                        (match, inner) => {
+                            const placeholder = `%%QUEST_${questBlocks.length}%%`;
+                            questBlocks.push(escapeHtml(inner));
+                            return placeholder;
+                        }
+                    );
+
                     // Sanitize the main content
                     content = sanitizeContent(content);
 
@@ -3265,6 +3327,14 @@ ${TalentSystem.getActiveContext()}`;
                         content = content.replace(
                             `%%MECHANICS_${i}%%`,
                             `<div class="mechanics-text">${block}</div>`
+                        );
+                    });
+
+                    // Restore quest blocks with special styling
+                    questBlocks.forEach((block, i) => {
+                        content = content.replace(
+                            `%%QUEST_${i}%%`,
+                            `<div class="quest-text">${block}</div>`
                         );
                     });
                 } else {
