@@ -30,8 +30,8 @@ const CONTENT_PACK_ASHLORDS = {
     },
 
     // --- CALLINGS ---
-    // Equipment with type: "armor" has pips for damage absorption (stat-specific)
-    // Equipment with type: "weapon" is narrative flavor (no mechanical bonus - buy tools from shop for bonuses)
+    // Equipment: 1 Armor (Stat Pips) + 1 Valuable (Trading/Healing). 
+    // Weapons are narrative flavor only and not tracked as items. Tools must be bought.
     callings: [
         {
             id: "sellsword",
@@ -40,8 +40,8 @@ const CONTENT_PACK_ASHLORDS = {
             stats: { FORCE: 2, FINESSE: 0, INFLUENCE: -1, WITS: 0, RESOLVE: 0 },
             talents: [{ id: "mercenary_code", name: "Mercenary's Code", description: "Combat rolls count as Tier 1 (Challenging) instead of Tier 2 when you are being paid for the specific objective." }],
             equipment: [
-                { name: "Heavy Blade", type: "weapon", properties: ["melee", "heavy"], desc: "A brutal weapon for brutal work." },
-                { name: "Boiled Leather", type: "armor", stat: "FORCE", pips: 2, max_pips: 2, properties: ["armor", "medium"], desc: "Hardened leather that turns aside blows." }
+                { name: "Boiled Leather", type: "armor", stat: "FORCE", pips: 2, max_pips: 2, properties: ["armor", "medium"], desc: "Hardened leather that turns aside blows." },
+                { name: "Blood-Stained Contract", type: "loot", tags: ["valuable"], desc: "Proof of a job completed but not yet paid." }
             ]
         },
         {
@@ -51,8 +51,8 @@ const CONTENT_PACK_ASHLORDS = {
             stats: { FORCE: -1, FINESSE: 2, INFLUENCE: 0, WITS: 0, RESOLVE: 0 },
             talents: [{ id: "shadow_walk", name: "Shadow Walk", description: "Hostile actions taken from hiding or shadows always count as Tier 1 (Challenging)." }],
             equipment: [
-                { name: "Matched Daggers", type: "weapon", properties: ["melee", "light"], desc: "Quick blades for quick kills." },
-                { name: "Dark Garb", type: "armor", stat: "FINESSE", pips: 2, max_pips: 2, properties: ["armor", "light"], desc: "Dark cloth that cushions falls and hides bloodstains." }
+                { name: "Dark Garb", type: "armor", stat: "FINESSE", pips: 2, max_pips: 2, properties: ["armor", "light"], desc: "Dark cloth that cushions falls and hides bloodstains." },
+                { name: "Stolen Guild Ledger", type: "loot", tags: ["valuable"], desc: " incriminating pages torn from a merchant's book." }
             ]
         },
         {
@@ -62,8 +62,8 @@ const CONTENT_PACK_ASHLORDS = {
             stats: { FORCE: 0, FINESSE: 0, INFLUENCE: 2, WITS: 0, RESOLVE: -1 },
             talents: [{ id: "highborn", name: "Highborn", description: "Social rolls against NPCs of high rank or status always count as Tier 1 (Challenging)." }],
             equipment: [
-                { name: "Ornate Rapier", type: "weapon", properties: ["melee", "light"], desc: "A gentleman's weapon, for what that's worth." },
-                { name: "Faded Finery", type: "armor", stat: "INFLUENCE", pips: 1, max_pips: 2, properties: ["armor", "shabby"], desc: "Once-fine clothes that still carry an air of nobility." }
+                { name: "Faded Finery", type: "armor", stat: "INFLUENCE", pips: 1, max_pips: 2, properties: ["armor", "shabby"], desc: "Once-fine clothes that still carry an air of nobility." },
+                { name: "Family Signet Ring", type: "loot", tags: ["valuable"], desc: "The last remnant of your house's authority." }
             ]
         },
         {
@@ -73,9 +73,8 @@ const CONTENT_PACK_ASHLORDS = {
             stats: { FORCE: 0, FINESSE: 0, INFLUENCE: -1, WITS: 0, RESOLVE: 2 },
             talents: [{ id: "slayers_knowledge", name: "Slayer's Knowledge", description: "Rolls to track, identify, or harm Beasts and Blighted Monstrosities always count as Tier 1 (Challenging)." }],
             equipment: [
-                { name: "Silvered Sword", type: "weapon", properties: ["melee", "silver"], desc: "Silver-plated blade for hunting monsters." },
-                { name: "Crossbow", type: "weapon", properties: ["ranged", "heavy"], desc: "A reliable weapon for striking from a distance." },
-                { name: "Hunter's Coat", type: "armor", stat: "RESOLVE", pips: 2, max_pips: 2, properties: ["armor", "light"], desc: "Warded leather that steadies the nerves against horror." }
+                { name: "Hunter's Coat", type: "armor", stat: "RESOLVE", pips: 2, max_pips: 2, properties: ["armor", "light"], desc: "Warded leather that steadies the nerves against horror." },
+                { name: "Vial of Pure Water", type: "loot", tags: ["valuable"], desc: "Rare water blessed by the Quiet Order." }
             ]
         },
         {
@@ -85,9 +84,8 @@ const CONTENT_PACK_ASHLORDS = {
             stats: { FORCE: -1, FINESSE: 0, INFLUENCE: 0, WITS: 2, RESOLVE: 0 },
             talents: [{ id: "artifact_attunement", name: "Artifact Attunement", description: "Rolls to use, disable, or resist magical devices/traps always count as Tier 1 (Challenging). You can identify properties safely." }],
             equipment: [
-                { name: "Aether-Spectrometer", type: "tool", stat: "WITS", bonus: 1, properties: ["tool", "fragile"], desc: "+1 WITS. Detects magical emanations and measures aetheric disturbances." },
-                { name: "Warding Chalk", type: "consumable", properties: ["consumable"], desc: "Draw protective circles. Limited uses." },
-                { name: "Reinforced Apron", type: "armor", stat: "WITS", pips: 1, max_pips: 2, properties: ["armor", "light"], desc: "Treated leather that resists magical backlash." }
+                { name: "Reinforced Apron", type: "armor", stat: "WITS", pips: 1, max_pips: 2, properties: ["armor", "light"], desc: "Treated leather that resists magical backlash." },
+                { name: "Captured Aether-Mote", type: "loot", tags: ["valuable"], desc: "A glowing spark trapped in a lead-glass sphere." }
             ]
         }
     ],
@@ -138,65 +136,65 @@ const CONTENT_PACK_ASHLORDS = {
 
     // --- ENDGAME FRONTS ---
     endgame_fronts: {
-        sellsword: { 
-            front_id: "iron_throne_succession_crisis", 
-            name: "The Succession War", 
-            description: "Five mercenary captains vie for the Iron Throne...", 
+        sellsword: {
+            front_id: "iron_throne_succession_crisis",
+            name: "The Succession War",
+            description: "Five mercenary captains vie for the Iron Throne...",
             grim_portents: [
-                { at: 2, event: "Captain Ironheart defeats Captain Redblade..." }, 
-                { at: 4, event: "Ironheart lays siege to Blackwall Fortress..." }, 
-                { at: 6, event: "Ironheart wins the siege..." }, 
+                { at: 2, event: "Captain Ironheart defeats Captain Redblade..." },
+                { at: 4, event: "Ironheart lays siege to Blackwall Fortress..." },
+                { at: 6, event: "Ironheart wins the siege..." },
                 { at: 8, event: "CATASTROPHE: Ironheart claims throne..." }
-            ], 
-            bad_ending: "Ironheart sits the Iron Throne..." 
+            ],
+            bad_ending: "Ironheart sits the Iron Throne..."
         },
-        cutthroat: { 
-            front_id: "guild_conspiracy_exposed", 
-            name: "The Guild's Tightening Grip", 
-            description: "The Alchemist's Guild consolidates power...", 
+        cutthroat: {
+            front_id: "guild_conspiracy_exposed",
+            name: "The Guild's Tightening Grip",
+            description: "The Alchemist's Guild consolidates power...",
             grim_portents: [
-                { at: 2, event: "Guild raises 'Blight Tax' again..." }, 
-                { at: 4, event: "Guild starts arresting 'Blight-carriers'..." }, 
-                { at: 6, event: "Guild reveals 'miracle cure'..." }, 
+                { at: 2, event: "Guild raises 'Blight Tax' again..." },
+                { at: 4, event: "Guild starts arresting 'Blight-carriers'..." },
+                { at: 6, event: "Guild reveals 'miracle cure'..." },
                 { at: 8, event: "CATASTROPHE: Guild becomes de facto rulers..." }
-            ], 
-            bad_ending: "The Guild's control is complete..." 
+            ],
+            bad_ending: "The Guild's control is complete..."
         },
-        disgraced: { 
-            front_id: "house_extinction", 
-            name: "The Name Dies", 
-            description: "Your family's enemies consolidate...", 
+        disgraced: {
+            front_id: "house_extinction",
+            name: "The Name Dies",
+            description: "Your family's enemies consolidate...",
             grim_portents: [
-                { at: 2, event: "Your enemy claims your family's ancestral lands..." }, 
-                { at: 4, event: "Your family crest is publicly defaced..." }, 
-                { at: 6, event: "The last elder who remembers your family's truth dies..." }, 
+                { at: 2, event: "Your enemy claims your family's ancestral lands..." },
+                { at: 4, event: "Your family crest is publicly defaced..." },
+                { at: 6, event: "The last elder who remembers your family's truth dies..." },
                 { at: 8, event: "CATASTROPHE: Your family name is formally erased..." }
-            ], 
-            bad_ending: "Your family name is gone..." 
+            ],
+            bad_ending: "Your family name is gone..."
         },
-        hexenjager: { 
-            front_id: "blight_spreads_unstoppable", 
-            name: "The Ash-Lord Awakens", 
-            description: "The Blight spreads faster...", 
+        hexenjager: {
+            front_id: "blight_spreads_unstoppable",
+            name: "The Ash-Lord Awakens",
+            description: "The Blight spreads faster...",
             grim_portents: [
-                { at: 2, event: "Blight corruption spreads..." }, 
-                { at: 4, event: "First Ash-Lord cultists appear..." }, 
-                { at: 6, event: "The Ash-Lord's presence is felt..." }, 
+                { at: 2, event: "Blight corruption spreads..." },
+                { at: 4, event: "First Ash-Lord cultists appear..." },
+                { at: 6, event: "The Ash-Lord's presence is felt..." },
                 { at: 8, event: "CATASTROPHE: The Ash-Lord fully awakens..." }
-            ], 
-            bad_ending: "The Ash-Lord rises..." 
+            ],
+            bad_ending: "The Ash-Lord rises..."
         },
-        arcanist: { 
-            front_id: "aether_collapse", 
-            name: "The Reality Breach", 
-            description: "The barrier between worlds is failing...", 
+        arcanist: {
+            front_id: "aether_collapse",
+            name: "The Reality Breach",
+            description: "The barrier between worlds is failing...",
             grim_portents: [
-                { at: 2, event: "Gravity anomalies reported in the slums..." }, 
-                { at: 4, event: "Ghosts become visible to everyone at noon..." }, 
-                { at: 6, event: "The Sky-Citadel vanishes into the Aether..." }, 
+                { at: 2, event: "Gravity anomalies reported in the slums..." },
+                { at: 4, event: "Ghosts become visible to everyone at noon..." },
+                { at: 6, event: "The Sky-Citadel vanishes into the Aether..." },
                 { at: 8, event: "CATASTROPHE: The city dissolves into raw magic..." }
-            ], 
-            bad_ending: "Reality unravels..." 
+            ],
+            bad_ending: "Reality unravels..."
         }
     },
 
@@ -264,41 +262,41 @@ const CONTENT_PACK_ASHLORDS = {
         sellsword: {
             id: "mercenary_legacy", title: "The Mercenary's Legacy", narrative: "Warlord Malgrath has fallen. Five mercenary captains circle the Iron Throne...",
             variants: {
-                FORCE: { path: "The Path of Steel", chapters: [{title: "Duel at Dawn", objective: "Defeat Captain Redblade"}, {title: "Siege Breaker", objective: "Break Blackwall's defense"}], success: "You are the Iron Lord.", tragedy: "Ashbane's blade finds your heart.", tags_add: ["Iron Lord"] },
-                FINESSE: { path: "The Path of Shadows", chapters: [{title: "Silent Knife", objective: "Assassinate Ironheart"}, {title: "Poisoned Cup", objective: "Remove Goldhand"}], success: "Emerge from shadows to claim empty throne.", tragedy: "Caught and killed by united captains.", tags_add: ["Shadow King"] },
-                INFLUENCE: { path: "The Path of Command", chapters: [{title: "The Summit", objective: "Call the captains"}, {title: "The Bribe", objective: "Buy Goldhand's loyalty"}], success: "Throne yours by consent.", tragedy: "They laugh and kill you.", tags_add: ["Mercenary Prince"] },
-                WITS: { path: "The Path of Strategy", chapters: [{title: "Intel Gathering", objective: "Find their weaknesses"}, {title: "The Trap", objective: "Lure them into a ravine"}], success: "They realize you've already won.", tragedy: "They saw through your plan.", tags_add: ["Master Tactician"] },
-                RESOLVE: { path: "The Path of Endurance", chapters: [{title: "The Last Stand", objective: "Hold the fortress alone"}, {title: "The Walk", objective: "Walk through their fire untouched"}], success: "They break against you like waves.", tragedy: "Even stone erodes.", tags_add: ["Unbroken"] }
+                FORCE: { path: "The Path of Steel", chapters: [{ title: "Duel at Dawn", objective: "Defeat Captain Redblade" }, { title: "Siege Breaker", objective: "Break Blackwall's defense" }], success: "You are the Iron Lord.", tragedy: "Ashbane's blade finds your heart.", tags_add: ["Iron Lord"] },
+                FINESSE: { path: "The Path of Shadows", chapters: [{ title: "Silent Knife", objective: "Assassinate Ironheart" }, { title: "Poisoned Cup", objective: "Remove Goldhand" }], success: "Emerge from shadows to claim empty throne.", tragedy: "Caught and killed by united captains.", tags_add: ["Shadow King"] },
+                INFLUENCE: { path: "The Path of Command", chapters: [{ title: "The Summit", objective: "Call the captains" }, { title: "The Bribe", objective: "Buy Goldhand's loyalty" }], success: "Throne yours by consent.", tragedy: "They laugh and kill you.", tags_add: ["Mercenary Prince"] },
+                WITS: { path: "The Path of Strategy", chapters: [{ title: "Intel Gathering", objective: "Find their weaknesses" }, { title: "The Trap", objective: "Lure them into a ravine" }], success: "They realize you've already won.", tragedy: "They saw through your plan.", tags_add: ["Master Tactician"] },
+                RESOLVE: { path: "The Path of Endurance", chapters: [{ title: "The Last Stand", objective: "Hold the fortress alone" }, { title: "The Walk", objective: "Walk through their fire untouched" }], success: "They break against you like waves.", tragedy: "Even stone erodes.", tags_add: ["Unbroken"] }
             }
         },
         cutthroat: {
             id: "guild_fall", title: "The Guild's Fall", narrative: "The Alchemist's Guild controls the city. You've discovered they CREATED the Blight...",
             variants: {
-                FINESSE: { path: "Master Heist", chapters: [{title: "Infiltration", objective: "Enter the Grand Vault"}, {title: "The Swap", objective: "Replace the cure"}], success: "The Guild collapses overnight.", tragedy: "Trapped in the vault forever.", tags_add: ["Guild Breaker"] },
-                WITS: { path: "Paper Trail", chapters: [{title: "The Ledger", objective: "Steal the books"}, {title: "Publication", objective: "Print the truth"}], success: "Riots destroy the Guild.", tragedy: "Silenced by assassins.", tags_add: ["Truth Bringer"] },
-                INFLUENCE: { path: "Puppet Master", chapters: [{title: "Sowing Dissent", objective: "Turn lieutenants"}, {title: "The Coup", objective: "Trigger internal war"}], success: "The Guild eats itself.", tragedy: "They turn on you.", tags_add: ["Kingpin"] }
+                FINESSE: { path: "Master Heist", chapters: [{ title: "Infiltration", objective: "Enter the Grand Vault" }, { title: "The Swap", objective: "Replace the cure" }], success: "The Guild collapses overnight.", tragedy: "Trapped in the vault forever.", tags_add: ["Guild Breaker"] },
+                WITS: { path: "Paper Trail", chapters: [{ title: "The Ledger", objective: "Steal the books" }, { title: "Publication", objective: "Print the truth" }], success: "Riots destroy the Guild.", tragedy: "Silenced by assassins.", tags_add: ["Truth Bringer"] },
+                INFLUENCE: { path: "Puppet Master", chapters: [{ title: "Sowing Dissent", objective: "Turn lieutenants" }, { title: "The Coup", objective: "Trigger internal war" }], success: "The Guild eats itself.", tragedy: "They turn on you.", tags_add: ["Kingpin"] }
             }
         },
         disgraced: {
             id: "name_reclaimed", title: "The Name Reclaimed", narrative: "Your family was destroyed by lies. You have evidence to prove innocence...",
             variants: {
-                INFLUENCE: { path: "Social Coup", chapters: [{title: "The Invitation", objective: "Enter the Royal Ball"}, {title: "The Accusation", objective: "Confront the usurper publicly"}], success: "Your name is restored.", tragedy: "Laughing stock of the court.", tags_add: ["Restored Noble"] },
-                WITS: { path: "Truth Revealed", chapters: [{title: "Archive Dive", objective: "Find the original deed"}, {title: "Legal Challenge", objective: "Present evidence to the High Court"}], success: "Legally recognized.", tragedy: "Evidence destroyed.", tags_add: ["High Lord"] }
+                INFLUENCE: { path: "Social Coup", chapters: [{ title: "The Invitation", objective: "Enter the Royal Ball" }, { title: "The Accusation", objective: "Confront the usurper publicly" }], success: "Your name is restored.", tragedy: "Laughing stock of the court.", tags_add: ["Restored Noble"] },
+                WITS: { path: "Truth Revealed", chapters: [{ title: "Archive Dive", objective: "Find the original deed" }, { title: "Legal Challenge", objective: "Present evidence to the High Court" }], success: "Legally recognized.", tragedy: "Evidence destroyed.", tags_add: ["High Lord"] }
             }
         },
         hexenjager: {
             id: "monsters_heart", title: "Monster's Heart", narrative: "Hunt the source of the Blight—the Ash-Lord in the Blighted Wastes...",
             variants: {
-                FORCE: { path: "Direct Assault", chapters: [{title: "Into the Wastes", objective: "Survive the journey"}, {title: "The Duel", objective: "Kill the Ash-Lord"}], success: "The Blight recedes.", tragedy: "You become the new Ash-Lord.", tags_add: ["Slayer of Gods"] },
-                WITS: { path: "Weakness Found", chapters: [{title: "Research", objective: "Find the phylactery"}, {title: "The Strike", objective: "Destroy the source"}], success: "The monster withers.", tragedy: "It has no weakness.", tags_add: ["Master Hunter"] },
-                RESOLVE: { path: "Resist Corruption", chapters: [{title: "Walk the Path", objective: "Enter the blight-storm"}, {title: "Will vs Will", objective: "Deny his power"}], success: "He fades away.", tragedy: "You are corrupted.", tags_add: ["Pure Soul"] }
+                FORCE: { path: "Direct Assault", chapters: [{ title: "Into the Wastes", objective: "Survive the journey" }, { title: "The Duel", objective: "Kill the Ash-Lord" }], success: "The Blight recedes.", tragedy: "You become the new Ash-Lord.", tags_add: ["Slayer of Gods"] },
+                WITS: { path: "Weakness Found", chapters: [{ title: "Research", objective: "Find the phylactery" }, { title: "The Strike", objective: "Destroy the source" }], success: "The monster withers.", tragedy: "It has no weakness.", tags_add: ["Master Hunter"] },
+                RESOLVE: { path: "Resist Corruption", chapters: [{ title: "Walk the Path", objective: "Enter the blight-storm" }, { title: "Will vs Will", objective: "Deny his power" }], success: "He fades away.", tragedy: "You are corrupted.", tags_add: ["Pure Soul"] }
             }
         },
         arcanist: {
             id: "great_work", title: "The Great Work", narrative: "You have designed a machine that can seal the Breach forever. But you need components...",
             variants: {
-                WITS: { path: "The Synthesis", chapters: [{title: "Rare Materials", objective: "Collect Aether-Shards"}, {title: "The Construction", objective: "Build the machine under siege"}], success: "The machine hums. The Breach closes. You are the Architect of the New Age.", tragedy: "The machine overloads. You are vaporized." },
-                RESOLVE: { path: "The Containment", chapters: [{title: "The Anchor", objective: "Calibrate the pylons"}, {title: "The Surge", objective: "Hold the reaction stable manually"}], success: "You hold the energy. The rift seals. You are the Warden.", tragedy: "Your mind shatters under the strain." }
+                WITS: { path: "The Synthesis", chapters: [{ title: "Rare Materials", objective: "Collect Aether-Shards" }, { title: "The Construction", objective: "Build the machine under siege" }], success: "The machine hums. The Breach closes. You are the Architect of the New Age.", tragedy: "The machine overloads. You are vaporized." },
+                RESOLVE: { path: "The Containment", chapters: [{ title: "The Anchor", objective: "Calibrate the pylons" }, { title: "The Surge", objective: "Hold the reaction stable manually" }], success: "You hold the energy. The rift seals. You are the Warden.", tragedy: "Your mind shatters under the strain." }
             }
         }
     },
@@ -310,31 +308,31 @@ const CONTENT_PACK_ASHLORDS = {
         { id: "iron_forgers", name: "The Iron-Forgers", goal: "Tech monopoly" },
         { id: "whispering_flesh", name: "Whispering Flesh", goal: "Accelerate Blight" }
     ],
-    
+
     FACTION_CONDITIONS: {
         // ... (Same as v0.9.3) ...
-        "ash_wardens": { 
-            name: "Martial Law", 
-            effect: "Checkpoints everywhere. Movement requires a Bribe or Stealth check. All illicit transactions are Tier 2 (Perilous)." 
+        "ash_wardens": {
+            name: "Martial Law",
+            effect: "Checkpoints everywhere. Movement requires a Bribe or Stealth check. All illicit transactions are Tier 2 (Perilous)."
         },
-        "soot_stained": { 
-            name: "Crime Wave", 
-            effect: "The streets are ungoverned. You cannot safely Rest in the city (Conditions persist). Acquiring Assets costs +1 XP." 
+        "soot_stained": {
+            name: "Crime Wave",
+            effect: "The streets are ungoverned. You cannot safely Rest in the city (Conditions persist). Acquiring Assets costs +1 XP."
         },
-        "iron_forgers": { 
-            name: "Industrial Smog", 
-            effect: "Thick, choking fumes. -1 to FINESSE (Vision) and FORCE (Breathing) while outdoors. Tech prices double." 
+        "iron_forgers": {
+            name: "Industrial Smog",
+            effect: "Thick, choking fumes. -1 to FINESSE (Vision) and FORCE (Breathing) while outdoors. Tech prices double."
         },
-        "whispering_flesh": { 
-            name: "The Thin Veil", 
-            effect: "The barrier rot is absolute. All RESOLVE checks (Fear/Corruption) are Tier 2 (Perilous). 'Shaken' condition cannot be cleared." 
+        "whispering_flesh": {
+            name: "The Thin Veil",
+            effect: "The barrier rot is absolute. All RESOLVE checks (Fear/Corruption) are Tier 2 (Perilous). 'Shaken' condition cannot be cleared."
         }
     },
-    
+
     ORACLES: {
-         ACTIONS: ["Abandon", "Accuse", "Afflict", "Ambush", "Assault", "Await", "Bargain", "Betray", "Blame", "Bleed", "Blight", "Block", "Break", "Bribe", "Burden", "Burn", "Bury", "Censor", "Coerce", "Collapse", "Condemn", "Confess", "Confine", "Consume", "Corrupt", "Covert", "Crave", "Cripple", "Crush", "Curse", "Deceive", "Decay", "Defile", "Demand", "Deny", "Desecrate", "Despair", "Destroy", "Disguise", "Exploit", "Extort", "Falter", "Fester", "Flee", "Forsake", "Frame", "Gnaw", "Grieve", "Grudge", "Haunt", "Hide", "Hinder", "Hoard", "Hunt", "Imprison", "Infect", "Inquire", "Isolate", "Lament", "Lure", "Mute", "Mutate", "Neglect", "Oppose", "Overthrow", "Persecute", "Poison", "Pollute", "Punish", "Pursue", "Ransack", "Refuse", "Reject", "Repress", "Resent", "Restrain", "Revenge", "Rot", "Ruin", "Sabotage", "Scorn", "Scrounge", "Seize", "Sever", "Shatter", "Silence", "Smuggle", "Steal", "Struggle", "Subvert", "Suffer", "Suppress", "Suture", "Taint", "Threaten", "Toil", "Torment", "Usurp", "Weaken", "Wither"],
-         THEMES: ["Authority", "Ash", "Addiction", "Ally", "Ambition", "Bargain", "Betrayal", "Blight", "Blood", "Body", "Bone", "Burden", "Bureaucracy", "Chain", "Cinder", "Community", "Conspiracy", "Covenant", "Greed", "Curse", "Debt", "Deceit", "Decree", "Despair", "Desperation", "Desolation", "Disease", "Dogma", "Doubt", "Duty", "Envy", "Evidence", "Execution", "Faction", "Faith (Shaken)", "Family", "Fear", "Filth", "Grave", "Heresy", "Home", "Hope (False)", "Hunger", "Ignorance", "Infection", "Iron", "Jealousy", "Judgment", "Justice", "Knowledge", "Labor", "Law", "Legacy", "Lie", "Loss", "Lust", "Madness", "Memory", "Mercy", "Price", "Pride", "Prison", "Privilege", "Prophecy", "Protection", "Power", "Punishment", "Rags", "Rat", "Rations", "Refuge", "Regret", "Religion", "Resource", "Revenge", "Ruin", "Rumor", "Rust", "Secret", "Slum", "Soot", "Sorrow", "Soul", "Superstition", "Survival", "Swarm", "Taint", "Tithe", "Tradition", "Treachery", "Truth", "Tyranny", "Vengeance", "Vermin", "Vice", "Victim", "Wall", "Weakness", "Wound"],
-         LOCATIONS: ["Abbey", "Altar", "Alley", "Archive", "Armory", "Asylum", "Bastion", "Baths", "Bell-Tower", "Bone-Yard", "Breach", "Bridge", "Canal", "Catacomb", "Cathedral", "Cenotaph", "Chapel", "Charnel House", "Cistern", "Citadel", "Courthouse", "Court", "Cradle", "Crematorium", "Crossroad", "Crypt", "Dam", "Den", "Dock", "Drain", "Dungeon", "Embassy", "Exchange", "Fane", "Flophouse", "Forge", "Fort", "Foundry", "Gallows", "Gaol", "Kennel", "Lamp-Post", "Labyrinth", "Library", "Lighthouse", "Lock", "Manufactory", "Market", "Memorial", "Menagerie", "Mill", "Monument", "Morgue", "Museum", "Nursery", "Observatory", "Orphanage", "Ossuary", "Pen", "Pit", "Prison", "Processing", "Pump-Station", "Quarry", "Rack", "Refinery", "Reliquary", "Rookery", "Rook's", "Sanatorium", "Scriptorium", "Sepulcher", "Sewer-Canal", "Shaft", "Shambles", "Shrine", "Slaughterhouse", "Slum", "Spire", "Stable", "Stockade", "Stockyard", "Stone", "Sump", "Tannery", "Temple", "Tenement", "Terminus", "Theatre", "Tomb", "Tower", "Undercroft", "Veldt", "Viaduct", "Wall", "Warren", "Waste", "Well", "Wharf", "Workshop"]
+        ACTIONS: ["Abandon", "Accuse", "Afflict", "Ambush", "Assault", "Await", "Bargain", "Betray", "Blame", "Bleed", "Blight", "Block", "Break", "Bribe", "Burden", "Burn", "Bury", "Censor", "Coerce", "Collapse", "Condemn", "Confess", "Confine", "Consume", "Corrupt", "Covert", "Crave", "Cripple", "Crush", "Curse", "Deceive", "Decay", "Defile", "Demand", "Deny", "Desecrate", "Despair", "Destroy", "Disguise", "Exploit", "Extort", "Falter", "Fester", "Flee", "Forsake", "Frame", "Gnaw", "Grieve", "Grudge", "Haunt", "Hide", "Hinder", "Hoard", "Hunt", "Imprison", "Infect", "Inquire", "Isolate", "Lament", "Lure", "Mute", "Mutate", "Neglect", "Oppose", "Overthrow", "Persecute", "Poison", "Pollute", "Punish", "Pursue", "Ransack", "Refuse", "Reject", "Repress", "Resent", "Restrain", "Revenge", "Rot", "Ruin", "Sabotage", "Scorn", "Scrounge", "Seize", "Sever", "Shatter", "Silence", "Smuggle", "Steal", "Struggle", "Subvert", "Suffer", "Suppress", "Suture", "Taint", "Threaten", "Toil", "Torment", "Usurp", "Weaken", "Wither"],
+        THEMES: ["Authority", "Ash", "Addiction", "Ally", "Ambition", "Bargain", "Betrayal", "Blight", "Blood", "Body", "Bone", "Burden", "Bureaucracy", "Chain", "Cinder", "Community", "Conspiracy", "Covenant", "Greed", "Curse", "Debt", "Deceit", "Decree", "Despair", "Desperation", "Desolation", "Disease", "Dogma", "Doubt", "Duty", "Envy", "Evidence", "Execution", "Faction", "Faith (Shaken)", "Family", "Fear", "Filth", "Grave", "Heresy", "Home", "Hope (False)", "Hunger", "Ignorance", "Infection", "Iron", "Jealousy", "Judgment", "Justice", "Knowledge", "Labor", "Law", "Legacy", "Lie", "Loss", "Lust", "Madness", "Memory", "Mercy", "Price", "Pride", "Prison", "Privilege", "Prophecy", "Protection", "Power", "Punishment", "Rags", "Rat", "Rations", "Refuge", "Regret", "Religion", "Resource", "Revenge", "Ruin", "Rumor", "Rust", "Secret", "Slum", "Soot", "Sorrow", "Soul", "Superstition", "Survival", "Swarm", "Taint", "Tithe", "Tradition", "Treachery", "Truth", "Tyranny", "Vengeance", "Vermin", "Vice", "Victim", "Wall", "Weakness", "Wound"],
+        LOCATIONS: ["Abbey", "Altar", "Alley", "Archive", "Armory", "Asylum", "Bastion", "Baths", "Bell-Tower", "Bone-Yard", "Breach", "Bridge", "Canal", "Catacomb", "Cathedral", "Cenotaph", "Chapel", "Charnel House", "Cistern", "Citadel", "Courthouse", "Court", "Cradle", "Crematorium", "Crossroad", "Crypt", "Dam", "Den", "Dock", "Drain", "Dungeon", "Embassy", "Exchange", "Fane", "Flophouse", "Forge", "Fort", "Foundry", "Gallows", "Gaol", "Kennel", "Lamp-Post", "Labyrinth", "Library", "Lighthouse", "Lock", "Manufactory", "Market", "Memorial", "Menagerie", "Mill", "Monument", "Morgue", "Museum", "Nursery", "Observatory", "Orphanage", "Ossuary", "Pen", "Pit", "Prison", "Processing", "Pump-Station", "Quarry", "Rack", "Refinery", "Reliquary", "Rookery", "Rook's", "Sanatorium", "Scriptorium", "Sepulcher", "Sewer-Canal", "Shaft", "Shambles", "Shrine", "Slaughterhouse", "Slum", "Spire", "Stable", "Stockade", "Stockyard", "Stone", "Sump", "Tannery", "Temple", "Tenement", "Terminus", "Theatre", "Tomb", "Tower", "Undercroft", "Veldt", "Viaduct", "Wall", "Warren", "Waste", "Well", "Wharf", "Workshop"]
     },
 
     // === TIER 1 MINOR TWISTS (5 themed tables × 20 entries = 100 total) ===
@@ -571,7 +569,100 @@ const CONTENT_PACK_ASHLORDS = {
         }
     ],
 
-    // === MASTER GEAR LIST (Equipment purchasable during downtime) ===
+    // === NARRATIVE DATA LAYER (Hybrid Quest System) ===
+
+    // RUMOR TEMPLATES (Layer 1)
+    // Dynamic quests tied to faction clock states
+    RUMOR_TEMPLATES: {
+        ash_wardens: [
+            { id: "aw_rumor_1", clock_range: [0, 3], tier: 1, text: "The Wardens are conscripting 'volunteers' for labor in the outer districts. But the work camps are too far from the fields." },
+            { id: "aw_rumor_2", clock_range: [4, 6], tier: 2, text: "A Warden patrol was seen burning documents behind the old barracks. The smoke smelled like sulfur and old blood." },
+            { id: "aw_rumor_3", clock_range: [7, 8], tier: 2, text: "The High Warden has declared martial law in the lower district. They claim it's for 'containment,' but they're arresting healthy citizens." }
+        ],
+        soot_stained: [
+            { id: "ss_rumor_1", clock_range: [0, 3], tier: 1, text: "A shipment of Guild medicine went missing. The Soot-Stained are selling it cheap in the Warrens—suspiciously cheap." },
+            { id: "ss_rumor_2", clock_range: [4, 6], tier: 2, text: "The smugglers are moving large crates out of the city at night. They're heavy, and sometimes they move on their own." },
+            { id: "ss_rumor_3", clock_range: [7, 8], tier: 2, text: "The Crime Lords have stopped fighting each other. They're pooling resources to build... a bunker? Or a tomb?" }
+        ],
+        iron_forgers: [
+            { id: "if_rumor_1", clock_range: [0, 3], tier: 1, text: "The Forgers' new drill has broken through into something deep. Workers are going missing near the sealed shaft." },
+            { id: "if_rumor_2", clock_range: [4, 6], tier: 2, text: "Strange lights are pulsing from the Foundry district. The air tastes like copper and static. People are getting nosebleeds." },
+            { id: "if_rumor_3", clock_range: [7, 8], tier: 2, text: "The Guild has shut down the pumps. They say it's maintenance, but the water level in the sewers is rising fast." }
+        ],
+        whispering_flesh: [
+            { id: "wf_rumor_1", clock_range: [0, 3], tier: 1, text: "The cult is openly recruiting now. They promise 'the truth about salvation.' Converts emerge changed—calmer, happier, hollow." },
+            { id: "wf_rumor_2", clock_range: [4, 6], tier: 2, text: "People are dreaming the same dream: a heartbeat beneath the city. The cultists say it's time to wake up." },
+            { id: "wf_rumor_3", clock_range: [7, 8], tier: 2, text: "The Flesh-Melders are walking the streets in broad daylight. They aren't hiding their mutations anymore. They're proud." }
+        ]
+    },
+
+    // TRUTH FRAGMENTS (Layer 2 Unlock)
+    // Bits of the Epic Truth discovered through rumors
+    TRUTH_FRAGMENTS: {
+        ash_wardens: [
+            { id: "aw_frag_labor", text: "The 'labor camps' aren't building anything. They're processing centers for a one-way trip into the Wastes." },
+            { id: "aw_frag_supply", text: "Warden supply logs show massive food deliveries to 'Station Zero'—a location that doesn't exist on any map." }
+        ],
+        soot_stained: [
+            { id: "ss_frag_corpse", text: "The 'contraband' crates aren't goods. They're bodies. Thousands of them, preserved in alchemical brine." },
+            { id: "ss_frag_bribe", text: "The Guild pays the Smugglers to move the bodies. It's not a crime ring; it's a sanitation department." }
+        ],
+        iron_forgers: [
+            { id: "if_frag_prison", text: "The drill didn't hit a pocket of gas. It hit a wall. A wall made of material that predates the city by eons." },
+            { id: "if_frag_rune", text: "The markings on the deep wall aren't decorative. They're binding runes. And they're cracked." }
+        ],
+        whispering_flesh: [
+            { id: "wf_frag_dream", text: "The cultists don't worship a god. They worship a prisoner. They call it 'The Anchored One.'" },
+            { id: "wf_frag_seal", text: "The Blight isn't an infection. It's a cauterizing agent. The cultists believe they are the antibodies." }
+        ]
+    },
+
+    // REVELATION QUESTS (Layer 2)
+    // 2-Chapter arcs that expose the faction's true purpose
+    REVELATION_QUESTS: {
+        ash_wardens: {
+            id: "wardens_duty",
+            title: "The Warden's Duty",
+            trigger_fragments: 2,
+            truth_revealed: "They knowingly supply the Blight's hunger. It's protocol, not cruelty.",
+            chapters: [
+                { chapter: 1, title: "Station Zero", objective: "Infiltrate the secret facility in the Wastes" },
+                { chapter: 2, title: "The Ledger of Souls", objective: "Find the intake logs and the reason for the tithe" }
+            ]
+        },
+        soot_stained: {
+            id: "smugglers_burden",
+            title: "The Smuggler's Burden",
+            trigger_fragments: 2,
+            truth_revealed: "They move bodies into the wastes—not for profit, but to avoid something worse rising from the rot.",
+            chapters: [
+                { chapter: 1, title: "The Dead Caravan", objective: "Hijack a 'special' shipment" },
+                { chapter: 2, title: " The Pit", objective: "Follow the route to its final destination" }
+            ]
+        },
+        iron_forgers: {
+            id: "sealed_chamber",
+            title: "The Sealed Chamber",
+            trigger_fragments: 2,
+            truth_revealed: "They found the edge of the prison. They know what's down there, and they're trying to reinforce the bars.",
+            chapters: [
+                { chapter: 1, title: "The Deep Shaft", objective: "Descend past the quarantine line" },
+                { chapter: 2, title: "The First Seal", objective: "Examine the cracked wall and what leaks through" }
+            ]
+        },
+        whispering_flesh: {
+            id: "willing_sacrifice",
+            title: "The Willing Sacrifice",
+            trigger_fragments: 2,
+            truth_revealed: "The cult isn't mad—they've met what's imprisoned. Worship is surrender to the inevitable.",
+            chapters: [
+                { chapter: 1, title: "The Inner Sanctum", objective: "Enter the temple without being converted" },
+                { chapter: 2, title: "The Communion", objective: "Speak with the High Priest about the Voice below" }
+            ]
+        }
+    },
+
+    // MASTER GEAR LIST (Equipment purchasable during downtime)
     MASTER_GEAR_LIST: [
         // FORCE Equipment
         {

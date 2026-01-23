@@ -109,23 +109,34 @@
 
     <div class="container mx-auto max-w-7xl p-4">
         <header
-            class="mb-4 p-4 bg-gray-800 rounded-lg border border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div>
-                <h1 class="text-2xl font-bold text-white">Ash-Lord's Covenant</h1>
-                <p class="text-sm text-gray-400">Digital RPG Prototype (Build v2.9.2 - Mechanics Fix)</p>
+            class="mb-2 p-2 bg-gray-800 rounded-lg border border-gray-700 flex flex-wrap justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <h1 class="text-xl sm:text-2xl font-bold text-white leading-none">Ash-Lord's Covenant</h1>
+                <span class="hidden sm:inline-block text-gray-600 text-xs">|</span>
+                <p class="hidden sm:block text-xs text-gray-400">v2.9.2 (Mechanics Fix)</p>
             </div>
-            <div class="flex items-center space-x-2">
-                <button onclick="window.exportSave()"
-                    class="px-3 py-2 bg-gray-700 text-xs text-gray-300 rounded-lg hover:bg-emerald-700 hover:text-white transition">
-                    Export Save
+            <div class="flex items-center space-x-1">
+                <button onclick="window.exportSave()" title="Export Save"
+                    class="p-2 bg-gray-700 text-gray-300 rounded hover:bg-emerald-700 hover:text-white transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
                 </button>
-                <button onclick="window.importSave()"
-                    class="px-3 py-2 bg-gray-700 text-xs text-gray-300 rounded-lg hover:bg-emerald-700 hover:text-white transition">
-                    Import Save
+                <button onclick="window.importSave()" title="Import Save"
+                    class="p-2 bg-gray-700 text-gray-300 rounded hover:bg-emerald-700 hover:text-white transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                    </svg>
                 </button>
-                <button id="reset-game-btn"
-                    class="px-3 py-2 bg-gray-700 text-xs text-gray-300 rounded-lg hover:bg-red-700 hover:text-white transition">
-                    Reset Game
+                <button id="reset-game-btn" title="Reset Game"
+                    class="p-2 bg-gray-700 text-gray-300 rounded hover:bg-red-700 hover:text-white transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                        </path>
+                    </svg>
                 </button>
             </div>
         </header>
@@ -178,33 +189,41 @@
                 <div id="sidebar-container" class="lg:col-span-1 space-y-4 custom-scrollbar">
                     <div id="character-sheet-wrapper" class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg">
                         <div id="character-sheet-header"
-                            class="flex justify-between items-center p-4 border-b border-gray-700 cursor-pointer">
-                            <h2 class="text-xl font-semibold text-white">Character Sheet</h2>
-                            <svg id="accordion-icon" class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
+                            class="flex justify-between items-center p-3 border-b border-gray-700 cursor-pointer hover:bg-gray-750">
+                            <h2 class="text-lg font-semibold text-white uppercase tracking-wider">Character</h2>
+                            <svg id="accordion-icon" class="w-5 h-5 text-gray-400 transform transition-transform"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </div>
-                        <div id="character-sheet-content" class="p-4 space-y-4">
-                            <p id="character-sheet-loading" class="text-gray-400 italic">Loading character data...</p>
+                        <div id="character-sheet-content" class="p-3 space-y-4">
+                            <p id="character-sheet-loading" class="text-gray-400 italic text-xs">Loading...</p>
                             <div id="character-sheet-data"></div>
+
+                            <!-- Narrative Section (Part B/C) -->
+                            <div id="narrative-display" class="mt-4 pt-4 border-t border-gray-700">
+                                <h4 class="text-xs uppercase font-semibold text-emerald-500 mb-2 tracking-wider">The
+                                    Truth</h4>
+                                <div id="fragments-list" class="text-xs text-gray-400 space-y-1">
+                                    <p class="italic opacity-50">No fragments discovered yet.</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     <div id="unified-clocks-wrapper"
-                        class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg mt-4">
+                        class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg mt-2">
                         <div id="unified-clocks-header"
-                            class="flex justify-between items-center p-4 border-b border-gray-700 cursor-pointer hover:bg-gray-750 transition">
-                            <h2 class="text-xl font-semibold text-white">World State</h2>
+                            class="flex justify-between items-center p-3 border-b border-gray-700 cursor-pointer hover:bg-gray-750 transition">
+                            <h2 class="text-lg font-semibold text-white uppercase tracking-wider">World State</h2>
                             <svg id="unified-accordion-icon"
-                                class="w-6 h-6 text-gray-400 transform transition-transform" fill="none"
+                                class="w-5 h-5 text-gray-400 transform transition-transform" fill="none"
                                 stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </div>
-
                         <div id="unified-clocks-content" class="p-4 space-y-4">
                             <div class="grid grid-cols-2 gap-2 border-b-spacers pb-4 mb-4">
                                 <div class="flex flex-col items-center">
@@ -234,177 +253,194 @@
                                     FACTION ACTIVITY</h4>
                                 <div id="world-clocks-container" class="grid grid-cols-2 gap-2">
                                     <p id="world-clocks-loading"
-                                        class="text-gray-400 italic col-span-2 text-center text-xs">Loading world
+                                        class="text-gray-400 italic col-span-2 text-center text-xs">
+                                        Loading world
                                         state...</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div id="quest-progress-wrapper" class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4"
-                        style="display: none;">
-                        <h2 class="text-xl font-semibold text-emerald-400 mb-2">Active Quest</h2>
-                        <div id="quest-progress-content">
-                            <p id="quest-title" class="font-bold text-white text-lg mb-1"></p>
-                            <p id="quest-chapter" class="text-sm text-gray-400 mb-2"></p>
-                            <div class="bg-gray-900 rounded p-2">
-                                <div class="flex justify-between text-xs text-gray-400 mb-1">
-                                    <span>Progress</span>
-                                    <span id="quest-progress-text">0/0</span>
-                                </div>
-                                <div class="w-full bg-gray-700 rounded-full h-2">
-                                    <div id="quest-progress-bar" class="bg-emerald-600 h-2 rounded-full transition-all"
-                                        style="width: 0%"></div>
-                                </div>
-                            </div>
-                            <p id="quest-xp-earned" class="text-xs text-gray-400 mt-2"></p>
-                        </div>
-                    </div>
                 </div>
+            </div>
 
-                <div class="lg:col-span-2 flex flex-col h-[80vh]">
-                    <div class="flex-grow bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4 overflow-y-auto"
-                        id="narrative-log"></div>
-
-                    <div id="interaction-panel"
-                        class="mt-4 bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4">
-                        <div id="chapter-phase-ui">
-                            <textarea id="player-input"
-                                class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                                rows="3" placeholder="Describe your character's action..."
-                                aria-label="Enter your character's action"></textarea>
-
-                            <button id="submit-action-btn"
-                                class="w-full mt-3 px-4 py-3 bg-emerald-700 text-white rounded-lg font-bold hover:bg-emerald-800 shadow-md"
-                                aria-label="Submit your action to the Game Master">
-                                Submit Action
-                            </button>
-
-                            <p class="text-xs text-gray-500 text-center mt-2">Press <kbd
-                                    class="px-1 bg-gray-700 rounded">Enter</kbd> to submit (Shift+Enter for new line)
-                            </p>
+            <div id="quest-progress-wrapper" class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4"
+                style="display: none;">
+                <h2 class="text-xl font-semibold text-emerald-400 mb-2">Active Quest</h2>
+                <div id="quest-progress-content">
+                    <p id="quest-title" class="font-bold text-white text-lg mb-1"></p>
+                    <p id="quest-chapter" class="text-sm text-gray-400 mb-2"></p>
+                    <div class="bg-gray-900 rounded p-2">
+                        <div class="flex justify-between text-xs text-gray-400 mb-1">
+                            <span>Progress</span>
+                            <span id="quest-progress-text">0/0</span>
                         </div>
-
-                        <div id="interlude-phase-ui" class="hidden">
-                            <div class="mb-4 p-3 bg-gray-900 rounded-lg border border-emerald-700">
-                                <h3 class="text-lg font-bold text-emerald-400 mb-2">⏳ Downtime Phase</h3>
-                                <p class="text-sm text-gray-400">The world moves on while you rest. Faction clocks
-                                    advance. Choose how to spend your time wisely.</p>
-                            </div>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <button id="interlude-train-btn"
-                                    class="interlude-button flex flex-col items-start text-left p-3">
-                                    <span class="font-bold text-white">Seek Training (1 XP)</span>
-                                    <span class="text-xs text-gray-400 mt-1">Study under a mentor. Gain insight or
-                                        skill.</span>
-                                </button>
-                                <button id="interlude-asset-btn"
-                                    class="interlude-button flex flex-col items-start text-left p-3">
-                                    <span class="font-bold text-white">Acquire an Asset (1 XP)</span>
-                                    <span class="text-xs text-gray-400 mt-1">Find equipment, allies, or
-                                        information.</span>
-                                </button>
-                                <button id="interlude-reflect-btn"
-                                    class="interlude-button flex flex-col items-start text-left p-3">
-                                    <span class="font-bold text-white">Reflect & Integrate (1 XP)</span>
-                                    <span class="text-xs text-gray-400 mt-1">Process experiences. Potentially gain a
-                                        Tag.</span>
-                                </button>
-                                <button id="interlude-heal-btn"
-                                    class="interlude-button flex flex-col items-start text-left p-3">
-                                    <span class="font-bold text-white">Rest & Recover (3 Coin)</span>
-                                    <span class="text-xs text-gray-400 mt-1">Heal one Pip of damage. Requires
-                                        coin.</span>
-                                </button>
-                                <button id="interlude-shop-btn"
-                                    class="interlude-button flex flex-col items-start text-left p-3 border-amber-700">
-                                    <span class="font-bold text-amber-400">Visit Equipment Shop (5 XP)</span>
-                                    <span class="text-xs text-gray-400 mt-1">Purchase specialized tools or armor.</span>
-                                </button>
-                                <button id="interlude-repair-btn"
-                                    class="interlude-button flex flex-col items-start text-left p-3 border-blue-700">
-                                    <span class="font-bold text-blue-400">Repair Armor (Free)</span>
-                                    <span class="text-xs text-gray-400 mt-1">Restore all armor to full
-                                        protection.</span>
-                                </button>
-                                <button id="interlude-cleanse-btn"
-                                    class="interlude-button flex flex-col items-start text-left p-3 border-purple-700">
-                                    <span class="font-bold text-purple-400">Cleanse Blight (5 Coin)</span>
-                                    <span class="text-xs text-gray-400 mt-1">Seek a hedge witch to remove 1
-                                        Blight.</span>
-                                </button>
-                            </div>
-                            <button id="interlude-end-btn"
-                                class="w-full mt-4 px-4 py-3 bg-red-900 text-white rounded-lg font-bold hover:bg-red-800 transition border border-red-700">
-                                Return to Adventure →
-                            </button>
-                            <p class="text-xs text-gray-500 text-center mt-2">Warning: Ending downtime advances faction
-                                clocks!</p>
-                        </div>
-
-                        <!-- XP Shop Modal -->
-                        <div id="xp-shop-modal"
-                            class="fixed top-0 left-0 w-full h-full bg-black/80 z-[200] flex justify-center items-center hidden"
-                            role="dialog" aria-modal="true" aria-labelledby="shop-title">
-                            <div
-                                class="modal-content bg-gray-800 border border-amber-700 p-6 rounded-lg max-w-lg w-full">
-                                <h2 id="shop-title" class="text-xl font-bold text-amber-400 mb-4">⚔️ Equipment Shop</h2>
-                                <p class="text-gray-400 text-sm mb-4">Spend 5 XP to purchase specialized gear. Choose
-                                    wisely - only 3 items available per visit.</p>
-                                <div id="xp-shop-items" class="space-y-3 mb-4">
-                                    <!-- Items will be populated by JavaScript -->
-                                </div>
-                                <button id="xp-shop-close-btn"
-                                    class="w-full px-4 py-2 bg-gray-700 text-white rounded-lg font-semibold hover:bg-gray-600 transition">
-                                    Close Shop
-                                </button>
-                            </div>
+                        <div class="w-full bg-gray-700 rounded-full h-2">
+                            <div id="quest-progress-bar" class="bg-emerald-600 h-2 rounded-full transition-all"
+                                style="width: 0%"></div>
                         </div>
                     </div>
+                    <p id="quest-xp-earned" class="text-xs text-gray-400 mt-2"></p>
                 </div>
             </div>
         </div>
 
-        <!-- Bug Report UI -->
-        <div id="bug-report-ui" class="fixed bottom-4 left-4 z-[100]">
-            <button onclick="window.openBugReport()"
-                class="px-3 py-2 bg-red-900/80 text-red-200 text-xs rounded border border-red-700 hover:bg-red-800 backdrop-blur-sm transition flex items-center gap-2">
-                <span>🐞 Report Issue</span>
-            </button>
-        </div>
+        <div class="lg:col-span-2 flex flex-col h-[80vh]">
+            <div class="flex-grow bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4 overflow-y-auto"
+                id="narrative-log"></div>
 
-        <div id="bug-report-modal"
-            class="fixed top-0 left-0 w-full h-full bg-black/80 z-[250] flex justify-center items-center hidden"
-            role="dialog" aria-modal="true">
-            <div class="modal-content bg-gray-800 border border-gray-600 p-6 rounded-lg max-w-lg w-full shadow-2xl">
-                <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                    <span>🐞 Report Game Issue</span>
-                </h2>
-                <p class="text-sm text-gray-400 mb-4">
-                    Describe what happened vs what you expected. This will capture the current game state and recent
-                    logs.
-                </p>
+            <div id="interaction-panel" class="mt-4 bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4">
+                <div id="chapter-phase-ui">
+                    <textarea id="player-input"
+                        class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        rows="3" placeholder="Describe your character's action..."
+                        aria-label="Enter your character's action"></textarea>
 
-                <textarea id="bug-description"
-                    class="w-full p-3 bg-gray-900 border border-gray-700 rounded text-gray-200 text-sm mb-4 h-32 focus:outline-none focus:border-emerald-500"
-                    placeholder="E.g. I rolled a success but the AI described a failure..."></textarea>
+                    <button id="submit-action-btn"
+                        class="w-full mt-3 px-4 py-3 bg-emerald-700 text-white rounded-lg font-bold hover:bg-emerald-800 shadow-md"
+                        aria-label="Submit your action to the Game Master">
+                        Submit Action
+                    </button>
 
-                <div class="flex gap-2 justify-end">
-                    <button onclick="document.getElementById('bug-report-modal').style.display='none'"
-                        class="px-4 py-2 text-gray-400 hover:text-white transition">Cancel</button>
-                    <button onclick="window.copyBugReport()"
-                        class="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 transition">Copy
-                        (One-Off)</button>
-                    <button onclick="window.addToSessionLog()"
-                        class="px-4 py-2 bg-amber-700 text-white rounded hover:bg-amber-600 transition">Add to
-                        Log</button>
-                    <!-- Download JSON hidden by default unless manually needed -->
-                    <button onclick="window.downloadBugReport()"
-                        class="px-4 py-2 bg-emerald-900/50 text-emerald-200/50 rounded hover:bg-emerald-800 transition text-xs">Isolate
-                        JSON</button>
+                    <p class="text-xs text-gray-500 text-center mt-2">Press <kbd
+                            class="px-1 bg-gray-700 rounded">Enter</kbd> to submit (Shift+Enter for new line)
+                    </p>
+                </div>
+
+                <div id="interlude-phase-ui" class="hidden">
+                    <div class="mb-4 p-3 bg-gray-900 rounded-lg border border-emerald-700">
+                        <h3 class="text-lg font-bold text-emerald-400 mb-2">⏳ Downtime Phase</h3>
+                        <p class="text-sm text-gray-400">The world moves on while you rest. Faction clocks
+                            advance. Choose how to spend your time wisely.</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button id="interlude-train-btn"
+                            class="interlude-button flex flex-col items-start text-left p-3">
+                            <span class="font-bold text-white">Seek Training (1 XP)</span>
+                            <span class="text-xs text-gray-400 mt-1">Study under a mentor. Gain insight or
+                                skill.</span>
+                        </button>
+                        <button id="interlude-asset-btn"
+                            class="interlude-button flex flex-col items-start text-left p-3">
+                            <span class="font-bold text-white">Acquire an Asset (1 XP)</span>
+                            <span class="text-xs text-gray-400 mt-1">Find equipment, allies, or
+                                information.</span>
+                        </button>
+                        <button id="interlude-reflect-btn"
+                            class="interlude-button flex flex-col items-start text-left p-3">
+                            <span class="font-bold text-white">Reflect & Integrate (1 XP)</span>
+                            <span class="text-xs text-gray-400 mt-1">Process experiences. Potentially gain a
+                                Tag.</span>
+                        </button>
+                        <button id="interlude-heal-btn"
+                            class="interlude-button flex flex-col items-start text-left p-3">
+                            <span class="font-bold text-white">Rest & Recover (3 Coin)</span>
+                            <span class="text-xs text-gray-400 mt-1">Heal one Pip of damage. Requires
+                                coin.</span>
+                        </button>
+                        <button id="interlude-shop-btn"
+                            class="interlude-button flex flex-col items-start text-left p-3 border-amber-700">
+                            <span class="font-bold text-amber-400">Visit Equipment Shop (5 XP)</span>
+                            <span class="text-xs text-gray-400 mt-1">Purchase specialized tools or armor.</span>
+                        </button>
+                        <button id="interlude-repair-btn"
+                            class="interlude-button flex flex-col items-start text-left p-3 border-blue-700">
+                            <span class="font-bold text-blue-400">Repair Armor (Free)</span>
+                            <span class="text-xs text-gray-400 mt-1">Restore all armor to full
+                                protection.</span>
+                        </button>
+                        <button id="interlude-cleanse-btn"
+                            class="interlude-button flex flex-col items-start text-left p-3 border-purple-700">
+                            <span class="font-bold text-purple-400">Cleanse Blight (5 Coin)</span>
+                            <span class="text-xs text-gray-400 mt-1">Seek a hedge witch to remove 1
+                                Blight.</span>
+                        </button>
+                    </div>
+                    <button id="interlude-end-btn"
+                        class="w-full mt-4 px-4 py-3 bg-red-900 text-white rounded-lg font-bold hover:bg-red-800 transition border border-red-700">
+                        Return to Adventure →
+                    </button>
+                    <p class="text-xs text-gray-500 text-center mt-2">Warning: Ending downtime advances faction
+                        clocks!</p>
+                </div>
+
+                <!-- XP Shop Modal -->
+                <div id="xp-shop-modal"
+                    class="fixed top-0 left-0 w-full h-full bg-black/80 z-[200] flex justify-center items-center hidden"
+                    role="dialog" aria-modal="true" aria-labelledby="shop-title">
+                    <div class="modal-content bg-gray-800 border border-amber-700 p-6 rounded-lg max-w-lg w-full">
+                        <h2 id="shop-title" class="text-xl font-bold text-amber-400 mb-4">⚔️ Equipment Shop</h2>
+                        <p class="text-gray-400 text-sm mb-4">Spend 5 XP to purchase specialized gear. Choose
+                            wisely - only 3 items available per visit.</p>
+                        <div id="xp-shop-items" class="space-y-3 mb-4">
+                            <!-- Items will be populated by JavaScript -->
+                        </div>
+                        <button id="xp-shop-close-btn"
+                            class="w-full px-4 py-2 bg-gray-700 text-white rounded-lg font-semibold hover:bg-gray-600 transition">
+                            Close Shop
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Rumor Mill Modal -->
+                <div id="rumor-mill-modal"
+                    class="fixed top-0 left-0 w-full h-full bg-black/80 z-[200] flex justify-center items-center hidden"
+                    role="dialog" aria-modal="true">
+                    <div class="modal-content bg-gray-800 border border-emerald-700 p-6 rounded-lg max-w-2xl w-full">
+                        <h2 class="text-xl font-bold text-emerald-400 mb-2">👂 The Rumor Mill</h2>
+                        <p class="text-sm text-gray-400 mb-4">You catch wind of whispers from the streets.
+                            Choose a lead to pursue:</p>
+                        <div id="rumor-options" class="grid grid-cols-1 gap-3 mb-4">
+                            <!-- Rumors injected here -->
+                        </div>
+                        <p class="text-xs text-center text-gray-500 italic">Choosing a rumor starts a Quest.</p>
+                    </div>
                 </div>
             </div>
         </div>
+    </div>
+    </div>
+
+    <!-- Bug Report UI -->
+    <div id="bug-report-ui" class="fixed bottom-4 left-4 z-[100]">
+        <button onclick="window.openBugReport()"
+            class="px-3 py-2 bg-red-900/80 text-red-200 text-xs rounded border border-red-700 hover:bg-red-800 backdrop-blur-sm transition flex items-center gap-2">
+            <span>🐞 Report Issue</span>
+        </button>
+    </div>
+
+    <div id="bug-report-modal"
+        class="fixed top-0 left-0 w-full h-full bg-black/80 z-[250] flex justify-center items-center hidden"
+        role="dialog" aria-modal="true">
+        <div class="modal-content bg-gray-800 border border-gray-600 p-6 rounded-lg max-w-lg w-full shadow-2xl">
+            <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <span>🐞 Report Game Issue</span>
+            </h2>
+            <p class="text-sm text-gray-400 mb-4">
+                Describe what happened vs what you expected. This will capture the current game state and recent
+                logs.
+            </p>
+
+            <textarea id="bug-description"
+                class="w-full p-3 bg-gray-900 border border-gray-700 rounded text-gray-200 text-sm mb-4 h-32 focus:outline-none focus:border-emerald-500"
+                placeholder="E.g. I rolled a success but the AI described a failure..."></textarea>
+
+            <div class="flex gap-2 justify-end">
+                <button onclick="document.getElementById('bug-report-modal').style.display='none'"
+                    class="px-4 py-2 text-gray-400 hover:text-white transition">Cancel</button>
+                <button onclick="window.copyBugReport()"
+                    class="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 transition">Copy
+                    (One-Off)</button>
+                <button onclick="window.addToSessionLog()"
+                    class="px-4 py-2 bg-amber-700 text-white rounded hover:bg-amber-600 transition">Add to
+                    Log</button>
+                <!-- Download JSON hidden by default unless manually needed -->
+                <button onclick="window.downloadBugReport()"
+                    class="px-4 py-2 bg-emerald-900/50 text-emerald-200/50 rounded hover:bg-emerald-800 transition text-xs">Isolate
+                    JSON</button>
+            </div>
+        </div>
+    </div>
 
     </div>
 
@@ -1711,6 +1747,120 @@
 
         const ui = {};
 
+        // EXTENDED INVENTORY SYSTEM (Asset Economy v1.2)
+        document.addEventListener('DOMContentLoaded', () => {
+            // Ensure InventorySystem exists (it should from game-logic.js module)
+            if (!window.InventorySystem) window.InventorySystem = {};
+
+            Object.assign(window.InventorySystem, {
+                async addItem(item) {
+                    await gameState.transaction(async (state) => {
+                        const char = state.character;
+                        const slots = { ...char.equipment.slots };
+                        const inventory = [...char.equipment.inventory];
+
+                        let equipped = false;
+                        // Auto-equip if slot empty
+                        if (item.type === 'tool' && item.stat) {
+                            if (!slots[item.stat]) slots[item.stat] = {};
+                            if (!slots[item.stat].tool) {
+                                slots[item.stat].tool = item;
+                                equipped = true;
+                            }
+                        } else if (item.type === 'armor' && item.stat) {
+                            if (!slots[item.stat]) slots[item.stat] = {};
+                            if (!slots[item.stat].armor) {
+                                slots[item.stat].armor = item;
+                                equipped = true;
+                            }
+                        }
+
+                        if (!equipped) {
+                            inventory.push(item);
+                        }
+
+                        return { character: { ...char, equipment: { slots, inventory } } };
+                    });
+                    return true;
+                },
+
+                async removeItem(itemName) {
+                    await gameState.transaction(async (state) => {
+                        const char = state.character;
+                        const slots = { ...char.equipment.slots };
+                        let inventory = [...char.equipment.inventory];
+                        let found = false;
+
+                        const invIndex = inventory.findIndex(i => i.name === itemName);
+                        if (invIndex !== -1) {
+                            inventory.splice(invIndex, 1);
+                            found = true;
+                        } else {
+                            for (const stat in slots) {
+                                if (slots[stat].tool && slots[stat].tool.name === itemName) {
+                                    slots[stat].tool = null;
+                                    found = true;
+                                    break;
+                                }
+                                if (slots[stat].armor && slots[stat].armor.name === itemName) {
+                                    slots[stat].armor = null;
+                                    found = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (found) {
+                            return { character: { ...char, equipment: { slots, inventory } } };
+                        }
+                        return {};
+                    });
+                    return true;
+                },
+
+                getAvailableShopItems(count) {
+                    const state = gameState.getState();
+                    const char = state.character;
+                    if (typeof CONTENT_PACK_ASHLORDS === 'undefined') return [];
+                    const allGear = CONTENT_PACK_ASHLORDS.MASTER_GEAR_LIST || [];
+
+                    const ownedNames = new Set();
+                    if (char.equipment) {
+                        (char.equipment.inventory || []).forEach(i => ownedNames.add(i.name));
+                        if (char.equipment.slots) {
+                            Object.values(char.equipment.slots).forEach(slot => {
+                                if (slot.tool) ownedNames.add(slot.tool.name);
+                                if (slot.armor) ownedNames.add(slot.armor.name);
+                            });
+                        }
+                    }
+
+                    const available = allGear.filter(i => !ownedNames.has(i.name));
+                    const shuffled = [...available].sort(() => 0.5 - Math.random());
+                    return shuffled.slice(0, count);
+                },
+
+                async repairAllArmor() {
+                    await gameState.transaction(async (state) => {
+                        const char = state.character;
+                        if (!char.equipment || !char.equipment.slots) return {};
+
+                        const slots = { ...char.equipment.slots };
+                        let repaired = false;
+                        for (const stat in slots) {
+                            if (slots[stat].armor && slots[stat].armor.pips < (slots[stat].armor.max_pips || 2)) {
+                                slots[stat].armor = { ...slots[stat].armor, pips: slots[stat].armor.max_pips || 2 };
+                                repaired = true;
+                            }
+                        }
+
+                        if (repaired) return { character: { ...char, equipment: { ...char.equipment, slots } } };
+                        return {};
+                    });
+                }
+            });
+        });
+
         function logBoot(msg) {
             console.log(msg);
             const el = document.getElementById('boot-log');
@@ -2001,6 +2151,28 @@
                 const pip1Class = pipCount >= 1 ? "filled" : "";
                 const pip2Class = pipCount >= 2 ? "filled" : "";
 
+                const slotData = (data.equipment?.slots?.[k]) || {};
+                const tool = slotData.tool;
+                const armor = slotData.armor;
+
+                let slotsHtml = '';
+                if (tool) {
+                    slotsHtml += `<div class="mt-1 text-xs bg-emerald-900/30 text-emerald-400 border border-emerald-800 rounded px-1 truncate" title="${tool.name} (+1)">${tool.name}</div>`;
+                } else {
+                    slotsHtml += `<div class="mt-1 text-xs bg-gray-800 text-gray-600 border border-gray-700 rounded px-1 dashed-border opacity-50">Empty Tool</div>`;
+                }
+
+                if (armor) {
+                    const armorPips = armor.pips || 0;
+                    const maxArmor = armor.max_pips || 2;
+                    const pips = Array.from({ length: maxArmor }, (_, i) =>
+                        `<span class="w-1.5 h-1.5 rounded-full ${i < armorPips ? 'bg-blue-400' : 'bg-gray-700'} inline-block"></span>`
+                    ).join('');
+                    slotsHtml += `<div class="mt-1 text-xs bg-blue-900/30 text-blue-300 border border-blue-800 rounded px-1 flex justify-between items-center" title="${armor.name}"><span>Armor</span><span class="flex gap-0.5">${pips}</span></div>`;
+                } else {
+                    slotsHtml += `<div class="mt-1 text-xs bg-gray-800 text-gray-600 border border-gray-700 rounded px-1 dashed-border opacity-50">Empty Armor</div>`;
+                }
+
                 return `
                 <div class="stat-block p-2 text-center border border-gray-700 rounded hover:bg-gray-700" onclick="updateDescription('${k}', 'Pips: ${pipCount}/2', 'stat')">
                     <div class="text-xs text-gray-400 uppercase">${k.substring(0, 3)}</div>
@@ -2009,6 +2181,7 @@
                         <div class="pip ${pip1Class}"></div>
                         <div class="pip ${pip2Class}"></div>
                     </div>
+                    ${slotsHtml}
                 </div>`;
             }).join('');
 
@@ -2058,7 +2231,7 @@
                     </div>`;
             }).join('');
 
-            const equipHtml = (data.equipment || []).map(i => {
+            const equipHtml = (data.equipment?.inventory || []).map(i => {
                 const safeName = (i.name || 'Unknown Item').replace(/'/g, "&apos;");
                 const loreContent = (i.lore || i.desc || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n');
 
@@ -2163,10 +2336,6 @@
                                  <p class="text-xs text-gray-500">EXP</p>
                                  <p class="text-lg font-bold text-emerald-400">${data.xp || 0}</p>
                              </div>
-                             <div>
-                                 <p class="text-xs text-gray-500">COIN</p>
-                                 <p class="text-lg font-bold ${(data.currency || 0) > 0 ? 'text-emerald-400' : 'text-gray-600'}">${data.currency || 0}</p>
-                             </div>
                         </div>
                     </div>
                     <div class="grid grid-cols-5 gap-2 select-none">${statsHtml}</div>
@@ -2187,6 +2356,42 @@
                         <span class="italic opacity-50">Select any attribute, talent, item, or tag above to view details.</span>
                     </div>
                 </div>`;
+
+            // Update Narrative Display (Part C)
+            const narrativeEl = document.getElementById('narrative-display');
+            if (narrativeEl) {
+                const fragments = data.truth_fragments || {};
+                const revelations = data.revelations_completed || [];
+                let fragHtml = '';
+
+                // Helper to render fragments
+                for (const faction in fragments) {
+                    if (fragments[faction].length > 0) {
+                        const fragList = fragments[faction].map(fid => {
+                            const fData = CONTENT_PACK_ASHLORDS.TRUTH_FRAGMENTS[faction]?.find(f => f.id === fid);
+                            return `<div class="pl-2 border-l border-emerald-900/50 text-emerald-100/80 italic">"${fData?.text || fid}"</div>`;
+                        }).join('');
+
+                        fragHtml += `
+                            <div class="mb-2">
+                                <span class="text-emerald-500 font-bold text-[0.65rem] uppercase tracking-wider">${faction.replace('_', ' ')}</span>
+                                <div class="mt-1 space-y-1">${fragList}</div>
+                            </div>
+                        `;
+                    }
+                }
+
+                if (revelations.length > 0) {
+                    fragHtml += `<div class="mt-3 pt-2 border-t border-gray-700">
+                        <span class="text-amber-500 font-bold text-[0.65rem] uppercase tracking-wider">Revelations</span>
+                        <ul class="list-disc pl-4 mt-1 space-y-1 text-amber-100/80">
+                            ${revelations.map(r => `<li>${r.replace('_', ' ')}</li>`).join('')}
+                        </ul>
+                    </div>`;
+                }
+
+                document.getElementById('fragments-list').innerHTML = fragHtml || '<p class="italic opacity-30 text-[0.7rem]">No fragments discovered yet.</p>';
+            }
         }
 
         window.updateDescription = (title, description, type, lore = '') => {
@@ -2244,17 +2449,44 @@
                     combinedStats[stat] = Math.max(-1, Math.min(5, rawValue));
                 }
 
+                // Initialize equipment logic (Asset Economy)
+                const rawEquipment = [...(calling.equipment || []), ...(burden.equipment || [])];
+                const slots = {};
+                const inventory = [];
+
+                rawEquipment.forEach(item => {
+                    const stat = item.stat;
+                    if (item.type === 'armor' && stat) {
+                        if (!slots[stat]) slots[stat] = {};
+                        slots[stat].armor = item;
+                    } else if (item.type === 'tool' && stat) {
+                        if (!slots[stat]) slots[stat] = {};
+                        slots[stat].tool = item;
+                    } else {
+                        inventory.push(item);
+                    }
+                });
+
                 const newCharacter = {
                     name: charName,
                     playbook: { calling: calling.name, burden: burden.name, callingId: callingId, burdenId: burdenId },
                     stats: combinedStats,
                     pips: {},
                     talents: [...(calling.talents || []), ...(burden.talents || [])],
-                    equipment: [...(calling.equipment || []), ...(burden.equipment || [])],
+                    equipment: { slots, inventory },
                     xp: 0,
                     xp_locked: 0,
-                    currency: 0,
-                    blight: 0  // Blight tracker for blight-related burdens
+                    blight: 0,  // Blight tracker
+                    // Narrative State (Part B)
+                    truth_fragments: {
+                        ash_wardens: [],
+                        soot_stained: [],
+                        iron_forgers: [],
+                        whispering_flesh: []
+                    },
+                    revelations_completed: [],
+                    legendary_quest_active: false,
+                    legendary_quest_chapter: 0
                 };
 
                 // Get front name from calling
@@ -2676,6 +2908,18 @@
             // Get tags context
             const tagsContext = TagSystem.getTagsContext(state);
 
+            // Helper for narrative context (defined inside scope or we can move it out)
+            const getGlanceableFragments = (char) => {
+                const frags = char.truth_fragments || {};
+                let text = "";
+                for (const faction in frags) {
+                    if (frags[faction].length > 0) {
+                        text += `${faction.toUpperCase()}: ${frags[faction].length} fragments\n`;
+                    }
+                }
+                return text || "None";
+            };
+
             // Check quest availability and roll quest hook if needed
             const turnCount = state.gameState?.turn_count || 0;
             const hasQuest = state.questState?.current_quest != null;
@@ -2716,16 +2960,28 @@ Name: ${character.name}
 Calling: ${character.playbook?.calling} / Burden: ${character.playbook?.burden}
 Stats: FOR ${character.stats.FORCE}, FIN ${character.stats.FINESSE}, INF ${character.stats.INFLUENCE}, WIT ${character.stats.WITS}, RES ${character.stats.RESOLVE}
 Injuries: ${pipContext}
-Equipment: ${(character.equipment || []).map(e => {
-                if (e.type === 'tool') return `${e.name} (+1 ${e.stat})`;
-                if (e.type === 'armor') return `${e.name} (${e.pips || 0}/${e.max_pips || 2} ${e.stat} armor)`;
-                return e.name;
-            }).join(', ')}
-Coin: ${character.currency}
+Equipment:
+  Equipped: ${Object.entries(character.equipment?.slots || {})
+                    .flatMap(([stat, slot]) => {
+                        const items = [];
+                        if (slot.tool) items.push(`${slot.tool.name} (+1 ${stat})`);
+                        if (slot.armor) items.push(`${slot.armor.name} (${slot.armor.pips}/${slot.armor.max_pips} ${stat} armor)`);
+                        return items;
+                    }).join(', ') || 'None'}
+  Inventory: ${(character.equipment?.inventory || []).map(i => i.name).join(', ') || 'None'}
 XP: ${character.xp || 0}
 
 *** CHARACTER TAGS (Story facts about the character) ***
 ${tagsContext}
+
+*** NARRATIVE PROGRESS (The Epic Truth) ***
+Fragments Discovered:
+${getGlanceableFragments(character)}
+
+Revelations Unlocked:
+${(character.revelations_completed || []).map(r => `- ${r.replace('_', ' ').toUpperCase()}`).join('\n') || "None"}
+
+Legendary Quest Active: ${character.legendary_quest_active ? "YES - Chapter " + character.legendary_quest_chapter : "NO"}
 
 *** GAME STATE ***
 Turn: ${turnCount} | Adventure Turns Since Rest: ${adventureTurns}
@@ -2765,26 +3021,16 @@ ${shouldSuggestDowntime ? `DOWNTIME HINT: The player ${hasDamage ? 'has accumula
 - NEVER mention game mechanics explicitly (no "XP", "pips", "dice")
 - Describe injuries as wounds, exhaustion, strain - not as "pips"
 
-*** STEALING GUIDANCE ***
-When the player successfully steals (action type 'steal'), you MUST determine what was stolen based on context:
-- Pickpocketing commoners: coin purse (1-3 coin), trinkets, bread
-- Pickpocketing merchants: coin pouch (2-6 coin), keys, receipts, small tools
-- Pickpocketing nobles: valuable jewelry (5-10 coin value), sealed letters, signet rings
-- Looting bodies: weapons, armor pieces, coin, evidence, personal effects
-- Burglary/theft from locations: tools, documents, valuables, supplies
+*** STEALING & LOOTING GUIDANCE (ASSET ECONOMY) ***
+            The game uses an ABSTRACT Asset Economy. There is NO currency count.
+            When the player successfully steals or loots valuable items (from nobles, rich merchants, treasure chests):
+            - Reward them with a "Valuable" item using: equipment_add: [{name: "Item Name", type: "loot", tags: ["valuable"], desc: "Description"}]
+            - "Valuable" items are consumed to Heal or Repair during Downtime.
+            - Examples of Valuables: Jewelry, Art objects, Deeds, Rare spices, Pouches of Gemstones.
+            - Do NOT award "Coin" or "Gold" as a number. Award it as an item: "Pouch of Gold" (Tag: valuable).
 
-For SUCCESS: Award full loot. ONLY include "currency_gain: X" if the item stolen is actual money (X = 1-6). If stealing an object, do NOT add currency.
-For COST/PARTIAL: Award reduced loot. Include "currency_gain: X" ONLY if money is found.
-For MISS: No loot is obtained. Do not include currency_gain.
-CRITICAL: Do not include "currency_gain" for general actions (hiding, moving, fighting) unless money is explicitly looted or paid.
+            NEVER use "currency_gain". Use "equipment_add" to give valuable items.
 
-You can also add interesting narrative items with: equipment_add: [{name: "Item Name", type: "loot", tags: ["tag1"], desc: "Description"}]
-
-            *** CURRENCY UPDATES (SPENDING / LOSING) ***
-            If the player SPENDS, GIVES, LOSES, or DROPS coin/gold/money during the narrative (e.g. buying ale, bribing a guard, getting robbed):
-            - You MUST include: "currency_gain: -X" (where X is the amount spent/lost).
-            - Example: "You toss the beggar a coin." -> Output must contain: currency_gain: -1
-            - Example: "You buy a room for the night (3 coin)." -> Output must contain: currency_gain: -3
 
             *** BLIGHT GUIDANCE ***
 The Blight is a supernatural corruption that can infect anyone. When narratively appropriate:
@@ -2913,6 +3159,7 @@ ${TalentSystem.getActiveContext()}`;
                 const character = state.character;
                 const updates = {};
 
+
                 // XP gain
                 if (update.xp_gain) {
                     updates.character = {
@@ -2920,20 +3167,6 @@ ${TalentSystem.getActiveContext()}`;
                         xp: (character.xp || 0) + update.xp_gain
                     };
                     showToast(`+${update.xp_gain} XP`);
-                }
-
-                // Currency gain/loss
-                if (update.currency_gain !== undefined && update.currency_gain !== 0 && update.currency_gain !== null) {
-                    const amount = Number(update.currency_gain);
-                    if (!isNaN(amount) && amount !== 0) {
-                        const newCurrency = Math.max(0, (character.currency || 0) + amount);
-                        updates.character = {
-                            ...(updates.character || character),
-                            currency: newCurrency
-                        };
-                        showToast(`${amount > 0 ? '+' : ''}${amount} Coin`);
-                        console.log(`Currency update: ${character.currency} + ${amount} = ${newCurrency}`);
-                    }
                 }
 
                 // Pips
@@ -2966,25 +3199,57 @@ ${TalentSystem.getActiveContext()}`;
                     };
                 }
 
-                // Equipment add
+                // Armor damage (ablative armor mechanic)
+                if (update.update_armor) {
+                    const { stat, amount } = update.update_armor;
+                    const currentEquipment = character.equipment || { slots: {}, inventory: [] };
+                    const slot = currentEquipment.slots?.[stat];
+
+                    if (slot && slot.armor) {
+                        const currentArmorPips = slot.armor.pips || 0;
+                        const newArmorPips = Math.max(0, currentArmorPips - amount);
+
+                        // Create updated slots with modified armor
+                        const updatedSlots = {
+                            ...currentEquipment.slots,
+                            [stat]: {
+                                ...slot,
+                                armor: {
+                                    ...slot.armor,
+                                    pips: newArmorPips
+                                }
+                            }
+                        };
+
+                        updates.character = {
+                            ...(updates.character || character),
+                            equipment: {
+                                ...currentEquipment,
+                                slots: updatedSlots
+                            }
+                        };
+
+                        showToast(`${slot.armor.name} absorbed ${amount} damage (${newArmorPips}/${slot.armor.max_pips || 2} remaining)`);
+                    }
+                }
+
+                // Equipment add - use InventorySystem to handle slot logic
                 if (update.equipment_add && update.equipment_add.length > 0) {
-                    const currentEquipment = character.equipment || [];
-                    const newItems = update.equipment_add.map(item => ({
-                        name: item.name || "Unknown Item",
-                        type: item.type || "loot",
-                        properties: item.properties || item.tags || [],
-                        lore: item.lore || item.desc || "",
-                        ...(item.stat ? { stat: item.stat } : {}),
-                        ...(item.pips !== undefined ? { pips: item.pips, max_pips: item.max_pips || 2 } : {}),
-                        ...(item.bonus !== undefined ? { bonus: item.bonus } : {})
-                    }));
+                    for (const item of update.equipment_add) {
+                        const normalizedItem = {
+                            name: item.name || "Unknown Item",
+                            type: item.type || "loot",
+                            properties: item.properties || item.tags || [],
+                            lore: item.lore || item.desc || "",
+                            ...(item.stat ? { stat: item.stat } : {}),
+                            ...(item.pips !== undefined ? { pips: item.pips, max_pips: item.max_pips || 2 } : {}),
+                            ...(item.bonus !== undefined ? { bonus: item.bonus } : {})
+                        };
 
-                    updates.character = {
-                        ...(updates.character || character),
-                        equipment: [...currentEquipment, ...newItems]
-                    };
-
-                    newItems.forEach(item => showToast(`+1 Item: ${item.name}`));
+                        // Use InventorySystem to properly handle slots vs inventory
+                        await InventorySystem.addItem(normalizedItem);
+                        showToast(`+1 Item: ${normalizedItem.name}`);
+                    }
                 }
 
                 // Blight gain (corruption from the Blight)
@@ -3103,6 +3368,58 @@ ${TalentSystem.getActiveContext()}`;
                         phase: 'interlude'
                     };
                     showToast('Interlude begins - time to rest');
+                }
+
+                // Narrative: Truth Fragment Add (MOVED INSIDE TRANSACTION)
+                if (update.truth_fragment_add && character) {
+                    const { faction, fragment_id } = update.truth_fragment_add;
+                    const currentFragments = character.truth_fragments || {
+                        ash_wardens: [], soot_stained: [],
+                        iron_forgers: [], whispering_flesh: []
+                    };
+
+                    if (!currentFragments[faction].includes(fragment_id)) {
+                        updates.character = {
+                            ...(updates.character || character),
+                            truth_fragments: {
+                                ...currentFragments,
+                                [faction]: [...(currentFragments[faction] || []), fragment_id]
+                            }
+                        };
+                        showToast(`Truth Fragment Discovered! (${faction})`);
+
+                        // Check for Revelation Unlock (2 fragments)
+                        if ((currentFragments[faction].length + 1) >= 2) {
+                            setTimeout(() => {
+                                addMessageToChat('model', `\n\n**REVELATION UNLOCKED**\nYou have pieced together a disturbing truth about the **${faction.replace('_', ' ').toUpperCase()}**. (Check World State)`);
+                            }, 1000);
+                        }
+                    }
+                }
+
+                // Narrative: Revelation Complete (MOVED INSIDE TRANSACTION)
+                if (update.revelation_complete && character) {
+                    const faction = update.revelation_complete;
+                    const currentRevelations = character.revelations_completed || [];
+
+                    if (!currentRevelations.includes(faction)) {
+                        updates.character = {
+                            ...(updates.character || character),
+                            revelations_completed: [...currentRevelations, faction]
+                        };
+
+                        // Award Destiny Clock progress (+2)
+                        updates.destinyFrontClocks = {
+                            ...state.destinyFrontClocks,
+                            destiny: {
+                                ...state.destinyFrontClocks.destiny,
+                                current: Math.min(8, (state.destinyFrontClocks.destiny.current || 0) + 2)
+                            }
+                        };
+
+                        showToast(`Revelation Completed: ${faction}!`);
+                        showToast(`Destiny Clock +2`);
+                    }
                 }
 
                 return updates;
@@ -3244,9 +3561,9 @@ ${TalentSystem.getActiveContext()}`;
                 seek_training: { costType: 'xp', cost: 1, label: 'Seek Training' },
                 acquire_asset: { costType: 'xp', cost: 1, label: 'Acquire an Asset' },
                 reflect: { costType: 'xp', cost: 1, label: 'Reflect & Integrate' },
-                heal: { costType: 'coin', cost: 3, label: 'Rest & Recover' },
-                repair_armor: { costType: 'none', cost: 0, label: 'Repair Armor' },
-                cleanse_blight: { costType: 'coin', cost: 5, label: 'Cleanse Blight' },
+                heal: { costType: 'valuable', cost: 1, label: 'Rest & Recover' },
+                repair_armor: { costType: 'valuable', cost: 1, label: 'Repair Armor' },
+                cleanse_blight: { costType: 'xp', cost: 3, label: 'Cleanse Blight' },
                 end_interlude: { costType: 'none', cost: 0, label: 'Return to Adventure' }
             };
 
@@ -3257,8 +3574,11 @@ ${TalentSystem.getActiveContext()}`;
             if (config.costType === 'xp' && (character.xp || 0) < config.cost) {
                 return window.showError("Insufficient XP", `You need ${config.cost} XP for this action.`);
             }
-            if (config.costType === 'coin' && (character.currency || 0) < config.cost) {
-                return window.showError("Insufficient Coin", `You need ${config.cost} coin for this action.`);
+            if (config.costType === 'valuable') {
+                const hasValuable = (character.equipment?.inventory || []).some(i => i.tags && i.tags.includes('valuable'));
+                if (!hasValuable) {
+                    return window.showError("No Valuables", "You need a 'Valuable' item (marked with 'valuable' tag) to trade for this service.");
+                }
             }
 
             // For healing, check if there's damage to heal
@@ -3271,8 +3591,8 @@ ${TalentSystem.getActiveContext()}`;
 
             // For repair armor, check if there's armor to repair
             if (actionType === 'repair_armor') {
-                const hasArmorToRepair = (character.equipment || []).some(
-                    e => e.type === 'armor' && (e.pips || 0) < (e.max_pips || 2)
+                const hasArmorToRepair = character.equipment?.slots && Object.values(character.equipment.slots).some(
+                    s => s.armor && (s.armor.pips < (s.armor.max_pips || 2))
                 );
                 if (!hasArmorToRepair) {
                     return window.showError("No Repairs Needed", "All your armor is already at full protection.");
@@ -3294,6 +3614,10 @@ ${TalentSystem.getActiveContext()}`;
             if (actionType === 'end_interlude') {
                 confirmMsg += "\n\nThis will advance all faction clocks by 1 segment!";
             }
+            if (config.costType === 'valuable') {
+                confirmMsg += "\n\n(A random valuable will be consumed)";
+            }
+
             if (!confirm(confirmMsg + "\n\nProceed?")) {
                 return;
             }
@@ -3307,11 +3631,25 @@ ${TalentSystem.getActiveContext()}`;
                         character: { ...s.character, xp: Math.max(0, s.character.xp - config.cost) }
                     }));
                     showToast(`-${config.cost} XP`);
-                } else if (config.costType === 'coin') {
-                    await gameState.transaction(async (s) => ({
-                        character: { ...s.character, currency: Math.max(0, s.character.currency - config.cost) }
-                    }));
-                    showToast(`-${config.cost} Coin`);
+                } else if (config.costType === 'valuable') {
+                    // Burn valuable
+                    await gameState.transaction(async (s) => {
+                        const inv = [...s.character.equipment.inventory];
+                        const idx = inv.findIndex(i => i.tags && i.tags.includes('valuable'));
+                        if (idx !== -1) {
+                            const item = inv[idx];
+                            inv.splice(idx, 1);
+                            // Need to return full equipment structure
+                            return {
+                                character: {
+                                    ...s.character,
+                                    equipment: { ...s.character.equipment, inventory: inv }
+                                }
+                            };
+                        }
+                        return {};
+                    });
+                    showToast('Valuable consumed');
                 }
 
                 // Handle specific actions
@@ -3364,6 +3702,13 @@ ${TalentSystem.getActiveContext()}`;
                     } else {
                         await addMessageToChat('model', `The factions continue their machinations while you rested. Fresh and alert, you return to face whatever comes next.`);
                     }
+
+                    // Check for Rumor Mill Trigger (Turn >= 5)
+                    const turnCount = gameState.getState().gameState.turn_count || 0;
+                    if (turnCount >= 5) {
+                        setTimeout(() => window.RumorSystem.showRumorMill(), 1500);
+                    }
+
 
                 } else {
                     // For training, asset, and reflect - call AI for narrative
@@ -3628,9 +3973,118 @@ ${TalentSystem.getActiveContext()}`;
 
         if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
 
+        // Mobile Layout Init
+        function initMobileLayout() {
+            if (window.innerWidth < 1024) {
+                // Close accordions by default on mobile
+                const charSheet = document.getElementById('character-sheet-content');
+                const worldSheet = document.getElementById('unified-clocks-content');
+                const charIcon = document.getElementById('accordion-icon');
+                const worldIcon = document.getElementById('unified-accordion-icon');
+
+                if (charSheet && !document.getElementById('character-sheet-wrapper').classList.contains('accordion-closed')) {
+                    document.getElementById('character-sheet-wrapper').classList.add('accordion-closed');
+                }
+                if (worldSheet && !document.getElementById('unified-clocks-wrapper').classList.contains('accordion-closed')) {
+                    document.getElementById('unified-clocks-wrapper').classList.add('accordion-closed');
+                }
+            }
+        }
+
+        // Hook into init
+        const originalInit = init;
+        init = async function () {
+            await originalInit();
+
+            // Add Accordion Listeners
+            const charHeader = document.getElementById('character-sheet-header');
+            if (charHeader) {
+                charHeader.onclick = () => {
+                    document.getElementById('character-sheet-wrapper').classList.toggle('accordion-closed');
+                };
+            }
+
+            const worldHeader = document.getElementById('unified-clocks-header');
+            if (worldHeader) {
+                worldHeader.onclick = () => {
+                    document.getElementById('unified-clocks-wrapper').classList.toggle('accordion-closed');
+                };
+            }
+
+            initMobileLayout();
+        };
+
         // Expose globals for UI event handlers
+        // ===== RUMOR SYSTEM =====
+        window.RumorSystem = {
+            showRumorMill: () => {
+                const state = gameState.getState();
+                const container = document.getElementById('rumor-options');
+                if (!container) return;
+
+                container.innerHTML = '';
+                const templates = CONTENT_PACK_ASHLORDS.RUMOR_TEMPLATES || {};
+                const clocks = state.worldClocks?.clocks || [];
+
+                // Get one rumor for each faction
+                Object.entries(templates).forEach(([factionId, rumors]) => {
+                    const clock = clocks.find(c => c.name.toLowerCase().replace(/[^a-z]/g, '_').includes(factionId)) || { current: 0 };
+                    const validRumors = rumors.filter(r =>
+                        (clock.current >= r.clock_range[0]) && (clock.current <= r.clock_range[1])
+                    );
+
+                    if (validRumors.length > 0) {
+                        const rumor = validRumors[Math.floor(Math.random() * validRumors.length)];
+
+                        const btn = document.createElement('button');
+                        btn.className = 'w-full text-left p-3 bg-gray-900 border border-gray-700 rounded hover:border-emerald-500 transition group';
+                        btn.innerHTML = `
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-emerald-400 font-bold text-sm uppercase">${factionId.replace('_', ' ')}</span>
+                                <span class="text-xs text-gray-600 bg-gray-800 px-2 py-0.5 rounded group-hover:bg-gray-700">Tier ${rumor.tier}</span>
+                            </div>
+                            <p class="text-sm text-gray-300">"${rumor.text}"</p>
+                        `;
+                        btn.onclick = () => window.RumorSystem.selectRumor(factionId, rumor);
+                        container.appendChild(btn);
+                    }
+                });
+
+                document.getElementById('rumor-mill-modal').style.display = 'flex';
+            },
+
+            selectRumor: async (factionId, rumor) => {
+                document.getElementById('rumor-mill-modal').style.display = 'none';
+
+                // Start Quest
+                const questTitle = `Investigate: ${factionId.replace(/_/g, ' ')}`;
+
+                await gameState.transaction(async (state) => ({
+                    questState: {
+                        current_quest: {
+                            title: questTitle,
+                            chapter: 1,
+                            objective: rumor.text,
+                            progress: 0,
+                            max_progress: 3, // Standard length
+                            xp_earned: 0,
+                            faction: factionId, // Track faction for rewards
+                            rumor_id: rumor.id
+                        }
+                    }
+                }));
+
+                showToast(`Quest Started: ${questTitle}`);
+
+                // Trigger narrative start
+                await addMessageToChat('model', `\n\n**NEW QUEST: ${questTitle.toUpperCase()}**\n\nYou decide to pursue the whisper: *"${rumor.text}"*\n\nWhere do you start inquiring?`);
+            }
+        };
+
         Object.assign(window, {
             ui,
+            // ... existing exports ...
+            RumorSystem: window.RumorSystem,
             init,
             openXPShop,
             purchaseFromShop,

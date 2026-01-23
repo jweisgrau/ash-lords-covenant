@@ -326,6 +326,7 @@ input.border-gray-700 { border: 1px solid rgba(227, 218, 201, 0.3) !important; }
     max-height: 2000px;
 }
 .accordion-closed #character-sheet-content { max-height: 0; }
+.accordion-closed #unified-clocks-content { max-height: 0; }
 #character-creation-ui, #main-game-ui { display: none; }
 
 .tooltip {

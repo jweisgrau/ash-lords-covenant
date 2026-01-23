@@ -1,4 +1,4 @@
-// State Manager Module for Ash-Lord's Covenant
+// (Skipping edit as character is initialized in index.html)
 // Replaces Firebase with localStorage + event-driven updates
 
 const GAME_STATE_KEY = "ashlords_game_v1";
@@ -55,10 +55,7 @@ class StateValidator {
         }
       }
 
-      // Currency non-negative
-      if (char.currency !== undefined && char.currency < 0) {
-        errors.push(`Currency cannot be negative: ${char.currency}`);
-      }
+
 
       // XP non-negative
       if (char.xp !== undefined && char.xp < 0) {
@@ -117,10 +114,10 @@ class ErrorRecovery {
 
   static validateStructure(state) {
     return state &&
-           state.version &&
-           state.userId &&
-           state.gameState &&
-           Array.isArray(state.chatHistory);
+      state.version &&
+      state.userId &&
+      state.gameState &&
+      Array.isArray(state.chatHistory);
   }
 
   static createBackup(state) {
@@ -260,7 +257,7 @@ class GameStateManager {
   }
 
   getStateSlice(key) {
-    switch(key) {
+    switch (key) {
       case 'character': return this.state.character;
       case 'chatHistory': return this.state.chatHistory;
       case 'worldClocks': return this.state.worldClocks;

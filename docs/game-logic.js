@@ -77,8 +77,8 @@ export const MechanicsEngine = {
             else if (total >= 5) outcome = 'cost';
             else outcome = 'miss';
         } else {
-            // Tier 2: 11+ Full Success, 8-10 Minor Cost, 6-7 Major Cost, 5- Failure
-            if (total >= 11) outcome = 'success';
+            // Tier 2: 11+ Critical, 8-10 Success w/ Strain, 6-7 Major Cost, 5- Failure
+            if (total >= 11) outcome = 'critical'; // Changed from 'success' to distinguish
             else if (total >= 8) outcome = 'minor_cost';
             else if (total >= 6) outcome = 'major_cost';
             else outcome = 'miss';
@@ -88,57 +88,81 @@ export const MechanicsEngine = {
     },
 
     // Calculate consequences based on roll result
-    getConsequences(rollResult, actionType, oracleSystem) {
+    getConsequences(rollResult, actionType, oracleSystem, character) {
         const consequences = {
             xp_gain: 0,
-            currency_gain: 0,
             add_pips: null,
+            update_armor: null,
             escalation: null,
             twist: null,
             description: '',
             stealContext: actionType === 'steal'
         };
 
-        if (rollResult.outcome === 'success') {
-            consequences.xp_gain = 1;
+        if (rollResult.outcome === 'success' || rollResult.outcome === 'critical') {
+            consequences.xp_gain = rollResult.outcome === 'critical' ? 2 : 1;
             if (actionType === 'steal') {
                 consequences.description = 'Success! The AI will describe what was stolen based on the target.';
             } else {
-                consequences.description = 'Success!';
+                consequences.description = rollResult.outcome === 'critical' ? 'CRITICAL SUCCESS!' : 'Success!';
             }
-        } else if (rollResult.outcome === 'cost' || rollResult.outcome === 'minor_cost') {
+        } else if (rollResult.outcome === 'cost') {
+            // Tier 1 Cost - No XP
+            consequences.xp_gain = 0;
+            const minorTwist = oracleSystem.rollMinorTwist();
+            consequences.twist = minorTwist;
+            consequences.description = `Success with minor complication`;
+        } else if (rollResult.outcome === 'minor_cost') {
+            // Tier 2 Success w/ Strain - +1 XP
             consequences.xp_gain = 1;
             const minorTwist = oracleSystem.rollMinorTwist();
             consequences.twist = minorTwist;
-
-            if (actionType === 'steal') {
-                consequences.description = `Success with complication! Partial loot - AI describes what was grabbed.`;
-            } else {
-                consequences.description = `Success with minor complication`;
-            }
+            consequences.description = `Success with minor complication (Strain)`;
+            // Strain (1 pip)
+            consequences.add_pips = { stat: rollResult.stat, amount: 1 };
         } else if (rollResult.outcome === 'major_cost') {
             consequences.xp_gain = 1;
             const majorTwist = oracleSystem.rollMajorTwist();
             consequences.twist = majorTwist;
-            consequences.add_pips = { stat: rollResult.stat, amount: 1 };
 
-            if (actionType === 'steal') {
-                consequences.description = `Success with major complication! Partial loot + injury.`;
+            // Check Ablative Armor
+            const armorPips = InventorySystem.getArmorPips(character, rollResult.stat);
+            if (armorPips > 0) {
+                consequences.update_armor = { stat: rollResult.stat, reduction: 1 };
+                consequences.description = `Success with major complication and armor damage`;
             } else {
+                consequences.add_pips = { stat: rollResult.stat, amount: 1 }; // Injury
                 consequences.description = `Success with major complication and injury`;
             }
-        } else { // miss
-            if (rollResult.tier === 2) {
-                consequences.xp_gain = 1;
-                const severity = 2; // Tier 2 miss is always serious
-                consequences.add_pips = { stat: rollResult.stat, amount: severity };
 
-                const flavor = oracleSystem.getInjuryFlavor(rollResult.stat, severity);
-                consequences.description = `Failure with serious injury: ${flavor}`;
+            if (actionType === 'steal') {
+                consequences.description += ` (Partial loot)`;
+            }
+        } else { // miss
+            consequences.xp_gain = 0;
+            if (rollResult.tier === 2) {
+                const severity = 2; // Tier 2 miss is always serious
+
+                // Check Ablative Armor (Absorbs up to current pips, remainder to health)
+                // Simplified: Armor takes 1, user takes 1? Or Armor takes all?
+                // Plan says "Deduct damage from armor pips first".
+                const armorPips = InventorySystem.getArmorPips(character, rollResult.stat);
+                let remainingDamage = severity;
+
+                if (armorPips > 0) {
+                    const absorbed = Math.min(remainingDamage, armorPips);
+                    consequences.update_armor = { stat: rollResult.stat, reduction: absorbed };
+                    remainingDamage -= absorbed;
+                    consequences.description = `Failure with armor damage`;
+                }
+
+                if (remainingDamage > 0) {
+                    consequences.add_pips = { stat: rollResult.stat, amount: remainingDamage };
+                    const flavor = oracleSystem.getInjuryFlavor(rollResult.stat, remainingDamage);
+                    consequences.description += (armorPips > 0 ? " and breakthrough injury: " : "Failure with serious injury: ") + flavor;
+                }
+
             } else {
-                // Tier 1 Miss: "Failed action without additional consequence"
-                // No XP gain mentioned by user for Tier 1 fail (usually rules imply XP on fail, but user said "without additional consequence")
-                // Assuming standard "Fail" means no progress, no damage.
                 consequences.description = `Failure. The attempt yields no results.`;
             }
 
@@ -165,19 +189,15 @@ export const MechanicsEngine = {
 
 export const InventorySystem = {
     getToolBonus(character, stat) {
-        if (!character) return 0;
-        const tool = (character.equipment || []).find(
-            i => i.type === 'tool' && i.stat === stat
-        );
-        return tool ? (tool.bonus || 1) : 0;
+        if (!character || !character.equipment || !character.equipment.slots) return 0;
+        const slot = character.equipment.slots[stat];
+        return (slot && slot.tool) ? (slot.tool.bonus || 1) : 0;
     },
 
     getArmorPips(character, stat) {
-        if (!character) return 0;
-        const armor = (character.equipment || []).find(
-            i => i.type === 'armor' && i.stat === stat
-        );
-        return armor ? (armor.pips || 0) : 0;
+        if (!character || !character.equipment || !character.equipment.slots) return 0;
+        const slot = character.equipment.slots[stat];
+        return (slot && slot.armor) ? (slot.armor.pips || 0) : 0;
     },
 
     // Note: async damageArmor and addItem logic usually involve state updates
@@ -258,19 +278,10 @@ export function processStateUpdateLogic(currentState, update) {
         };
     }
 
-    // Currency
-    if (update.currency_gain !== undefined && update.currency_gain !== 0) {
-        const amount = Number(update.currency_gain);
-        if (!isNaN(amount) && amount !== 0) {
-            const newCurrency = Math.max(0, (character.currency || 0) + amount);
-            nextState.character = {
-                ...(nextState.character || character),
-                currency: newCurrency
-            };
-        }
-    }
+
 
     // Pips (simplified logic for testing - real one handles array updates)
+    // Pips (damage)
     if (update.add_pips) {
         const { stat, amount } = update.add_pips;
         const currentPips = { ...(character.pips || {}) };
@@ -279,6 +290,27 @@ export function processStateUpdateLogic(currentState, update) {
             ...(nextState.character || character),
             pips: currentPips
         };
+    }
+
+    // Armor Damage
+    if (update.update_armor) {
+        const { stat, reduction } = update.update_armor;
+        if (reduction > 0 && character.equipment && character.equipment.slots) {
+            const slots = { ...character.equipment.slots }; // Shallow copy slots
+            if (slots[stat] && slots[stat].armor) {
+                const newArmor = { ...slots[stat].armor };
+                newArmor.pips = Math.max(0, (newArmor.pips || 0) - reduction);
+                slots[stat] = { ...slots[stat], armor: newArmor };
+
+                nextState.character = {
+                    ...(nextState.character || character),
+                    equipment: {
+                        ...(character.equipment),
+                        slots: slots
+                    }
+                };
+            }
+        }
     }
 
     return nextState;
