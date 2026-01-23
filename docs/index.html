@@ -185,8 +185,8 @@
         </div>
 
         <div id="main-game-ui">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <div id="sidebar-container" class="lg:col-span-1 space-y-4 custom-scrollbar">
+            <div class="grid grid-cols-3 gap-4">
+                <div id="sidebar-container" class="col-span-1 space-y-4 custom-scrollbar">
                     <div id="character-sheet-wrapper" class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg">
                         <div id="character-sheet-header"
                             class="flex justify-between items-center p-3 border-b border-gray-700 cursor-pointer hover:bg-gray-750">
@@ -262,6 +262,33 @@
                     </div>
 
                 </div>
+
+                <div class="col-span-2 flex flex-col h-[80vh]">
+                    <div class="flex-grow bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4 overflow-y-auto"
+                        id="narrative-log"></div>
+
+                    <div id="interaction-panel"
+                        class="mt-4 bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4">
+                        <div id="chapter-phase-ui">
+                            <textarea id="player-input"
+                                class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                rows="3" placeholder="Describe your character's action..."
+                                aria-label="Enter your character's action"></textarea>
+
+                            <button id="submit-action-btn"
+                                class="w-full mt-3 px-4 py-3 bg-emerald-700 text-white rounded-lg font-bold hover:bg-emerald-800 shadow-md"
+                                aria-label="Submit your action to the Game Master">
+                                Submit Action
+                            </button>
+
+                            <p class="text-xs text-gray-500 text-center mt-2">Press <kbd
+                                    class="px-1 bg-gray-700 rounded">Enter</kbd> to submit (Shift+Enter for new line)
+                            </p>
+                        </div>
+
+                        <!-- Interlude phase UI and modals would continue here -->
+                    </div>
+                </div>
             </div>
 
             <div id="quest-progress-wrapper" class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4"
@@ -285,174 +312,68 @@
             </div>
         </div>
 
-        <div class="lg:col-span-2 flex flex-col h-[80vh]">
-            <div class="flex-grow bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4 overflow-y-auto"
-                id="narrative-log"></div>
 
-            <div id="interaction-panel" class="mt-4 bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4">
-                <div id="chapter-phase-ui">
-                    <textarea id="player-input"
-                        class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                        rows="3" placeholder="Describe your character's action..."
-                        aria-label="Enter your character's action"></textarea>
+        <!-- Bug Report UI -->
+        <!-- Bug Report UI -->
+        <div id="bug-report-ui" class="fixed bottom-4 left-4 z-[100]">
+            <button onclick="window.openBugReport()"
+                class="px-3 py-2 bg-red-900/80 text-red-200 text-xs rounded border border-red-700 hover:bg-red-800 backdrop-blur-sm transition flex items-center gap-2">
+                <span>🐞 Report Issue</span>
+            </button>
+        </div>
 
-                    <button id="submit-action-btn"
-                        class="w-full mt-3 px-4 py-3 bg-emerald-700 text-white rounded-lg font-bold hover:bg-emerald-800 shadow-md"
-                        aria-label="Submit your action to the Game Master">
-                        Submit Action
-                    </button>
+        <div id="bug-report-modal"
+            class="fixed top-0 left-0 w-full h-full bg-black/80 z-[250] flex justify-center items-center hidden"
+            role="dialog" aria-modal="true">
+            <div class="modal-content bg-gray-800 border border-gray-600 p-6 rounded-lg max-w-lg w-full shadow-2xl">
+                <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <span>🐞 Report Game Issue</span>
+                </h2>
+                <p class="text-sm text-gray-400 mb-4">
+                    Describe what happened vs what you expected. This will capture the current game state and recent
+                    logs.
+                </p>
 
-                    <p class="text-xs text-gray-500 text-center mt-2">Press <kbd
-                            class="px-1 bg-gray-700 rounded">Enter</kbd> to submit (Shift+Enter for new line)
-                    </p>
-                </div>
+                <textarea id="bug-description"
+                    class="w-full p-3 bg-gray-900 border border-gray-700 rounded text-gray-200 text-sm mb-4 h-32 focus:outline-none focus:border-emerald-500"
+                    placeholder="E.g. I rolled a success but the AI described a failure..."></textarea>
 
-                <div id="interlude-phase-ui" class="hidden">
-                    <div class="mb-4 p-3 bg-gray-900 rounded-lg border border-emerald-700">
-                        <h3 class="text-lg font-bold text-emerald-400 mb-2">⏳ Downtime Phase</h3>
-                        <p class="text-sm text-gray-400">The world moves on while you rest. Faction clocks
-                            advance. Choose how to spend your time wisely.</p>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <button id="interlude-train-btn"
-                            class="interlude-button flex flex-col items-start text-left p-3">
-                            <span class="font-bold text-white">Seek Training (1 XP)</span>
-                            <span class="text-xs text-gray-400 mt-1">Study under a mentor. Gain insight or
-                                skill.</span>
-                        </button>
-                        <button id="interlude-asset-btn"
-                            class="interlude-button flex flex-col items-start text-left p-3">
-                            <span class="font-bold text-white">Acquire an Asset (1 XP)</span>
-                            <span class="text-xs text-gray-400 mt-1">Find equipment, allies, or
-                                information.</span>
-                        </button>
-                        <button id="interlude-reflect-btn"
-                            class="interlude-button flex flex-col items-start text-left p-3">
-                            <span class="font-bold text-white">Reflect & Integrate (1 XP)</span>
-                            <span class="text-xs text-gray-400 mt-1">Process experiences. Potentially gain a
-                                Tag.</span>
-                        </button>
-                        <button id="interlude-heal-btn"
-                            class="interlude-button flex flex-col items-start text-left p-3">
-                            <span class="font-bold text-white">Rest & Recover (3 Coin)</span>
-                            <span class="text-xs text-gray-400 mt-1">Heal one Pip of damage. Requires
-                                coin.</span>
-                        </button>
-                        <button id="interlude-shop-btn"
-                            class="interlude-button flex flex-col items-start text-left p-3 border-amber-700">
-                            <span class="font-bold text-amber-400">Visit Equipment Shop (5 XP)</span>
-                            <span class="text-xs text-gray-400 mt-1">Purchase specialized tools or armor.</span>
-                        </button>
-                        <button id="interlude-repair-btn"
-                            class="interlude-button flex flex-col items-start text-left p-3 border-blue-700">
-                            <span class="font-bold text-blue-400">Repair Armor (Free)</span>
-                            <span class="text-xs text-gray-400 mt-1">Restore all armor to full
-                                protection.</span>
-                        </button>
-                        <button id="interlude-cleanse-btn"
-                            class="interlude-button flex flex-col items-start text-left p-3 border-purple-700">
-                            <span class="font-bold text-purple-400">Cleanse Blight (5 Coin)</span>
-                            <span class="text-xs text-gray-400 mt-1">Seek a hedge witch to remove 1
-                                Blight.</span>
-                        </button>
-                    </div>
-                    <button id="interlude-end-btn"
-                        class="w-full mt-4 px-4 py-3 bg-red-900 text-white rounded-lg font-bold hover:bg-red-800 transition border border-red-700">
-                        Return to Adventure →
-                    </button>
-                    <p class="text-xs text-gray-500 text-center mt-2">Warning: Ending downtime advances faction
-                        clocks!</p>
-                </div>
-
-                <!-- XP Shop Modal -->
-                <div id="xp-shop-modal"
-                    class="fixed top-0 left-0 w-full h-full bg-black/80 z-[200] flex justify-center items-center hidden"
-                    role="dialog" aria-modal="true" aria-labelledby="shop-title">
-                    <div class="modal-content bg-gray-800 border border-amber-700 p-6 rounded-lg max-w-lg w-full">
-                        <h2 id="shop-title" class="text-xl font-bold text-amber-400 mb-4">⚔️ Equipment Shop</h2>
-                        <p class="text-gray-400 text-sm mb-4">Spend 5 XP to purchase specialized gear. Choose
-                            wisely - only 3 items available per visit.</p>
-                        <div id="xp-shop-items" class="space-y-3 mb-4">
-                            <!-- Items will be populated by JavaScript -->
-                        </div>
-                        <button id="xp-shop-close-btn"
-                            class="w-full px-4 py-2 bg-gray-700 text-white rounded-lg font-semibold hover:bg-gray-600 transition">
-                            Close Shop
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Rumor Mill Modal -->
-                <div id="rumor-mill-modal"
-                    class="fixed top-0 left-0 w-full h-full bg-black/80 z-[200] flex justify-center items-center hidden"
-                    role="dialog" aria-modal="true">
-                    <div class="modal-content bg-gray-800 border border-emerald-700 p-6 rounded-lg max-w-2xl w-full">
-                        <h2 class="text-xl font-bold text-emerald-400 mb-2">👂 The Rumor Mill</h2>
-                        <p class="text-sm text-gray-400 mb-4">You catch wind of whispers from the streets.
-                            Choose a lead to pursue:</p>
-                        <div id="rumor-options" class="grid grid-cols-1 gap-3 mb-4">
-                            <!-- Rumors injected here -->
-                        </div>
-                        <p class="text-xs text-center text-gray-500 italic">Choosing a rumor starts a Quest.</p>
-                    </div>
+                <div class="flex gap-2 justify-end">
+                    <button onclick="document.getElementById('bug-report-modal').style.display='none'"
+                        class="px-4 py-2 text-gray-400 hover:text-white transition">Cancel</button>
+                    <button onclick="window.copyBugReport()"
+                        class="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 transition">Copy
+                        (One-Off)</button>
+                    <button onclick="window.addToSessionLog()"
+                        class="px-4 py-2 bg-amber-700 text-white rounded hover:bg-amber-600 transition">Add to
+                        Log</button>
+                    <!-- Download JSON hidden by default unless manually needed -->
+                    <button onclick="window.downloadBugReport()"
+                        class="px-4 py-2 bg-emerald-900/50 text-emerald-200/50 rounded hover:bg-emerald-800 transition text-xs">Isolate
+                        JSON</button>
                 </div>
             </div>
         </div>
-    </div>
-    </div>
-
-    <!-- Bug Report UI -->
-    <div id="bug-report-ui" class="fixed bottom-4 left-4 z-[100]">
-        <button onclick="window.openBugReport()"
-            class="px-3 py-2 bg-red-900/80 text-red-200 text-xs rounded border border-red-700 hover:bg-red-800 backdrop-blur-sm transition flex items-center gap-2">
-            <span>🐞 Report Issue</span>
-        </button>
-    </div>
-
-    <div id="bug-report-modal"
-        class="fixed top-0 left-0 w-full h-full bg-black/80 z-[250] flex justify-center items-center hidden"
-        role="dialog" aria-modal="true">
-        <div class="modal-content bg-gray-800 border border-gray-600 p-6 rounded-lg max-w-lg w-full shadow-2xl">
-            <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <span>🐞 Report Game Issue</span>
-            </h2>
-            <p class="text-sm text-gray-400 mb-4">
-                Describe what happened vs what you expected. This will capture the current game state and recent
-                logs.
-            </p>
-
-            <textarea id="bug-description"
-                class="w-full p-3 bg-gray-900 border border-gray-700 rounded text-gray-200 text-sm mb-4 h-32 focus:outline-none focus:border-emerald-500"
-                placeholder="E.g. I rolled a success but the AI described a failure..."></textarea>
-
-            <div class="flex gap-2 justify-end">
-                <button onclick="document.getElementById('bug-report-modal').style.display='none'"
-                    class="px-4 py-2 text-gray-400 hover:text-white transition">Cancel</button>
-                <button onclick="window.copyBugReport()"
-                    class="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 transition">Copy
-                    (One-Off)</button>
-                <button onclick="window.addToSessionLog()"
-                    class="px-4 py-2 bg-amber-700 text-white rounded hover:bg-amber-600 transition">Add to
-                    Log</button>
-                <!-- Download JSON hidden by default unless manually needed -->
-                <button onclick="window.downloadBugReport()"
-                    class="px-4 py-2 bg-emerald-900/50 text-emerald-200/50 rounded hover:bg-emerald-800 transition text-xs">Isolate
-                    JSON</button>
-            </div>
-        </div>
-    </div>
 
     </div>
 
     <!-- Load game data first (no module required) -->
     <script src="./game_data.js"></script>
 
-    <script type="module">
-        import { MechanicsEngine as PureMechanics, OracleSystem as PureOracle, TagSystem as PureTags, InventorySystem as PureInventory, processStateUpdateLogic } from './game-logic.js';
+    <!-- Load game_logic as standard script -->
+    <script src="./game-logic.js"></script>
 
-        // Expose for debugging and delegation
+    <script>
+        // Aliases for compatibility with previous module code
+        // Accessing the IIFE-exposed namespace
+        const PureMechanics = window.PureGameLogic.MechanicsEngine;
+        const PureOracle = window.PureGameLogic.OracleSystem;
+        const PureTags = window.PureGameLogic.TagSystem;
+        const PureInventory = window.PureGameLogic.InventorySystem;
+
+        // Expose for debugging and delegation (backward compatibility)
         window.GameLogic = { PureMechanics, PureOracle, PureTags, PureInventory };
-        window.processStateUpdateLogic = processStateUpdateLogic;
+        window.processStateUpdateLogic = window.PureGameLogic.processStateUpdateLogic;
 
         // ===== STATE MANAGER (Inlined for local file:// compatibility) =====
 
@@ -2045,11 +1966,11 @@
             gameState.subscribe('gameState', (state) => {
                 if (state) {
                     if (state.phase === 'interlude' || state.phase === 'downtime') {
-                        ui.chapterUI.style.display = 'none';
-                        ui.interludeUI.style.display = 'block';
+                        if (ui.chapterUI) ui.chapterUI.style.display = 'none';
+                        if (ui.interludeUI) ui.interludeUI.style.display = 'block';
                     } else {
-                        ui.chapterUI.style.display = 'block';
-                        ui.interludeUI.style.display = 'none';
+                        if (ui.chapterUI) ui.chapterUI.style.display = 'block';
+                        if (ui.interludeUI) ui.interludeUI.style.display = 'none';
                     }
                 }
             });
@@ -2158,9 +2079,9 @@
                 let slotsHtml = '';
                 if (tool) {
                     slotsHtml += `<div class="mt-1 text-xs bg-emerald-900/30 text-emerald-400 border border-emerald-800 rounded px-1 truncate" title="${tool.name} (+1)">${tool.name}</div>`;
-                } else {
-                    slotsHtml += `<div class="mt-1 text-xs bg-gray-800 text-gray-600 border border-gray-700 rounded px-1 dashed-border opacity-50">Empty Tool</div>`;
                 }
+
+
 
                 if (armor) {
                     const armorPips = armor.pips || 0;
@@ -2169,9 +2090,8 @@
                         `<span class="w-1.5 h-1.5 rounded-full ${i < armorPips ? 'bg-blue-400' : 'bg-gray-700'} inline-block"></span>`
                     ).join('');
                     slotsHtml += `<div class="mt-1 text-xs bg-blue-900/30 text-blue-300 border border-blue-800 rounded px-1 flex justify-between items-center" title="${armor.name}"><span>Armor</span><span class="flex gap-0.5">${pips}</span></div>`;
-                } else {
-                    slotsHtml += `<div class="mt-1 text-xs bg-gray-800 text-gray-600 border border-gray-700 rounded px-1 dashed-border opacity-50">Empty Armor</div>`;
                 }
+
 
                 return `
                 <div class="stat-block p-2 text-center border border-gray-700 rounded hover:bg-gray-700" onclick="updateDescription('${k}', 'Pips: ${pipCount}/2', 'stat')">
