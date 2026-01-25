@@ -2087,6 +2087,9 @@
 
             const pipsData = data.pips || {};
 
+            // Helper function for escaping strings
+            const escapeStr = (str) => str.replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, ' ');
+
             // Stat descriptions
             const STAT_DESCRIPTIONS = {
                 "FORCE": "Raw power to break bones and bend wills.",
@@ -2137,8 +2140,6 @@
                     ${slotsHtml}
                 </div>`;
             }).join('');
-
-            const escapeStr = (str) => str.replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, ' ');
 
             // Build talents with activation buttons
             const activeTalent = TalentSystem.getActiveTalent();
