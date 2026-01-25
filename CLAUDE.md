@@ -452,12 +452,14 @@ Before starting work:
 - `[2026-01-19]` JSON path updates via curl - Misunderstood format requirements, hallucinated unrelated package.json structure instead of updating .mcp.json - **Solution:** Use Claude Edit tool for precise file modifications, or simplify qwen prompts to single-purpose operations
 - `[2026-01-19]` Folder reorganization planning - ✅ Excellent at analysis and recommendations, successfully identified files to move and path dependencies
 - `[2026-01-25]` Incorrect escalation (Claude routing error) - Claude incorrectly escalated refactoring work (converting array access to object property access for equipment slots) to itself instead of using Qwen. Task was straightforward find/replace style refactoring, not complex control flow. - **Solution:** Assess complexity of the *fix*, not severity of the *bug*. Structural refactoring (array→object, data access pattern changes) should default to Qwen first, only escalate if output quality insufficient.
+- `[2026-01-25]` Frontend UI fixes - ✅ Qwen3-coder successfully handled 7 frontend tasks: slot display, stat descriptions, remove buttons, refactor talent activation, redesign world clocks, generate thematic text, mobile CSS. Output was clean, correct, and required minimal manual adjustments. - **Conclusion:** Qwen IS capable of frontend work despite benchmarks suggesting Gemini Pro superiority. Gemini Pro broke mobile responsive during Asset Economy implementation; Qwen fixed it successfully.
 
 ### Current Status
 ✅ **Works well:**
 - Code generation, boilerplate, unit tests, documentation, refactoring
 - Planning and analysis (folder structures, identifying dependencies)
 - Breaking down complex tasks into steps
+- **Frontend UI/UX** (slot displays, CSS fixes, responsive design, HTML structure changes)
 
 ⚠️ **Unproven:**
 - Architecture decisions, security-critical code, complex multi-step reasoning
