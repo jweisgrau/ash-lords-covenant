@@ -1079,6 +1079,34 @@ input.border-gray-700 {
     .grid-cols-1.sm\:grid-cols-2 {
         grid-template-columns: 1fr !important;
     }
+
+    /* Stat block adjustments for mobile */
+    .stat-block {
+        padding: 0.5rem !important;
+        font-size: 0.85rem;
+    }
+
+    .stat-block .text-xl {
+        font-size: 1.25rem !important;
+    }
+
+    /* Slot displays - smaller on mobile */
+    .stat-block .mt-1.text-xs {
+        font-size: 0.65rem !important;
+        padding: 0.125rem 0.25rem !important;
+    }
+
+    /* World clocks - ensure names don't overflow */
+    .min-w-\[120px\] {
+        min-width: 80px !important;
+        font-size: 0.65rem !important;
+    }
+
+    /* Pip indicators smaller on mobile */
+    .w-3.h-3 {
+        width: 0.625rem !important;
+        height: 0.625rem !important;
+    }
 }
 
 /* v0.6.1 - Tactical UI Updates */

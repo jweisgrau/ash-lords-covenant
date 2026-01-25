@@ -1005,50 +1005,20 @@
                     return;
                 }
 
-                if (config.type === 'calling') {
-                    // Calling talents: toggle ready state for next action
-                    if (this._activeTalent === talentId) {
-                        this._activeTalent = null;
-                        showToast('Talent deactivated');
-                    } else {
-                        this._activeTalent = talentId;
-                        showToast(`${this._getTalentName(talentId)} READY - next qualifying action → Tier 1`);
-
-                        // Mark talent as used this chapter
-                        await gameState.transaction(async (state) => {
-                            const used = [...(state.talentsUsedThisChapter || [])];
-                            if (!used.includes(talentId)) {
-                                used.push(talentId);
-                            }
-                            return { talentsUsedThisChapter: used };
-                        });
+                // Both calling and burden talents: toggle ready state for next action
+                if (this._activeTalent === talentId) {
+                    // Deactivate
+                    this._activeTalent = null;
+                    showToast('Talent deactivated');
+                } else {
+                    // Activate (ready for next action)
+                    this._activeTalent = talentId;
+                    const talentName = this._getTalentName(talentId);
+                    if (config.type === 'calling') {
+                        showToast(`${talentName} READY - next qualifying action → Tier 1`);
+                    } else if (config.type === 'burden') {
+                        showToast(`${talentName} READY - cost applies on next action`);
                     }
-                    // Refresh character display to show active state
-                    displayCharacter(character);
-
-                } else if (config.type === 'burden') {
-                    // Check if pip cost would have any effect
-                    let costWarning = '';
-                    if (config.costType === 'pips') {
-                        const currentPips = character.pips?.[config.costStat] || 0;
-                        const effectiveCost = Math.min(config.costAmount, 2 - currentPips);
-                        if (effectiveCost <= 0) {
-                            costWarning = `\n\n⚠️ WARNING: You already have max pips in ${config.costStat}!\nThe pip cost will have no effect.`;
-                        } else if (effectiveCost < config.costAmount) {
-                            costWarning = `\n\n⚠️ Note: You have ${currentPips} ${config.costStat} pips.\nOnly ${effectiveCost} pip(s) will be added (max 2).`;
-                        }
-                    }
-
-                    // Burden talents: apply cost and effect immediately
-                    const confirmed = confirm(
-                        `Activate ${this._getTalentName(talentId)}?\n\n` +
-                        `Effect: ${config.description}\n` +
-                        `Cost: ${config.cost}` +
-                        costWarning +
-                        `\n\nThis cost will be applied immediately.`
-                    );
-
-                    if (!confirmed) return;
 
                     // Mark talent as used this chapter
                     await gameState.transaction(async (state) => {
@@ -1058,14 +1028,14 @@
                         }
                         return { talentsUsedThisChapter: used };
                     });
+                }
 
-                    // Apply cost
-                    await this._applyCost(config);
+                // Refresh character display to show active state
+                displayCharacter(character);
 
-                    // Set as active for AI context
-                    this._activeTalent = talentId;
-
-                    // Add context message for AI
+                // NOTE: Burden talent costs will be applied when the next action is taken
+                if (false) {  // Disabled immediate cost application
+                    // Old burden talent code (now disabled - cost applies on next action)
                     const contextMsg = `[TALENT ACTIVATED: ${this._getTalentName(talentId)}] - ${config.description}. The cost (${config.cost}) has been paid. Narrate the effect dramatically.`;
                     await addMessageToChat('user', contextMsg);
 
@@ -2117,6 +2087,15 @@
 
             const pipsData = data.pips || {};
 
+            // Stat descriptions
+            const STAT_DESCRIPTIONS = {
+                "FORCE": "Raw power to break bones and bend wills.",
+                "FINESSE": "Silent steps, precise strikes, hidden blades.",
+                "INFLUENCE": "Weaving lies into truth, making enemies serve.",
+                "WITS": "Quick mind to see through schemes and survive.",
+                "RESOLVE": "Unbreakable will to endure torture and madness."
+            };
+
             const statsHtml = Object.entries(data.stats || {}).map(([k, v]) => {
                 const pipCount = pipsData[k] || 0;
                 const pip1Class = pipCount >= 1 ? "filled" : "";
@@ -2127,24 +2106,28 @@
                 const armor = slotData.armor;
 
                 let slotsHtml = '';
+                // Tool slot (always show, even if empty)
                 if (tool) {
                     slotsHtml += `<div class="mt-1 text-xs bg-emerald-900/30 text-emerald-400 border border-emerald-800 rounded px-1 truncate" title="${tool.name} (+1)">${tool.name}</div>`;
+                } else {
+                    slotsHtml += `<div class="mt-1 text-xs bg-gray-900/30 text-gray-500 border border-gray-800 rounded px-1 truncate">Empty</div>`;
                 }
 
-
-
+                // Armor slot (always show, even if empty)
                 if (armor) {
                     const armorPips = armor.pips || 0;
                     const maxArmor = armor.max_pips || 2;
                     const pips = Array.from({ length: maxArmor }, (_, i) =>
                         `<span class="w-1.5 h-1.5 rounded-full ${i < armorPips ? 'bg-blue-400' : 'bg-gray-700'} inline-block"></span>`
                     ).join('');
-                    slotsHtml += `<div class="mt-1 text-xs bg-blue-900/30 text-blue-300 border border-blue-800 rounded px-1 flex justify-between items-center" title="${armor.name}"><span>Armor</span><span class="flex gap-0.5">${pips}</span></div>`;
+                    slotsHtml += `<div class="mt-1 text-xs bg-blue-900/30 text-blue-300 border border-blue-800 rounded px-1 flex justify-between items-center" title="${armor.name}"><span>${armor.name}</span><span class="flex gap-0.5">${pips}</span></div>`;
+                } else {
+                    slotsHtml += `<div class="mt-1 text-xs bg-gray-900/30 text-gray-500 border border-gray-800 rounded px-1 truncate">Empty</div>`;
                 }
 
-
+                const statDesc = STAT_DESCRIPTIONS[k] || '';
                 return `
-                <div class="stat-block p-2 text-center border border-gray-700 rounded hover:bg-gray-700" onclick="updateDescription('${k}', 'Pips: ${pipCount}/2', 'stat')">
+                <div class="stat-block p-2 text-center border border-gray-700 rounded hover:bg-gray-700" onclick="updateDescription('${k}', '${escapeStr(statDesc)}', 'stat')">
                     <div class="text-xs text-gray-400 uppercase">${k.substring(0, 3)}</div>
                     <div class="text-xl font-bold ${v > 0 ? 'text-emerald-400' : 'text-gray-300'}">${v > 0 ? '+' + v : v}</div>
                     <div class="pip-container">
@@ -2244,9 +2227,6 @@
                     <span class="flex items-center gap-2">${typeBadge}${i.name}</span>
                     <div class="flex items-center gap-2">
                         ${specialBadge}
-                        <button onclick="event.stopPropagation(); dropItem('${safeName}')"
-                                class="text-xs text-gray-500 hover:text-red-400 px-1 transition"
-                                title="Drop item">✕</button>
                     </div>
                 </li>`;
             }).join('');
@@ -3848,14 +3828,23 @@ ${TalentSystem.getActiveContext()}`;
 
             (data.clocks || []).forEach(clock => {
                 const clockDiv = document.createElement('div');
-                clockDiv.className = 'clock';
+                clockDiv.className = 'mt-2 p-1.5 bg-gray-800/30 border-gray-700 border rounded';
+
+                const boxes = [];
+                for (let i = 0; i < clock.segments; i++) {
+                    const filled = i < clock.current;
+                    const danger = clock.current >= clock.segments - 1;
+                    boxes.push(`<div class="w-3 h-3 rounded-sm border ${filled ? (danger ? 'bg-red-600 border-red-400' : 'bg-amber-600 border-amber-400') : 'bg-gray-800 border-gray-600'}"></div>`);
+                }
+
                 clockDiv.innerHTML = `
-                    <div class="clock-face ${clock.current >= clock.segments - 1 ? 'near-full' : ''}"
-                         id="clock-${clock.name.replace(/\s+/g, '-')}">
-                        ${renderClockSegments(clock.current, clock.segments)}
+                    <div class="flex items-center gap-2">
+                        <h4 class="text-xs uppercase font-semibold text-gray-300 min-w-[120px]">${clock.name}</h4>
+                        <div class="flex gap-0.5">
+                            ${boxes.join('')}
+                        </div>
+                        <span class="text-xs text-gray-400">${clock.current}/${clock.segments}</span>
                     </div>
-                    <div class="clock-name">${clock.name}</div>
-                    <div style="font-size: 0.6rem;" class="text-gray-500 text-center">${clock.current}/${clock.segments}</div>
                 `;
                 container.appendChild(clockDiv);
             });
