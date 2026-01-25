@@ -658,47 +658,46 @@
             // Get tool bonus for a stat (returns 0 or 1)
             getToolBonus(stat) {
                 const character = gameState.getState().character;
-                if (!character) return 0;
-                const tool = (character.equipment || []).find(
-                    i => i.type === 'tool' && i.stat === stat
-                );
+                if (!character || !character.equipment || !character.equipment.slots) return 0;
+                const slot = character.equipment.slots[stat];
+                const tool = slot?.tool;
                 return tool ? (tool.bonus || 1) : 0;
             },
 
             // Get available armor pips for a stat
             getArmorPips(stat) {
                 const character = gameState.getState().character;
-                if (!character) return 0;
-                const armor = (character.equipment || []).find(
-                    i => i.type === 'armor' && i.stat === stat
-                );
+                if (!character || !character.equipment || !character.equipment.slots) return 0;
+                const slot = character.equipment.slots[stat];
+                const armor = slot?.armor;
                 return armor ? (armor.pips || 0) : 0;
             },
 
             // Damage armor before character takes pips - returns remaining damage
             async damageArmor(stat, amount) {
                 const character = gameState.getState().character;
-                if (!character) return amount;
+                if (!character || !character.equipment || !character.equipment.slots) return amount;
 
-                const equipment = character.equipment || [];
-                const armorIndex = equipment.findIndex(
-                    i => i.type === 'armor' && i.stat === stat && (i.pips || 0) > 0
-                );
+                const slot = character.equipment.slots[stat];
+                if (!slot || !slot.armor || (slot.armor.pips || 0) <= 0) return amount;
 
-                if (armorIndex === -1) return amount; // No armor to absorb
-
-                const armor = equipment[armorIndex];
+                const armor = slot.armor;
                 const absorbed = Math.min(armor.pips, amount);
                 const remaining = amount - absorbed;
 
-                // Update armor pips
-                const newEquipment = [...equipment];
-                newEquipment[armorIndex] = { ...armor, pips: armor.pips - absorbed };
+                // Update armor pips in slot
+                const updatedSlots = {
+                    ...character.equipment.slots,
+                    [stat]: {
+                        ...slot,
+                        armor: { ...armor, pips: armor.pips - absorbed }
+                    }
+                };
 
                 await gameState.transaction(async (state) => ({
                     character: {
                         ...state.character,
-                        equipment: newEquipment
+                        equipment: { ...state.character.equipment, slots: updatedSlots }
                     }
                 }));
 
@@ -712,114 +711,175 @@
             // Repair all armor during downtime
             async repairAllArmor() {
                 const character = gameState.getState().character;
-                if (!character) return;
+                if (!character || !character.equipment || !character.equipment.slots) return;
 
-                const equipment = character.equipment || [];
+                const slots = { ...character.equipment.slots };
                 let repairedAny = false;
 
-                const repairedEquipment = equipment.map(item => {
-                    if (item.type === 'armor' && item.pips < (item.max_pips || 2)) {
+                for (const stat in slots) {
+                    if (slots[stat].armor && slots[stat].armor.pips < (slots[stat].armor.max_pips || 2)) {
+                        slots[stat] = {
+                            ...slots[stat],
+                            armor: { ...slots[stat].armor, pips: slots[stat].armor.max_pips || 2 }
+                        };
                         repairedAny = true;
-                        return { ...item, pips: item.max_pips || 2 };
                     }
-                    return item;
-                });
+                }
 
                 if (repairedAny) {
                     await gameState.transaction(async (state) => ({
                         character: {
                             ...state.character,
-                            equipment: repairedEquipment
+                            equipment: { ...state.character.equipment, slots }
                         }
                     }));
                     showToast('All armor repaired!');
                 }
             },
 
-            // Add item to inventory
+            // Add item to inventory (slot-aware)
             async addItem(item) {
                 const character = gameState.getState().character;
-                if (!character) return false;
+                if (!character || !character.equipment) return false;
 
-                // For tools/armor, check if we already have one for that stat
-                if (item.type === 'tool' || item.type === 'armor') {
-                    const existing = (character.equipment || []).find(
-                        i => i.type === item.type && i.stat === item.stat
-                    );
-                    if (existing) {
-                        showToast(`Already have a ${item.stat} ${item.type}!`);
-                        return false;
+                await gameState.transaction(async (state) => {
+                    const char = state.character;
+                    const slots = { ...char.equipment.slots };
+                    const inventory = [...char.equipment.inventory];
+
+                    let equipped = false;
+                    // Auto-equip if slot empty
+                    if (item.type === 'tool' && item.stat) {
+                        if (!slots[item.stat]) slots[item.stat] = {};
+                        if (!slots[item.stat].tool) {
+                            slots[item.stat].tool = item;
+                            equipped = true;
+                        }
+                    } else if (item.type === 'armor' && item.stat) {
+                        if (!slots[item.stat]) slots[item.stat] = {};
+                        if (!slots[item.stat].armor) {
+                            slots[item.stat].armor = item;
+                            equipped = true;
+                        }
+                    }
+
+                    if (!equipped) {
+                        inventory.push(item);
+                    }
+
+                    return { character: { ...char, equipment: { slots, inventory } } };
+                });
+
+                return true;
+            },
+
+            // Remove item by name (slot-aware)
+            async removeItem(itemName) {
+                const character = gameState.getState().character;
+                if (!character || !character.equipment) return false;
+
+                await gameState.transaction(async (state) => {
+                    const char = state.character;
+                    const slots = { ...char.equipment.slots };
+                    let inventory = [...char.equipment.inventory];
+                    let found = false;
+
+                    // Check inventory first
+                    const invIndex = inventory.findIndex(i => i.name === itemName);
+                    if (invIndex !== -1) {
+                        inventory.splice(invIndex, 1);
+                        found = true;
+                    } else {
+                        // Check slots
+                        for (const stat in slots) {
+                            if (slots[stat].tool && slots[stat].tool.name === itemName) {
+                                slots[stat].tool = null;
+                                found = true;
+                                break;
+                            }
+                            if (slots[stat].armor && slots[stat].armor.name === itemName) {
+                                slots[stat].armor = null;
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (found) {
+                        showToast(`Removed: ${itemName}`);
+                        return { character: { ...char, equipment: { slots, inventory } } };
+                    }
+                    return {};
+                });
+
+                return true;
+            },
+
+            // Check if character has an item (slot-aware)
+            hasItem(itemName) {
+                const character = gameState.getState().character;
+                if (!character || !character.equipment) return false;
+
+                // Check inventory
+                if (character.equipment.inventory?.some(i => i.name === itemName)) return true;
+
+                // Check slots
+                if (character.equipment.slots) {
+                    for (const stat in character.equipment.slots) {
+                        const slot = character.equipment.slots[stat];
+                        if (slot.tool?.name === itemName || slot.armor?.name === itemName) return true;
                     }
                 }
 
-                // Prepare item with proper structure
-                const newItem = {
-                    name: item.name,
-                    type: item.type || 'loot',
-                    properties: item.properties || [],
-                    lore: item.lore || item.desc || '',
-                    ...(item.type === 'tool' ? { stat: item.stat, bonus: item.bonus || 1 } : {}),
-                    ...(item.type === 'armor' ? { stat: item.stat, pips: item.max_pips || 2, max_pips: item.max_pips || 2 } : {}),
-                    ...(item.tags ? { tags: item.tags } : {}),
-                    ...(item.desc ? { desc: item.desc } : {})
-                };
-
-                await gameState.transaction(async (state) => ({
-                    character: {
-                        ...state.character,
-                        equipment: [...(state.character.equipment || []), newItem]
-                    }
-                }));
-
-                showToast(`+1 Item: ${item.name}`);
-                return true;
+                return false;
             },
 
-            // Remove item by name
-            async removeItem(itemName) {
-                const character = gameState.getState().character;
-                if (!character) return false;
-
-                const equipment = character.equipment || [];
-                const index = equipment.findIndex(i => i.name === itemName);
-                if (index === -1) return false;
-
-                const newEquipment = [...equipment];
-                newEquipment.splice(index, 1);
-
-                await gameState.transaction(async (state) => ({
-                    character: {
-                        ...state.character,
-                        equipment: newEquipment
-                    }
-                }));
-
-                showToast(`Removed: ${itemName}`);
-                return true;
-            },
-
-            // Check if character has an item
-            hasItem(itemName) {
-                const character = gameState.getState().character;
-                if (!character) return false;
-                return (character.equipment || []).some(i => i.name === itemName);
-            },
-
-            // Get all equipment of a type
+            // Get all equipment of a type (slot-aware)
             getEquipmentByType(type) {
                 const character = gameState.getState().character;
-                if (!character) return [];
-                return (character.equipment || []).filter(i => i.type === type);
+                if (!character || !character.equipment) return [];
+
+                const items = [];
+
+                // Check inventory
+                if (character.equipment.inventory) {
+                    items.push(...character.equipment.inventory.filter(i => i.type === type));
+                }
+
+                // Check slots
+                if (character.equipment.slots) {
+                    for (const stat in character.equipment.slots) {
+                        const slot = character.equipment.slots[stat];
+                        if (type === 'tool' && slot.tool) items.push(slot.tool);
+                        if (type === 'armor' && slot.armor) items.push(slot.armor);
+                    }
+                }
+
+                return items;
             },
 
-            // Get 3 random items from MASTER_GEAR_LIST that player doesn't own
+            // Get random items from MASTER_GEAR_LIST that player doesn't own (slot-aware)
             getAvailableShopItems(count = 3) {
                 const character = gameState.getState().character;
                 if (!character || !CONTENT_PACK_ASHLORDS.MASTER_GEAR_LIST) return [];
 
-                const owned = (character.equipment || []).map(e => e.name);
+                const ownedNames = new Set();
+
+                // Collect owned items from inventory
+                if (character.equipment?.inventory) {
+                    character.equipment.inventory.forEach(i => ownedNames.add(i.name));
+                }
+
+                // Collect owned items from slots
+                if (character.equipment?.slots) {
+                    Object.values(character.equipment.slots).forEach(slot => {
+                        if (slot.tool) ownedNames.add(slot.tool.name);
+                        if (slot.armor) ownedNames.add(slot.armor.name);
+                    });
+                }
+
                 const available = CONTENT_PACK_ASHLORDS.MASTER_GEAR_LIST.filter(
-                    item => !owned.includes(item.name)
+                    item => !ownedNames.has(item.name)
                 );
 
                 // Shuffle and pick
@@ -1292,15 +1352,6 @@
                         showToast(`+${consequences.xp_gain} XP`);
                     }
 
-                    if (consequences.currency_gain !== 0) {
-                        const newCurrency = Math.max(0, (character.currency || 0) + consequences.currency_gain);
-                        updates.character = {
-                            ...(updates.character || character),
-                            currency: newCurrency
-                        };
-                        showToast(`${consequences.currency_gain > 0 ? '+' : ''}${consequences.currency_gain} Coin`);
-                    }
-
                     return updates;
                 });
             },
@@ -1341,7 +1392,6 @@
             _legacy_getConsequences(rollResult, actionType) {
                 const consequences = {
                     xp_gain: 0,
-                    currency_gain: 0,
                     add_pips: null,
                     escalation: null,
                     twist: null,  // Oracle-generated twist for AI narrative
@@ -2532,36 +2582,10 @@
             return true;
         }
 
-        // Parse AI response for structured commands (currency_gain, equipment_add, etc.)
+        // Parse AI response for structured commands (equipment_add, blight_gain, tags, etc.)
         function parseAIStructuredResponse(text) {
             let cleanNarrative = text;
             const stateUpdates = {};
-
-            // Pattern to match currency_gain: X (with various formats, including negative)
-            const currencyMatch = text.match(/currency_gain:\s*(-?\d+)/i);
-            if (currencyMatch) {
-                let rawGain = parseInt(currencyMatch[1], 10);
-
-                // --- SEMANTIC VALIDATION FIX ---
-                // Prevent hallucinations: Only allow currency change if narrative mentions money/trade context
-                if (rawGain !== 0) {
-                    // Use regex with word boundaries to prevent false matches (e.g., "soldier" matching "sold")
-                    const moneyRegex = /\b(coins?|gold|silver|copper|purse|pouch|wallet|money|pay(s|ing|ment)?|paid|buy(s|ing)?|bought|sell(s|ing)?|sold|loot(s|ing|ed)?|steal(s|ing)?|stole|stolen|bribe(s|ry)?|tip(s|ped)?|found|earnings|dropped|gave|lost|taken|cash|currency|reward|treasure|wealth)\b/i;
-
-                    // Check both the raw text and clean narrative for context
-                    const contextText = (cleanNarrative + " " + text).toLowerCase();
-                    const hasMoneyContext = moneyRegex.test(contextText);
-
-                    if (!hasMoneyContext) {
-                        console.warn(`Blocked currency hallucination: ${rawGain} coin without narrative justification.`);
-                        rawGain = 0;
-                    }
-                }
-                // -------------------------------
-
-                stateUpdates.currency_gain = rawGain;
-                cleanNarrative = cleanNarrative.replace(/currency_gain:\s*-?\d+/gi, '').trim();
-            }
 
             // Pattern to match blight_gain: X (for Blight corruption from AI)
             const blightMatch = text.match(/blight_gain:\s*(\d+)/i);
@@ -2744,7 +2768,7 @@
                 // 4. Parse AI response for structured commands and clean narrative
                 const { cleanNarrative, stateUpdates, parseErrors } = parseAIStructuredResponse(narrative);
 
-                // 5. Process any state updates from AI (currency_gain, equipment_add, etc.)
+                // 5. Process any state updates from AI (equipment_add, blight_gain, tags, etc.)
                 if (stateUpdates) {
                     await processStateUpdate(stateUpdates);
                 }
@@ -3190,25 +3214,50 @@ ${TalentSystem.getActiveContext()}`;
                     }
                 }
 
-                // Equipment modify
+                // Equipment modify (slot-aware)
                 if (update.item_modify && update.item_modify.length > 0) {
-                    const currentEquipment = character.equipment || [];
-                    const modifiedEquipment = currentEquipment.map(item => {
-                        const modification = update.item_modify.find(mod => mod.name === item.name);
-                        if (modification) {
-                            showToast(`Item modified: ${modification.name}`);
-                            return {
-                                ...item,
-                                name: modification.new_name || item.name,
-                                lore: modification.lore || item.lore
+                    const currentEquipment = character.equipment || { slots: {}, inventory: [] };
+                    const slots = { ...currentEquipment.slots };
+                    const inventory = [...currentEquipment.inventory];
+
+                    update.item_modify.forEach(modification => {
+                        // Check inventory
+                        const invIndex = inventory.findIndex(i => i.name === modification.name);
+                        if (invIndex !== -1) {
+                            inventory[invIndex] = {
+                                ...inventory[invIndex],
+                                name: modification.new_name || inventory[invIndex].name,
+                                lore: modification.lore || inventory[invIndex].lore
                             };
+                            showToast(`Item modified: ${modification.name}`);
+                        } else {
+                            // Check slots
+                            for (const stat in slots) {
+                                if (slots[stat].tool && slots[stat].tool.name === modification.name) {
+                                    slots[stat].tool = {
+                                        ...slots[stat].tool,
+                                        name: modification.new_name || slots[stat].tool.name,
+                                        lore: modification.lore || slots[stat].tool.lore
+                                    };
+                                    showToast(`Item modified: ${modification.name}`);
+                                    break;
+                                }
+                                if (slots[stat].armor && slots[stat].armor.name === modification.name) {
+                                    slots[stat].armor = {
+                                        ...slots[stat].armor,
+                                        name: modification.new_name || slots[stat].armor.name,
+                                        lore: modification.lore || slots[stat].armor.lore
+                                    };
+                                    showToast(`Item modified: ${modification.name}`);
+                                    break;
+                                }
+                            }
                         }
-                        return item;
                     });
 
                     updates.character = {
                         ...(updates.character || character),
-                        equipment: modifiedEquipment
+                        equipment: { slots, inventory }
                     };
                 }
 

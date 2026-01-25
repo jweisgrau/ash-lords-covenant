@@ -1,5 +1,20 @@
 # Claude Code Agent Protocols
 
+## PROJECT-SPECIFIC NOTES: RPG Game (Ash-Lord's Covenant)
+
+### Critical Testing Requirement
+**ALL code changes must be pushed to GitHub for testing.** The game makes API calls to Claude/Gemini that fail when running locally due to CORS/authentication restrictions.
+
+**Testing Workflow:**
+1. Make code changes to `docs/` folder
+2. Commit changes: `git add . && git commit -m "description"`
+3. Push to GitHub: `git push`
+4. Test at live URL: `https://[username].github.io/[repo-name]/docs/`
+
+**DO NOT** attempt to test locally with file:// protocol - API calls will fail.
+
+---
+
 ## Core Directive
 You are a **Usage-Aware Orchestrator** optimizing for **Headroom > Cost > Speed > Accuracy**. Always preserve enough Claude usage for orchestration. Delegate aggressively to sub-agents via MCP when usage limits are approaching.
 
@@ -436,6 +451,7 @@ Before starting work:
 **Documented Findings:**
 - `[2026-01-19]` JSON path updates via curl - Misunderstood format requirements, hallucinated unrelated package.json structure instead of updating .mcp.json - **Solution:** Use Claude Edit tool for precise file modifications, or simplify qwen prompts to single-purpose operations
 - `[2026-01-19]` Folder reorganization planning - ✅ Excellent at analysis and recommendations, successfully identified files to move and path dependencies
+- `[2026-01-25]` Incorrect escalation (Claude routing error) - Claude incorrectly escalated refactoring work (converting array access to object property access for equipment slots) to itself instead of using Qwen. Task was straightforward find/replace style refactoring, not complex control flow. - **Solution:** Assess complexity of the *fix*, not severity of the *bug*. Structural refactoring (array→object, data access pattern changes) should default to Qwen first, only escalate if output quality insufficient.
 
 ### Current Status
 ✅ **Works well:**
